@@ -1,0 +1,32 @@
+{
+  "name": "zotlo-checkout",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/zotlo-checkout.umd.cjs",
+  "module": "./dist/zotlo-checkout.js",
+  "exports": {
+    ".": {
+      "import": "./dist/zotlo-checkout.js",
+      "require": "./dist/zotlo-checkout.umd.cjs"
+    }
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/vite": "^4.0.12",
+    "autoprefixer": "^10.4.21",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "tailwindcss": "^4.0.12"
+  }
+}

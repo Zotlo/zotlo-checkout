@@ -1,0 +1,132 @@
+.zotlo-checkout {
+  .tw-checkmark {
+    @apply inline-block h-20 w-20 flex-[0_0_20px] rounded-4 border-2 border-neutral-200 bg-center bg-no-repeat transition-colors;
+  
+    &.error:not(.disabled) {
+      @apply border-error-500;
+    }
+  }
+  
+  *:not(:disabled):hover + .tw-checkmark,
+  *:not(:disabled):hover > .byWrapper.tw-checkmark,
+  .tw-checkmark:not(.disabled):hover {
+    &:not(.error) {
+      @apply border-primary-500 bg-primary-100 text-primary-700;
+    }
+  
+    &.error {
+      @apply border-error-500 bg-error-100 text-error-700;
+    }
+  }
+  
+  *:not(:disabled):focus + .tw-checkmark,
+  *:not(:disabled):focus > .byWrapper.tw-checkmark,
+  .tw-checkmark:not(.disabled):focus {
+    @apply bg-white bg-no-repeat ring-4 ring-offset-0;
+  
+    &:not(.error) {
+      @apply border-primary-500 text-primary-500 ring-primary-100;
+    }
+  
+    &.error {
+      @apply border-error-500 text-error-500 ring-error-100;
+    }
+  }
+  
+  *:not(:disabled):focus:hover + .tw-checkmark,
+  *:not(:disabled):focus:hover > .byWrapper.tw-checkmark,
+  .tw-checkmark:not(.disabled):focus:hover {
+    &:not(.error) {
+      @apply bg-primary-100;
+    }
+  
+    &.error {
+      @apply bg-error-100;
+    }
+  }
+  
+  *:not(:disabled):checked + .tw-checkmark,
+  *:not(:disabled):checked > .byWrapper.tw-checkmark,
+  *:not(:disabled) > .byWrapper.tw-checkmark.checked,
+  .tw-checkmark:not(.disabled).checked,
+  .byWrapper.tw-checkmark:not(.disabled).checked {
+    @apply bg-[length:12px];
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%23FFFFFF' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
+  
+    &:not(.error) {
+      @apply border-primary-500 bg-primary-500;
+    }
+  
+    &.error {
+      @apply border-error-500 bg-error-500;
+    }
+  }
+  
+  *:not(:disabled):checked:hover + .tw-checkmark,
+  *:not(:disabled):checked:hover > .byWrapper.tw-checkmark,
+  *:not(:disabled):hover > .byWrapper.tw-checkmark.checked,
+  .byWrapper.tw-checkmark:not(.disabled).checked:hover,
+  .tw-checkmark:not(.disabled).checked:hover {
+    &:not(.error) {
+      @apply border-primary-700 bg-primary-700;
+    }
+  
+    &.error {
+      @apply border-error-700 bg-error-700;
+    }
+  }
+  
+  *:not(:disabled):checked:focus + .tw-checkmark,
+  *:not(:disabled):checked:focus > .byWrapper.tw-checkmark,
+  *:not(:disabled):focus > .byWrapper.tw-checkmark.checked,
+  .tw-checkmark:not(.disabled).checked:focus {
+    &:not(.error) {
+      @apply bg-primary-100;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%234329CC' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
+    }
+  
+    &.error {
+      @apply bg-error-100;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%23E13023' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
+    }
+  }
+  
+  *:not(:disabled):checked:focus:hover + .tw-checkmark,
+  *:not(:disabled):checked:focus:hover > .byWrapper.tw-checkmark,
+  *:not(:disabled):focus:hover > .byWrapper.tw-checkmark.checked,
+  .tw-checkmark:not(.disabled).checked:focus:hover {
+    &.error {
+      @apply border-error-500;
+    }
+  }
+  
+  *:checked:disabled + .tw-checkmark,
+  *:checked:disabled > .byWrapper.tw-checkmark,
+  *:disabled > .byWrapper.tw-checkmark.checked,
+  .tw-checkmark.checked.disabled {
+    @apply bg-neutral-100;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%23C3C9D5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
+  }
+
+  .zotlo-checkout__checkbox {
+    @apply relative flex gap-12 font-medium text-14;
+  
+    input {
+      @apply absolute left-0 top-0 h-20 w-20 opacity-0;
+    }
+
+    a {
+      @apply text-[#007aff] inline cursor-pointer hover:underline font-medium;
+    }
+
+    &.error {
+      .tw-checkbox-label,
+      .tw-checkbox-label a,
+      .tw-checkbox-hint,
+      .tw-checkbox-hint a {
+        @apply !text-error-500;
+      }
+    }
+  }
+}
+

@@ -1,0 +1,63 @@
+@config "../../tailwind.config.mjs";
+@import "tailwindcss";
+@import "./input.css";
+@import "./checkbox.css";
+
+:root {
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.zotlo-checkout {
+  @apply text-[16px] p-24 border border-neutral-200 rounded-8 font-montserrat;
+
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    @apply box-border;
+  }
+
+  a {
+    @apply text-[#007aff] hover:underline;
+  }
+
+}
+
+.zotlo-checkout__summary {
+  @apply flex justify-between mb-24 mt-32 lg:mb-32 text-neutral-900 text-[18px] font-semibold;
+}
+
+.zotlo-checkout__button {
+  @apply font-bold px-16 py-8 inline-flex bg-primary-500 w-full text-white rounded-8 text-14 justify-center items-center cursor-pointer min-h-48;
+  
+  &.provider {
+    @apply bg-[black];
+    
+    img {
+      @apply max-h-24;
+    }
+    
+    &.paypal {
+      @apply bg-[#f6c444];
+    }
+  }
+}
+.zotlo-checkout__button-desc {
+  @apply block mt-4 text-center text-12 font-semibold;
+
+  &:empty {
+    @apply hidden;
+  }
+}
+
+.zotlo-checkout__seperator {
+  @apply flex items-center before:h-[1px] before:grow before:bg-neutral-200 before:content-[''] after:h-[1px] after:grow after:bg-neutral-200 after:content-[''];
+
+  span {
+    @apply shrink-0 px-[6px] text-12 text-neutral-500;
+  }
+}
+

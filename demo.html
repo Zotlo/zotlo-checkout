@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+    <link id="gfonts" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Montserrat:wght@400;500;600;700" rel="stylesheet">
+    <link href="./dist/zotlo-checkout.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="w-[460px] mx-auto mt-16" id="zotlo-checkout">
+    </div>
+    <div id="app"></div>
+
+    <!-- GLOBAL OBJECT USAGE-->
+    <script async src="./dist/zotlo-checkout.min.js"></script>
+    <script>
+      (async () => {
+        const checkout = await window.ZotloCheckout({
+          token: '123ASDASsqasdas=',
+          packageId: 'zotlo-123',
+          events: {
+            onLoad() {
+              console.log('OK!')
+            },
+            onSubmit() {}
+          }
+        });
+        
+        checkout.mount('zotlo-checkout')
+      })()
+    </script>
+  </body>
+</html>

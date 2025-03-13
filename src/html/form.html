@@ -1,0 +1,54 @@
+<div class="zotlo-checkout grid gap-24">
+  <!-- CARD -->
+  <form id="zotlo-checkout-form" class="zotlo-checkout__card">
+    <div class="zotlo-checkout__form">
+      {{CARD_NUMBER}}
+      {{CARD_HOLDER}}
+      
+      <div class="grid grid-cols-2 gap-[16px]">
+        {{EXPIRATION_DATE}}
+        {{SECURITY_CODE}}
+      </div>
+
+      {{SUBSCRIBER_ID}}
+
+      {{AGREEMENT_CHECKBOX}}
+    </div>
+
+    <div class="zotlo-checkout__summary">
+      <span>Total:</span>
+      <span>{{TOTAL_PRICE}}</span>
+    </div>
+
+    <div>
+      {{CARD_SUBMIT}}
+      <div class="flex justify-center my-8">
+        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/visa.png" alt="visa"></div>
+        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/mastercard.png" alt="mastercard"></div>
+        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/american.png" alt="american"></div>
+        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/mnp.png" alt="mnp"></div>
+        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/jcb.png" alt="jcb"></div>
+        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/discover.png" alt="discover"></div>
+        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/diners.png" alt="diners"></div>
+      </div>
+    </div>
+    <div class="zotlo-checkout__seperator">
+      <span>or</span>
+    </div>
+  </form>
+
+  <!-- PROVIDERS -->
+  {{PROVIDERS}}
+
+  <div class="text-10 text-[#737380] text-center grid gap-12">
+    <p>You will be charged {TRIAL_PRICE} for {TRIAL_PERIOD}, then {PRICE} per {PERIOD}. For more details about cancellation and refund, please refer to usage terms.</p>
+    <div>
+      Supported by Online reseller & Merchant of Record, Zotlo.com<br/>
+
+      <div class="flex gap-12 justify-center">
+        <a href="#">Terms of service</a>
+        <a href="#">Privacy policy</a>
+      </div>
+    </div>
+  </div>  
+</div>
