@@ -2,64 +2,11 @@ import form from '../html/form.html'
 import inputElement from '../html/input.html'
 import checkboxElement from '../html/checkbox.html'
 import buttonElement from '../html/button.html'
+import { FORM_ITEMS } from './fields';
 
 function generateAttributes(attrs: Record<string, string | number | boolean>) {
   if (!attrs) return '';
   return Object.entries(attrs).map(([key, value]) => value !== undefined && value !== null ? `${key}="${value}"` : '').join(' ')
-}
-
-export const FORM_ITEMS = {
-  CARD_NUMBER: {
-    label: 'Card Number',
-    input: {
-      name: 'cardNumber',
-      placeholder: 'Card number',
-      'data-rules': 'required|minLength:19',
-      'data-mask': '#### #### #### ####',
-    },
-  },
-  CARD_HOLDER: {
-    label: 'Card Holder\'s Name',
-    input: {
-      name: 'cardHolder',
-      'data-rules': 'required',
-      placeholder: 'Name on card',
-    }
-  },
-  EXPIRATION_DATE: {
-    label: 'Expiration Date',
-    input: {
-      name: 'cardExpiration',
-      placeholder: 'MM/YY',
-      'data-rules': 'required|expirationDate',
-      'data-mask': '##/##',
-    }
-  },
-  SECURITY_CODE: {
-    label: 'Security Code',
-    input: {
-      name: 'cardCVV',
-      placeholder: 'CVV',
-      'data-rules': 'required',
-      'data-mask': '###',
-    }
-  },
-  SUBSCRIBER_ID: {
-    label: 'E-mail Address',
-    input: {
-      name: 'subscriberId',
-      type: 'email',
-      'data-rules': 'required|email',
-      placeholder: 'Write your email address'
-    }
-  },
-  AGREEMENT_CHECKBOX: {
-    label: `I read and agree to <a target="_blank" href="#">distance sales agreement</a> and <a href="#" target="_blank">information form</a>`,
-    input: {
-      name: 'acceptPolicy',
-      'data-rules': 'required',
-    }
-  }
 }
 
 export function createInput(payload: {

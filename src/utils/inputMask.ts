@@ -4,8 +4,15 @@ interface InputMaskOptions {
   validChars?: RegExp;
 }
 
+type IMaskInputOnInput = {
+  name: string,
+  value: string,
+  mask: InputMask,
+  updateValue: (value?: string) => string
+}
+
 class InputMask {
-  private readonly options: Required<InputMaskOptions>;
+  private options: Required<InputMaskOptions>;
 
   constructor(options: InputMaskOptions) {
     this.options = {
@@ -43,17 +50,40 @@ class InputMask {
 
     return maskedValue;
   }
+
+  public updateOptions(options: InputMaskOptions) {
+    this.options = {
+      ...this.options,
+      ...options
+    }
+  }
 }
 
-function maskInput(inputElement: HTMLInputElement, options: InputMaskOptions) {
+function maskInput(
+  inputElement: HTMLInputElement,
+  options: InputMaskOptions & {
+    onInput?: (payload: IMaskInputOnInput) => void
+  }
+) {
   if (!inputElement) throw new Error('Element not found');
 
   let mask = new InputMask(options);
 
-  function handleInput(e: Event) {
-    const target = e.target as HTMLInputElement;
-    const value = target.value.replace(/\D/g, ''); // Remove non-digits
-    target.value = mask.apply(value);
+  function updateValue(val?: string) {
+    const value = (val || inputElement.value).replace(/\D/g, ''); // Remove non-digits
+    const maskedValue = mask.apply(value);
+    inputElement.value = maskedValue;
+    return maskedValue
+  }
+
+  function handleInput() {
+    const value = updateValue();
+    options.onInput?.({
+      name: inputElement.name,
+      value,
+      mask,
+      updateValue
+    });
   }
 
   inputElement.addEventListener('input', handleInput);
@@ -64,9 +94,11 @@ function maskInput(inputElement: HTMLInputElement, options: InputMaskOptions) {
   }
 
   return {
+    mask,
+    updateValue,
     destroy
   }
 }
 
 // Export the types and class
-export { maskInput, InputMask, type InputMaskOptions };
+export { maskInput, InputMask, type InputMaskOptions, type IMaskInputOnInput };

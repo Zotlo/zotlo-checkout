@@ -1,3 +1,5 @@
+import { getCardMask } from "./getCardMask";
+
 type ValidationRule = (value: any, params: any[]) => true | string;
 
 export interface ValidationResult {
@@ -7,7 +9,8 @@ export interface ValidationResult {
 
 interface ValidateInput {
   name: string;
-  validate: () => ValidationResult
+  validate: () => ValidationResult,
+  updateRule: (ruleString: string) => void;
 }
 
 export class Validator {
@@ -68,6 +71,22 @@ export const ValidationRules = {
       return 'Expiration Date is not valid.';
     }
     return true;
+  },
+  card(value: string) {
+    const card = getCardMask(value);
+    const filteredValue = value.replace(/\s/g, ''); // remove spaces
+    if (filteredValue.length === card.length) return true;
+    return 'Invalid card format';
+  },
+  length(value: string, params: any[]) {
+    const length = params[0];
+    if (value.length === length) return true;
+    return `Length must be ${length}`;
+  },
+  min(value: string, params: any[]) {
+    const length = params[0];
+    if (value.length >= length) return true;
+    return `Minimum ${length} characters required`;
   }
 };
 
@@ -77,8 +96,8 @@ export function validateInput(input: HTMLInputElement, options?: {
   validateOnBlur?: boolean;
   onValidate?: (result: ValidationResult) => void;
 }): ValidateInput {
-  const ruleString = input.getAttribute('data-rules') || '';
-  const rules = (ruleString?.split('|') || []);
+  let ruleString = input.getAttribute('data-rules') || '';
+  let rules = (ruleString?.split('|') || []);
 
   if (!validatorInstance) validatorInstance = new Validator();
   
@@ -88,12 +107,22 @@ export function validateInput(input: HTMLInputElement, options?: {
     validatorInstance.addRule(ruleName, ruleItem);
   }
 
-  function handleInput(): ValidationResult {
+  function updateRule(newRuleString: string) {
+    if (!newRuleString) return;
+    ruleString = newRuleString;
+    rules = ruleString?.split('|') || [];
+  }
+
+  function validate(): ValidationResult {
     const value = input.type === 'checkbox' ? input.checked : input.value;
     if (!validatorInstance) return { isValid: false, errors: [] };    
     const result = validatorInstance.validate(value, ruleString);
     options?.onValidate?.(result);
     return result;
+  }
+
+  function handleInput() {
+    validate();
   }
 
   if (input.type !== 'checkbox' && options?.validateOnBlur) {
@@ -104,6 +133,7 @@ export function validateInput(input: HTMLInputElement, options?: {
 
   return {
     name: input.name,
-    validate: handleInput
+    validate,
+    updateRule
   }
 }

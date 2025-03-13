@@ -19,14 +19,14 @@
 }
 
 .zotlo-checkout__input {
-  @apply bg-white rounded-8 border border-transparent px-8 focus-within:border-primary-500 focus-within:shadow-input;
+  @apply bg-white rounded-8 border border-transparent px-8 focus-within:border-primary-500 focus-within:shadow-input flex;
 
   &:not(.error):not(:focus-within) {
     @apply border-neutral-200;
   }
 
   input {
-    @apply border-none bg-transparent w-full text-14 font-medium text-neutral-900 h-40 py-0 px-8 focus:ring-0 focus:outline-none font-montserrat;
+    @apply border-none bg-transparent w-full text-14 font-medium text-neutral-900 h-40 py-0 px-8 focus:ring-0 focus:outline-none font-montserrat flex-1;
 
     &::placeholder {
       @apply text-neutral-500;
@@ -55,5 +55,14 @@
     input {
       @apply text-neutral-500 placeholder:text-neutral-500;
     }
+  }
+}
+
+.zotlo-checkout__input__left,
+.zotlo-checkout__input__right {
+  @apply flex items-center;
+
+  &:empty {
+    @apply hidden;
   }
 }
