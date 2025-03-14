@@ -4,6 +4,7 @@ import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, ValidationResult } from "../utils/validation";
 import { FORM_ITEMS } from "./fields";
 import { getCardMask } from "../utils/getCardMask";
+import { getCDNUrl } from "../utils/getCDNUrl";
 
 async function ZotloCheckout(params: IZotloCheckoutParams) {
   // TODO: initialize the checkout form here
@@ -88,7 +89,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams) {
           return;
         }
 
-        const imgUrl = `https://3platform-gen-test-17.stage.mobylonia.com/cards/{NAME}.svg`.replace(/\{NAME\}/, currentMask.icon)
+        const imgUrl = getCDNUrl('cards/{NAME}.svg').replace(/\{NAME\}/, currentMask.icon)
 
         if (rightSide.innerHTML) {
           const img = rightSide.querySelector('img');

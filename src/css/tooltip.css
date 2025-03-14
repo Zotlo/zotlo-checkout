@@ -1,0 +1,12 @@
+.zotlo-checkout__tooltip {
+  @apply absolute top-full -right-8 hidden;
+  filter: drop-shadow(0 0 7px rgba(0, 0, 0, 0.12));
+}
+
+.zotlo-checkout__tooltip__arrow {
+  @apply absolute right-8 text-white;
+}
+
+.zotlo-checkout__tooltip__content {
+  @apply bg-white rounded-8 mt-8 text-neutral-900 text-14 font-medium p-16;
+}

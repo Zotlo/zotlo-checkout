@@ -2,7 +2,9 @@ import form from '../html/form.html'
 import inputElement from '../html/input.html'
 import checkboxElement from '../html/checkbox.html'
 import buttonElement from '../html/button.html'
+import tooltipElement from '../html/tooltip.html'
 import { FORM_ITEMS } from './fields';
+import { getCDNUrl } from '../utils/getCDNUrl'
 
 function generateAttributes(attrs: Record<string, string | number | boolean>) {
   if (!attrs) return '';
@@ -12,6 +14,7 @@ function generateAttributes(attrs: Record<string, string | number | boolean>) {
 export function createInput(payload: {
   label: string;
   message?: string;
+  hint?: string;
   className?: string;
   attrs?: Record<string, string | number | boolean>;
   input: {
@@ -30,6 +33,10 @@ export function createInput(payload: {
     ? 'disabled'
     : ''
 
+  const inputHint = payload?.hint
+    ? `<span><img src="${getCDNUrl('cards/info.svg')}" alt="Info" class="size-16"></span>` + tooltipElement.replace(/\{\{CONTENT\}}/gm, payload.hint)
+    : ''
+
   return inputElement
     .replace(/\{\{TYPE\}\}/gm, payload.input.type || 'text')
     .replace(/\{\{CLASS_NAME\}\}/gm, payload.className || '')
@@ -39,6 +46,7 @@ export function createInput(payload: {
     .replace(/\{\{INPUT_NAME\}\}/gm, payload.input.name)
     .replace(/\{\{INPUT_ATTRIBUTES\}\}/gm, inputAttrs)
     .replace(/\{\{MESSAGE\}}/gm, payload.message || '')
+    .replace(/\{\{HINT\}}/gm, inputHint)
 }
 
 export function createCheckbox(payload: {
@@ -106,7 +114,7 @@ export function createForm(params: {
 
   const providerButtons = ['paypal', 'googlePay', 'applePay'].map(provider => {
     return createButton({
-      content: `<img src="https://zotlo-3platform-frontend.stage.mobylonia.com/editor/payment-providers/${provider}.png" alt="${provider}">`,
+      content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}.png`)}" alt="${provider}">`,
       className: 'provider '+provider,
       description: provider === 'paypal' ? 'The safer, easier way to pay' : undefined
     })

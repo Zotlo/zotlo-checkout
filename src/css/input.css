@@ -59,10 +59,19 @@
 }
 
 .zotlo-checkout__input__left,
-.zotlo-checkout__input__right {
+.zotlo-checkout__input__right,
+.zotlo-checkout__input__hint {
   @apply flex items-center;
 
   &:empty {
     @apply hidden;
+  }
+}
+
+.zotlo-checkout__input__hint {
+  @apply relative self-center cursor-pointer;
+
+  &:hover .zotlo-checkout__tooltip {
+    @apply block;
   }
 }

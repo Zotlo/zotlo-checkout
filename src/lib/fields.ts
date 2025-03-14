@@ -1,3 +1,5 @@
+import { getCDNUrl } from "../utils/getCDNUrl";
+
 export const FORM_ITEMS = {
   CARD_NUMBER: {
     label: 'Card Number',
@@ -30,6 +32,10 @@ export const FORM_ITEMS = {
   },
   SECURITY_CODE: {
     label: 'Security Code',
+    hint: `<div class="flex justify-center gap-8" style="width:104px;">
+    <img src="${getCDNUrl('cards/cvv.svg')}" style="width:48px;" alt="CVV">
+    <img src="${getCDNUrl('cards/cvvAmex.svg')}" style="width:48px;" alt="CVV Amex">
+    </div>`,
     input: {
       name: 'cardCVV',
       placeholder: 'CVV',
