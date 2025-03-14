@@ -1,5 +1,7 @@
 import fsp from 'fs/promises';
 import { PluginOption } from 'vite';
+import minify from '@node-minify/core';
+import htmlMinifier from '@node-minify/html-minifier';
 
 const htmlFileRegex = /\.html$/;
 const postfixRE = /[?#].*$/s
@@ -45,12 +47,18 @@ function htmlImportBuild(): PluginOption {
     async load(id) {
       if (!id.endsWith(postfix)) return;
 
-      let htmlContent = await fsp.readFile(cleanUrl(id));
-      /* htmlContent = minifyHtml.minify(htmlContent, {
-        keep_spaces_between_attributes: true,
-      }); */
+      const htmlContent = await fsp.readFile(cleanUrl(id));
+      const minified = await minify({
+        compressor: htmlMinifier,
+        content: htmlContent.toString('utf-8'),
+        options: {
+          ignoreCustomFragments: [ /<%[\s\S]*?%>/, /<\?[\s\S]*?\?>/, /\{\{(.*?)\}\}/],
+          quoteCharacter: '"',
+          removeAttributeQuotes: false
+        }
+      });
 
-      return `export default ${JSON.stringify(htmlContent.toString('utf-8'))}`;
+      return `export default \`${minified}\``;
     },
   }
 }
