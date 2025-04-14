@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite'
 import importHtml from './plugins/importHtml';
+import dts from "vite-plugin-dts";
 
 export default defineConfig({
   build: {
     lib: {
-      entry: 'src/main.prod.ts',
+      entry: 'src/zotlo-checkout.ts',
       name: 'ZotloCheckout',
       fileName(format) {
         const baseName = 'zotlo-checkout';
@@ -25,7 +25,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    tailwindcss(),
-    importHtml()
+    importHtml(),
+    dts()
   ]
 });

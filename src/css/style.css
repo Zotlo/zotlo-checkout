@@ -1,64 +1,149 @@
-@config "../../tailwind.config.mjs";
-@import "tailwindcss";
+
 @import "./input.css";
 @import "./checkbox.css";
 @import "./tooltip.css";
 
-:root {
-  line-height: 1.5;
-  font-weight: 400;
-
+.zotlo-checkout {
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: Montserrat, sans-serif;
+  background-color: white;
+  display: grid;
+  gap: 24px;
+  min-width: 320px;
+  max-width: 460px;
 }
 
-.zotlo-checkout {
-  @apply text-[16px] p-16 sm:p-24 sm:border sm:border-neutral-200 rounded-8 font-montserrat;
-
-  *, ::after, ::before, ::backdrop, ::file-selector-button {
-    @apply box-border;
-  }
-
-  a {
-    @apply text-[#007aff] hover:underline;
-  }
-
+.zotlo-checkout *, 
+.zotlo-checkout::after, 
+.zotlo-checkout::before, 
+.zotlo-checkout::backdrop, 
+.zotlo-checkout::file-selector-button {
+  box-sizing: border-box;
 }
 
-.zotlo-checkout__summary {
-  @apply flex justify-between mb-24 mt-32 lg:mb-32 text-neutral-900 text-[18px] font-semibold;
+.zotlo-checkout img {
+  max-width: 100%;
+}
+
+.zotlo-checkout a { color: #007AFF; }
+.zotlo-checkout a:hover {
+  text-decoration: underline;
+}
+
+.zotlo-checkout__form__col2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.zotlo-checkout__total {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  margin-top: 32px;
+  color: #151B26;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.zotlo-checkout__card-logos {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
 }
 
 .zotlo-checkout__button {
-  @apply font-bold px-16 py-8 inline-flex bg-primary-500 w-full text-white rounded-8 text-14 justify-center items-center cursor-pointer min-h-48;
-  
-  &.provider {
-    @apply bg-[black];
-    
-    img {
-      @apply max-h-24;
-    }
-    
-    &.paypal {
-      @apply bg-[#f6c444];
-    }
-  }
+  font-weight: 700;
+  padding: 8px 16px;
+  display: inline-flex;
+  background-color: #4329CC;
+  width: 100%;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  min-height: 48px;
+  border: 0;
 }
-.zotlo-checkout__button-desc {
-  @apply block mt-4 text-center text-12 font-semibold;
 
-  &:empty {
-    @apply hidden;
-  }
+.zotlo-checkout__button.provider {
+  background-color: #000000;
+}
+
+.zotlo-checkout__button.provider img {
+  max-height: 24px;
+}
+
+.zotlo-checkout__button.provider.paypal {
+  background-color: #f6c444;
+}
+
+.zotlo-checkout__button-desc {
+  display: block;
+  margin-top: 4px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.zotlo-checkout__button-desc:empty {
+  display: none;
 }
 
 .zotlo-checkout__seperator {
-  @apply flex items-center before:h-[1px] before:grow before:bg-neutral-200 before:content-[''] after:h-[1px] after:grow after:bg-neutral-200 after:content-[''];
+  display: flex;
+  align-items: center;
+}
 
-  span {
-    @apply shrink-0 px-[6px] text-12 text-neutral-500;
+.zotlo-checkout__seperator::before, 
+.zotlo-checkout__seperator::after {
+  content: "";
+  height: 1px;
+  flex-grow: 1;
+  background-color: #E7EAEE;
+}
+
+.zotlo-checkout__seperator span {
+  flex-shrink: 0;
+  padding: 0 16px;
+  font-size: 12px;
+  color: #818A9C;
+}
+
+.zotlo-checkout__footer {
+  font-size: 10px;
+  color: #737380;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+}
+
+.zotlo-checkout__footer nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .zotlo-checkout {
+    padding: 24px;
+    border: 1px solid #E7EAEE;
   }
 }
 
+@media (min-width: 1024px) {
+  .zotlo-checkout__total {
+    margin-bottom: 32px;
+  }
+}

@@ -13,22 +13,20 @@
   ],
   "main": "./dist/zotlo-checkout.umd.cjs",
   "module": "./dist/zotlo-checkout.js",
+  "types": "./dist/zotlo-checkout.d.ts",
   "exports": {
     ".": {
       "import": "./dist/zotlo-checkout.js",
       "require": "./dist/zotlo-checkout.umd.cjs"
-    }
+    },
+    "./dist/zotlo-checkout.css": "./dist/zotlo-checkout.css"
   },
   "devDependencies": {
     "@node-minify/core": "^9.0.2",
     "@node-minify/html-minifier": "^9.0.1",
-    "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/vite": "^4.0.12",
     "autoprefixer": "^10.4.21",
     "typescript": "~5.7.2",
-    "vite": "^6.2.0"
-  },
-  "dependencies": {
-    "tailwindcss": "^4.0.12"
+    "vite": "^6.2.0",
+    "vite-plugin-dts": "^4.5.3"
   }
 }

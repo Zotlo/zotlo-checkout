@@ -1,12 +1,23 @@
 .zotlo-checkout__tooltip {
-  @apply absolute top-full -right-8 hidden;
+  position: absolute;
+  top: 100%;
+  right: -8px;
+  display: none;
   filter: drop-shadow(0 0 7px rgba(0, 0, 0, 0.12));
 }
 
 .zotlo-checkout__tooltip__arrow {
-  @apply absolute right-8 text-white;
+  position: absolute;
+  right: 8px;
+  color: white;
 }
 
 .zotlo-checkout__tooltip__content {
-  @apply bg-white rounded-8 mt-8 text-neutral-900 text-14 font-medium p-16;
+  background-color: white;
+  border-radius: 8px;
+  margin-top: 8px;
+  color: #151B26;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 16px;
 }

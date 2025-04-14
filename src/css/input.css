@@ -1,77 +1,131 @@
 .zotlo-checkout__form {
-  @apply flex flex-col gap-[16px];
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .zotlo-checkout__label {
-  @apply flex flex-col gap-[8px] text-14 font-medium text-neutral-900;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #151B26;
 }
 
 .zotlo-checkout__hint {
-  @apply text-neutral-500 text-12;
+  color: #818A9C;
+  font-size: 12px;
+}
 
-  &.error {
-    @apply text-error-500;
-  }
+.zotlo-checkout__hint__toggle {
+  display: flex;
+  align-items: center;
+}
 
-  &:empty {
-    @apply hidden;
-  }
+.zotlo-checkout__hint.error {
+  color: #E13023;
+}
+.zotlo-checkout__hint:empty {
+  display: none;
 }
 
 .zotlo-checkout__input {
-  @apply bg-white rounded-8 border border-transparent px-8 focus-within:border-primary-500 focus-within:shadow-input flex;
-
-  &:not(.error):not(:focus-within) {
-    @apply border-neutral-200;
-  }
-
-  input {
-    @apply border-none bg-transparent w-full text-14 font-medium text-neutral-900 h-40 py-0 px-8 focus:ring-0 focus:outline-none font-montserrat flex-1;
-
-    &::placeholder {
-      @apply text-neutral-500;
-    }
-  }
-
-  &.error {
-    @apply border-error-500 focus-within:border-error-500 focus-within:shadow-input-error;
-
-    input {
-      @apply text-error-500;
-
-      &::placeholder {
-        @apply text-error-300;
-      }
-    }
-
-    ~ .zotlo-checkout__hint {
-      @apply text-error-500;
-    }
-  }
-
-  &.disabled {
-    @apply border-neutral-200 bg-neutral-100 text-neutral-100;
-
-    input {
-      @apply text-neutral-500 placeholder:text-neutral-500;
-    }
-  }
+  display: flex;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0 8px;
 }
 
+.zotlo-checkout__input:focus-within {
+  border-color: #4329CC;
+  box-shadow: 0 0 0 0.25rem #EDEFFC;
+}
+
+.zotlo-checkout__input:not(.error):not(:focus-within) {
+  border-color: #E7EAEE;
+}
+
+/* INPUT */ 
+.zotlo-checkout__input input {
+  border: none;
+  background-color: transparent;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 500;
+  color: #151B26;
+  height: 40px;
+  padding: 0 8px;
+  font-family: Montserrat, sans-serif;
+  flex: 1;
+}
+
+.zotlo-checkout__input input:focus {
+  outline-style: none;
+}
+.zotlo-checkout__input input::placeholder {
+  color: #818A9C;
+}
+
+/* INPUT ERROR */ 
+.zotlo-checkout__input.error {
+  border-color: #E13023;
+}
+
+.zotlo-checkout__input.error:focus-within {
+  border-color: #E13023;
+  box-shadow: 0 0 0 0.25rem #FFF1F0;
+}
+
+.zotlo-checkout__input.error input {
+  color: #E13023;
+}
+
+.zotlo-checkout__input.error input::placeholder {
+  color: #FF7F76;
+}
+
+.zotlo-checkout__input.error ~ .zotlo-checkout__hint {
+  color: #E13023;
+}
+
+/* INPUT DISABLED */ 
+.zotlo-checkout__input.disabled {
+  border-color: #E7EAEE;
+  background-color: #F6F7F9;
+  color: #F6F7F9;
+}
+
+.zotlo-checkout__input.disabled input {
+  color: #818A9C;
+}
+
+.zotlo-checkout__input.disabled input::placeholder {
+  color: #818A9C;
+}
+
+/* INPUT SIDE ICONS */ 
 .zotlo-checkout__input__left,
 .zotlo-checkout__input__right,
 .zotlo-checkout__input__hint {
-  @apply flex items-center;
-
-  &:empty {
-    @apply hidden;
-  }
+  display: flex;
+  align-items: center;
 }
 
-.zotlo-checkout__input__hint {
-  @apply relative self-center cursor-pointer;
+.zotlo-checkout__input__left:empty,
+.zotlo-checkout__input__right:empty,
+.zotlo-checkout__input__hint:empty {
+  display: none;
+}
 
-  &:hover .zotlo-checkout__tooltip {
-    @apply block;
-  }
+/* INPUT SIDE HINT */ 
+.zotlo-checkout__input__hint {
+  position: relative;
+  align-self: center;
+  cursor: pointer;
+}
+
+.zotlo-checkout__input__hint:hover .zotlo-checkout__tooltip {
+  display: block;
 }
