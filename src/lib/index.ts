@@ -1,13 +1,20 @@
-import type { IZotloCheckoutParams } from "./types"
+import type { FormConfig, IZotloCheckoutParams, IZotloCheckoutReturn } from "./types"
 import { createForm } from "./create";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, ValidationResult } from "../utils/validation";
 import { FORM_ITEMS } from "./fields";
 import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
+import { createStyle } from "../utils/createStyle";
+import { loadFontsOnPage } from "../utils/fonts";
 
-async function ZotloCheckout(params: IZotloCheckoutParams) {
+async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   // TODO: initialize the checkout form here
+  let config = { settings: {}, design: {} } as FormConfig;
+  let containerId = '';
+  let subscriberId = '';
+  const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
+  const validations: Record<string, ReturnType<typeof validateInput>> = {};
 
   function getFormValues(form: HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
@@ -52,16 +59,79 @@ async function ZotloCheckout(params: IZotloCheckoutParams) {
     }
   }
 
-  function mount(id: string) {
-    const form = createForm({ subscriberId: '' });
-    const container = document.getElementById(id)
-    if (container) container.innerHTML = form;
+  function validateForm() {
+    const errors = []
+    for (const validation of Object.values(validations)) {
+      const result = validation.validate();
+      if (!result.isValid) {
+        errors.push({ name: validation.name, result });
+      }
+    }
 
+    return {
+      isValid: errors.length === 0,
+      errors
+    }
+  }
+
+  function getContainerElement() {
+    if (!containerId) return null;
+    return  document.getElementById(containerId);
+  }
+
+  function handleForm(e: Event) {
+    e.preventDefault();
+    const validation = validateForm();
+
+    if (!validation.isValid) return;
+
+    const result = getFormValues(e.target as HTMLFormElement);
+    const [cardExpirationMonth, cardExpirationYear] = result.cardExpiration.split('/');
+
+    const payload = {
+      providerKey: 'creditCard',
+      packageId: params.packageId,
+      acceptPolicy: result.acceptPolicy,
+      creditCardDetails: {
+        email: result.subscriberId,
+        cardNumber: result.cardNumber.replace(/\s/g, ''),
+        cardHolder: result.cardHolder,
+        cardCVV: result.cardCVV,
+        cardExpirationMonth: cardExpirationMonth,
+        cardExpirationYear: cardExpirationYear
+      }
+    }
+
+    console.log('Form submitted!', payload);
+
+    params.events?.onSubmit?.();
+  }
+
+  function refresh() {
+    if (!containerId) return;
+
+    if ((globalThis as any)?.getZotloConfig) {
+      config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
+    }
+
+    // Destroy previous form events
+    destroy();
+
+    const form = createForm({ subscriberId, config });
+    const style = createStyle(config);
+    const container = getContainerElement();
+
+    loadFontsOnPage([config.design.fontFamily]);
+
+    if (container) container.innerHTML = `<style>${style}</style>` + form;
+
+    init();
+  }
+
+  function init() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     const maskInputs = formElement?.querySelectorAll('input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll('input[data-rules]');
-    const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
-    const validations: Record<string, ReturnType<typeof validateInput>> = {};
 
     function formatCardMask(item: HTMLInputElement, options: IMaskInputOnInput) {
       const { value, mask: inputMask, updateValue } = options;
@@ -133,49 +203,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams) {
       }
     }
 
-    function validateForm() {
-      const errors = []
-      for (const validation of Object.values(validations)) {
-        const result = validation.validate();
-        if (!result.isValid) {
-          errors.push({ name: validation.name, result });
-        }
-      }
-
-      return {
-        isValid: errors.length === 0,
-        errors
-      }
-    }
-
-    function handleForm(e: Event) {
-      e.preventDefault();
-      const validation = validateForm();
-
-      if (!validation.isValid) return;
-
-      const result = getFormValues(e.target as HTMLFormElement);
-      const [cardExpirationMonth, cardExpirationYear] = result.cardExpiration.split('/');
-
-      const payload = {
-        providerKey: 'creditCard',
-        packageId: params.packageId,
-        acceptPolicy: result.acceptPolicy,
-        creditCardDetails: {
-          email: result.subscriberId,
-          cardNumber: result.cardNumber.replace(/\s/g, ''),
-          cardHolder: result.cardHolder,
-          cardCVV: result.cardCVV,
-          cardExpirationMonth: cardExpirationMonth,
-          cardExpirationYear: cardExpirationYear
-        }
-      }
-
-      console.log('Form submitted!', payload);
-
-      params.events?.onSubmit?.();
-    }
-
     applyMaskAndValidation();
 
     formElement?.addEventListener('submit', handleForm);
@@ -183,8 +210,33 @@ async function ZotloCheckout(params: IZotloCheckoutParams) {
     params.events?.onLoad?.();
   }
 
+  function destroy() {
+    const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+    formElement?.removeEventListener('submit', handleForm);
+
+    for (const mask of Object.values(maskItems)) {
+      mask.destroy();
+    }
+
+    for (const item of Object.values(validations)) {
+      item.destroy();
+    }
+
+    const container = getContainerElement();
+    if (container) container.innerHTML = '';
+  }
+
+  function mount(id: string) {
+    if (containerId) return;
+
+    containerId = id;
+    refresh();
+  }
+
   return {
-    mount
+    mount,
+    refresh,
+    destroy
   }
 }
 

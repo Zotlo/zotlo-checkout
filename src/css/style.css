@@ -4,18 +4,51 @@
 @import "./tooltip.css";
 
 .zotlo-checkout {
+  --zc-fontFamily: inherit;
+  --zc-form-backgroundColor: #FFFFFF;
+  --zc-form-borderRadius: 8px;
+  --zc-form-borderWidth: 1px;
+  --zc-form-borderColor: #E7EAEE;
+  --zc-form-input-label-display: block;
+  --zc-form-input-label-color: #000000;
+  --zc-form-input-label-fontSize: 14px;
+  --zc-form-input-label-fontWeight: 500;
+  --zc-form-input-label-fontStyle: normal;
+  --zc-form-input-label-textDecoration: none;
+  --zc-form-consent-color: #000000;
+  --zc-form-consent-fontSize: 14px;
+  --zc-form-consent-fontWeight: normal;
+  --zc-form-consent-fontStyle: normal;
+  --zc-form-consent-textDecoration: none;
+  --zc-form-totalPrice-color: #151B26;
+  --zc-form-submit-color: #FFFFFF;
+  --zc-form-submit-borderColor: #4329CC;
+  --zc-form-submit-backgroundColor: #4329CC;
+  --zc-form-submit-borderWidth: 0px;
+  --zc-form-submit-borderRadius: 8px;
+  --zc-form-submit-fontWeight: normal;
+  --zc-form-submit-fontStyle: normal;
+  --zc-form-submit-textDecoration: none;
+  --zc-form-submit-hover-color: #FFFFFF;
+  --zc-form-submit-hover-borderColor: #301BA3;
+  --zc-form-submit-hover-backgroundColor: #301BA3;
+  --zc-footer-color: #737380;
+  --zc-footer-fontSize: 10px;
+  --zc-form-provider-backgroundColor: #000000;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
   
   line-height: 1.5;
   font-weight: 400;
   font-size: 16px;
   padding: 16px;
-  border-radius: 8px;
-  font-family: Montserrat, sans-serif;
-  background-color: white;
+  border-radius: var(--zc-form-borderRadius);
+  font-family: var(--zc-fontFamily, inherit);
+  background-color: var(--zc-form-backgroundColor);
   display: grid;
   gap: 24px;
   min-width: 320px;
@@ -28,6 +61,7 @@
 .zotlo-checkout::backdrop, 
 .zotlo-checkout::file-selector-button {
   box-sizing: border-box;
+  font-family: var(--zc-fontFamily, inherit);
 }
 
 .zotlo-checkout img {
@@ -45,12 +79,20 @@
   gap: 16px;
 }
 
+.zotlo-checkout__agreement {
+  color: var(--zc-form-consent-color);
+  font-size: var(--zc-form-consent-fontSize);
+  font-weight: var(--zc-form-consent-fontWeight);
+  font-style: var(--zc-form-consent-fontStyle);
+  text-decoration: var(--zc-form-consent-textDecoration);
+}
+
 .zotlo-checkout__total {
   display: flex;
   justify-content: space-between;
   margin-bottom: 24px;
   margin-top: 32px;
-  color: #151B26;
+  color: var(--zc-form-totalPrice-color);
   font-size: 18px;
   font-weight: 600;
 }
@@ -78,7 +120,7 @@
 }
 
 .zotlo-checkout__button.provider {
-  background-color: #000000;
+  background-color: var(--zc-form-provider-backgroundColor);
 }
 
 .zotlo-checkout__button.provider img {
@@ -99,6 +141,22 @@
 
 .zotlo-checkout__button-desc:empty {
   display: none;
+}
+
+.zotlo-checkout__cardSubmit {
+  color: var(--zc-form-submit-color);
+  background-color: var(--zc-form-submit-backgroundColor);
+  border: var(--zc-form-submit-borderWidth) solid var(--zc-form-submit-borderColor);
+  border-radius: var(--zc-form-submit-borderRadius);
+  font-weight: var(--zc-form-submit-fontWeight);
+  font-style: var(--zc-form-submit-fontStyle);
+  text-decoration: var(--zc-form-submit-textDecoration);
+}
+
+.zotlo-checkout__cardSubmit:hover {
+  color: var(--zc-form-submit-hover-color);
+  background-color: var(--zc-form-submit-hover-backgroundColor);
+  border-color: var(--zc-form-submit-hover-borderColor);
 }
 
 .zotlo-checkout__seperator {
@@ -122,11 +180,11 @@
 }
 
 .zotlo-checkout__footer {
-  font-size: 10px;
-  color: #737380;
   text-align: center;
   display: grid;
   gap: 12px;
+  color: var(--zc-footer-color);
+  font-size: var(--zc-footer-fontSize)
 }
 
 .zotlo-checkout__footer nav {
@@ -138,7 +196,7 @@
 @media (min-width: 640px) {
   .zotlo-checkout {
     padding: 24px;
-    border: 1px solid #E7EAEE;
+    border: var(--zc-form-borderWidth, 1px) solid var(--zc-form-borderColor, #E7EAEE);
   }
 }
 

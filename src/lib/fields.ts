@@ -32,7 +32,7 @@ export const FORM_ITEMS = {
   },
   SECURITY_CODE: {
     label: 'Security Code',
-    hint: `<div class="flex justify-center gap-8" style="width:104px;">
+    hint: `<div style="width:104px;display:flex;justify-content:center;gap:8px;">
     <img src="${getCDNUrl('cards/cvv.svg')}" style="width:48px;" alt="CVV">
     <img src="${getCDNUrl('cards/cvvAmex.svg')}" style="width:48px;" alt="CVV Amex">
     </div>`,
@@ -55,6 +55,7 @@ export const FORM_ITEMS = {
   },
   AGREEMENT_CHECKBOX: {
     label: `I read and agree to <a target="_blank" href="#">distance sales agreement</a> and <a href="#" target="_blank">information form</a>`,
+    className: 'zotlo-checkout__agreement',
     input: {
       name: 'acceptPolicy',
       'data-rules': 'required',

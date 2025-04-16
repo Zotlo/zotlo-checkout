@@ -5,6 +5,7 @@ import buttonElement from '../html/button.html'
 import tooltipElement from '../html/tooltip.html'
 import { FORM_ITEMS } from './fields';
 import { getCDNUrl } from '../utils/getCDNUrl'
+import type { FormConfig } from './types'
 
 function generateAttributes(attrs: Record<string, string | number | boolean>) {
   if (!attrs) return '';
@@ -87,7 +88,9 @@ export function createButton(payload: {
 
 export function createForm(params: {
   subscriberId: string;
+  config: FormConfig;
 }) {
+  const { subscriberId, config } = params;
   let newForm = form;
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
@@ -95,9 +98,9 @@ export function createForm(params: {
       ...inputOptions,
       input: {
         ...inputOptions.input,
-        ...(key === 'SUBSCRIBER_ID' && params?.subscriberId ? {
-          value: params?.subscriberId,
-          disabled: !!params?.subscriberId || undefined
+        ...(key === 'SUBSCRIBER_ID' && subscriberId ? {
+          value: subscriberId,
+          disabled: !!subscriberId || undefined
         } : {})
       }
     }
@@ -109,19 +112,33 @@ export function createForm(params: {
   
   const cardSubmit = createButton({
     content: 'Start {TRIAL_PERIOD} Trial',
+    className: 'zotlo-checkout__cardSubmit',
     attrs: { type: 'submit' }
   })
 
   const providerButtons = ['paypal', 'googlePay', 'applePay'].map(provider => {
+    const canDarkMode = config.design.darkMode && ['googlePay', 'applePay'].includes(provider)
+    const postfix = canDarkMode ? '_black' : '';
+
     return createButton({
-      content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}.png`)}" alt="${provider}">`,
+      content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
       className: 'provider '+provider,
-      description: provider === 'paypal' ? 'The safer, easier way to pay' : undefined
+      description: provider === 'paypal' ? 'The safer, easier way to pay' : undefined,
     })
   }).join('');
 
+  const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer ? `
+  <div>
+    Supported by Online reseller & Merchant of Record, Zotlo.com<br/>
+    <nav>
+      <a href="#">Terms of service</a>
+      <a href="#">Privacy policy</a>
+    </nav>
+  </div>` : '';
+
   return newForm
     .replace(/\{\{CARD_SUBMIT\}\}/gm, cardSubmit)
-    .replace(/\{\{TOTAL_PRICE\}\}/gm, '0.00USD')
+    .replace(/\{\{TOTAL_PRICE\}\}/gm, '0.00 USD')
     .replace(/\{\{PROVIDERS\}\}/gm, providerButtons)
+    .replace(/\{\{DISCLAIMER\}\}/gm, disclaimer)
 }

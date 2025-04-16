@@ -9,8 +9,9 @@ export interface ValidationResult {
 
 interface ValidateInput {
   name: string;
-  validate: () => ValidationResult,
+  validate: () => ValidationResult;
   updateRule: (ruleString: string) => void;
+  destroy: () => void;
 }
 
 export class Validator {
@@ -131,9 +132,15 @@ export function validateInput(input: HTMLInputElement, options?: {
     input.addEventListener('input', handleInput);
   }
 
+  function destroy() {
+    input.removeEventListener('blur', handleInput);
+    input.removeEventListener('input', handleInput);
+  }
+
   return {
     name: input.name,
     validate,
-    updateRule
+    updateRule,
+    destroy
   }
 }
