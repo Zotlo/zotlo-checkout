@@ -1,0 +1,113 @@
+.zotlo-checkout__select {
+  position: relative;
+}
+
+.zotlo-checkout__select select{
+  visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.zotlo-checkout__select__toggle {
+  display: flex;
+  align-items: center;
+}
+
+.zotlo-checkout__select__toggle::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg version='1.1' role='presentation' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='20' height='20'%3E%3Cpath d='M8.12266 9.00246L12.0027 12.8825L15.8827 9.00246C16.2727 8.61246 16.9027 8.61246 17.2927 9.00246C17.6827 9.39246 17.6827 10.0225 17.2927 10.4125L12.7027 15.0025C12.3127 15.3925 11.6827 15.3925 11.2927 15.0025L6.70266 10.4125C6.31266 10.0225 6.31266 9.39246 6.70266 9.00246C7.09266 8.62246 7.73266 8.61246 8.12266 9.00246Z' fill='%23000000'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.zotlo-checkout__select[data-toggle="open"] .zotlo-checkout__select__toggle::after {
+  rotate: 180deg;
+}
+
+.zotlo-checkout__select__list {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 5px;
+  background-color: #FFFFFF;
+  padding: 8px;
+  box-shadow: 0 0.25rem 1rem rgba(27,33,44,.08);
+  z-index: 20;
+  width: 250px;
+  overflow: auto;
+  border-radius: 8px;
+  max-height: 192px;
+}
+
+.zotlo-checkout__select__list__item {
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  min-height: 48px;
+  text-align: left;
+  color: #151b26;
+  gap: 10px;
+}
+
+.zotlo-checkout__select__list__item:hover,
+.zotlo-checkout__select__list__item:focus {
+  color: #151b26;
+  background-color: #f6f7f9;
+}
+
+.zotlo-checkout__select__list__item[data-selected="true"] {
+  color: #FFFFFF;
+  background-color: #56c4d6;
+}
+
+.zotlo-checkout__select__list__item__img {
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: 50%;
+  display: flex;
+  vertical-align: middle;
+  justify-content: center;
+}
+
+.zotlo-checkout__select__list__item__img img{
+  object-fit: cover;
+  width: 100%;
+}
+
+.zotlo-checkout__select__list__item__text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zotlo-checkout__select[data-toggle="open"] .zotlo-checkout__select__list {
+  display: block;
+}
+
+.zotlo-checkout__select__toggle .zotlo-checkout__select__list__item {
+  min-height: auto;
+  background-color: transparent;
+  color: #151B26;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 0 0 8px;
+  font-size: 14px;
+  border-radius: 0;
+}
+
+.zotlo-checkout__select.disabled {
+  pointer-events: none;
+}

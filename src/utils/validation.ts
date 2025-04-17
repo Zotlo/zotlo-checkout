@@ -1,3 +1,4 @@
+import { getCountryByCode, getCountryCodeByNumber } from "./index";
 import { getCardMask } from "./getCardMask";
 
 type ValidationRule = (value: any, params: any[]) => true | string;
@@ -88,6 +89,16 @@ export const ValidationRules = {
     const length = params[0];
     if (value.length >= length) return true;
     return `Minimum ${length} characters required`;
+  },
+  phone(value: string) {
+    const clearPattern = /[\s-()+]/g
+    const code = getCountryCodeByNumber(value, false);
+    const country = getCountryByCode(code);
+
+    if (value.replace(clearPattern, '').length !== country?.maskLength) {
+      return 'Invalid phone number format';
+    }
+    return true;
   }
 };
 

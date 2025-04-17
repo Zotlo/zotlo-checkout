@@ -28,23 +28,20 @@ class InputMask {
 
     for (let i = 0; i < this.options.mask.length && valueIndex < value.length; i++) {
       const maskChar: string = this.options.mask[i];
-      
+      const valueChar: string = value[valueIndex];
+
       if (maskChar === '#') {
-        if (this.options.validChars.test(value[valueIndex])) {
-          maskedValue += value[valueIndex];
+        if (this.options.validChars.test(valueChar)) {
+          maskedValue += valueChar;
           valueIndex++;
         }
-
-        /* if (valueIndex < value.length) {
-          if (this.options.validChars.test(value[valueIndex])) {
-            maskedValue += value[valueIndex];
-            valueIndex++;
-          }
-        } else {
-          maskedValue += this.options.maskChar;
-        } */
       } else {
         maskedValue += maskChar;
+
+        // If the mask character is a placeholder, we need to skip the value character
+        if (valueChar === maskChar) {
+          valueIndex++;
+        }
       }
     }
 

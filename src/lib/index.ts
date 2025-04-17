@@ -7,14 +7,16 @@ import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
+import { getCountryByCode, getMaskByCode } from "../utils";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   // TODO: initialize the checkout form here
-  let config = { settings: {}, design: {} } as FormConfig;
+  let config = { settings: { registration: 'phoneNumber' }, design: {} } as FormConfig;
   let containerId = '';
   let subscriberId = '';
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
+  const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
 
   function getFormValues(form: HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
@@ -102,7 +104,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       }
     }
 
-    console.log('Form submitted!', payload);
+    console.log('Form submitted!', payload, result);
 
     params.events?.onSubmit?.();
   }
@@ -128,10 +130,105 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     init();
   }
 
+  function loadSelectbox(item: HTMLElement, options: {
+    onSelect: (value: string) => void;
+  }) {
+    const toggle = item.querySelector('[data-select-toggle]') as HTMLElement;
+    const items = item.querySelectorAll('[data-select-list] [data-select-item]') as NodeListOf<HTMLElement>;
+    const selectbox = item.querySelector('select') as HTMLSelectElement;
+
+    function closeSelectbox() {
+      item.setAttribute('data-toggle', 'closed');
+    }
+
+    function clickOutside(e: MouseEvent) {
+      const closest = (e.target as HTMLElement).parentElement?.closest('[data-select]')
+      if (!closest) {
+        closeSelectbox();
+        document.removeEventListener('click', clickOutside);
+      }
+    }
+
+    function toggleSelectbox() {
+      const dataToggle = item.getAttribute('data-toggle') === 'open' ? 'closed' : 'open';
+      item.setAttribute('data-toggle', dataToggle);
+
+      if (dataToggle === 'open') {
+        document.addEventListener('click', clickOutside);
+        item.querySelector('[data-select-list] [data-selected="true"]')?.scrollIntoView({ block: 'center' });
+      }
+    }
+
+    function selectItem(this: HTMLElement) {
+      const target = this;
+      const value = target?.getAttribute('data-value');
+
+      for (const item of items) {
+        item.setAttribute('data-selected', 'false');
+      }
+
+      target.setAttribute('data-selected', 'true');
+      const textElement = target.querySelector('[data-select-text]') as HTMLElement;
+      toggle.innerHTML = target.outerHTML.replace(new RegExp(textElement.innerText, 'gm'), value || '');
+      selectbox.value = value || '';
+      options.onSelect(value || '');
+
+      closeSelectbox();
+    }
+
+    function init() {
+      toggle?.addEventListener('click', toggleSelectbox);
+
+      for (const item of items) {
+        item.addEventListener('click', selectItem);
+      }
+    }
+
+    function destroy() {
+      toggle.removeEventListener('click', toggleSelectbox);
+      document.removeEventListener('click', clickOutside);
+
+      for (const item of items) {
+        item.removeEventListener('click', selectItem);
+      }
+    }
+
+    init();
+
+    return {
+      init,
+      destroy
+    }
+  }
+
   function init() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     const maskInputs = formElement?.querySelectorAll('input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll('input[data-rules]');
+    const selectboxes = getContainerElement()?.querySelectorAll('[data-select]');
+
+    function updatePhoneMask(code: string, input: HTMLInputElement) {
+      const country = getCountryByCode(code);
+  
+      if (country) {
+        const mask = getMaskByCode(country);
+        input.setAttribute('data-mask', mask);
+        maskItems[input.name].mask.updateOptions({ mask });
+        maskItems[input.name].updateValue();
+      }
+    }
+
+    for (const item of selectboxes as NodeListOf<HTMLElement>) {
+      const name = item.querySelector('select')?.name || Math.random().toString(36).substring(2, 15);
+      selectboxList[name] = loadSelectbox(item, {
+        onSelect(value) {
+          const input = item.parentElement?.closest('.zotlo-checkout__input')?.querySelector('input[data-mask]') as HTMLInputElement;
+          if (input && Object.prototype.hasOwnProperty.call(input.dataset, 'phone')) {
+            updatePhoneMask(value, input);
+          }
+        }
+      });
+    }
 
     function formatCardMask(item: HTMLInputElement, options: IMaskInputOnInput) {
       const { value, mask: inputMask, updateValue } = options;
@@ -184,6 +281,11 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
               }
             }
           });
+
+          if (FORM_ITEMS.SUBSCRIBER_ID_PHONE.input.name === item.name) {
+            // Update for initial value
+            maskItems[item.name].updateValue();
+          }
         }
       }
   
@@ -219,6 +321,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     for (const item of Object.values(validations)) {
+      item.destroy();
+    }
+
+    for (const item of Object.values(selectboxList)) {
       item.destroy();
     }
 

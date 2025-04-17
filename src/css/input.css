@@ -45,6 +45,7 @@
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0 8px;
+  align-items: center;
 }
 
 .zotlo-checkout__input:focus-within {
@@ -66,12 +67,12 @@
   color: #151B26;
   height: 40px;
   padding: 0 8px;
-  font-family: Montserrat, sans-serif;
   flex: 1;
 }
 
 .zotlo-checkout__input input:focus {
   outline-style: none;
+  box-shadow: none;
 }
 .zotlo-checkout__input input::placeholder {
   color: #818A9C;
@@ -138,4 +139,24 @@
 
 .zotlo-checkout__input__hint:hover .zotlo-checkout__tooltip {
   display: block;
+}
+
+.zotlo-checkout__input .zotlo-checkout__select {
+  height: 40px;
+}
+.zotlo-checkout__input .zotlo-checkout__select__toggle {
+  height: 100%;
+}
+
+.zotlo-checkout__input .zotlo-checkout__select__toggle .zotlo-checkout__select__list__item .zotlo-checkout__select__list__item__img {
+  display: flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  flex-basis: 16px;
+  overflow: hidden;
+  border-radius: 50%;
+  justify-content: center;
+  vertical-align: middle;
 }

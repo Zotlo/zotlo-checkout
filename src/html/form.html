@@ -10,8 +10,8 @@
         {{SECURITY_CODE}}
       </div>
 
-      {{SUBSCRIBER_ID}}
-
+      {{SUBSCRIBER_ID_EMAIL}}
+      {{SUBSCRIBER_ID_PHONE}}
       {{AGREEMENT_CHECKBOX}}
     </div>
 
@@ -23,13 +23,13 @@
     <div>
       {{CARD_SUBMIT}}
       <div class="zotlo-checkout__card-logos">
-        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/visa.png" alt="visa"></div>
-        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/mastercard.png" alt="mastercard"></div>
-        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/american.png" alt="american"></div>
-        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/mnp.png" alt="mnp"></div>
-        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/jcb.png" alt="jcb"></div>
-        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/discover.png" alt="discover"></div>
-        <div><img src="https://zotlo-3platform-frontend.stage.mobylonia.com/img/payment-methods/diners.png" alt="diners"></div>
+        <div><img src="{{CDN_URL}}img/payment-methods/visa.png" alt="visa"></div>
+        <div><img src="{{CDN_URL}}img/payment-methods/mastercard.png" alt="mastercard"></div>
+        <div><img src="{{CDN_URL}}img/payment-methods/american.png" alt="american"></div>
+        <div><img src="{{CDN_URL}}img/payment-methods/mnp.png" alt="mnp"></div>
+        <div><img src="{{CDN_URL}}img/payment-methods/jcb.png" alt="jcb"></div>
+        <div><img src="{{CDN_URL}}img/payment-methods/discover.png" alt="discover"></div>
+        <div><img src="{{CDN_URL}}img/payment-methods/diners.png" alt="diners"></div>
       </div>
     </div>
     <div class="zotlo-checkout__seperator">
@@ -37,7 +37,6 @@
     </div>
   </form>
 
-  <!-- PROVIDERS -->
   {{PROVIDERS}}
 
   <div class="zotlo-checkout__footer">

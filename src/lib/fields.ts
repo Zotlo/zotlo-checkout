@@ -44,7 +44,7 @@ export const FORM_ITEMS = {
       'data-mask': '###',
     }
   },
-  SUBSCRIBER_ID: {
+  SUBSCRIBER_ID_EMAIL: {
     label: 'E-mail Address',
     input: {
       name: 'subscriberId',
@@ -53,8 +53,19 @@ export const FORM_ITEMS = {
       placeholder: 'Write your email address'
     }
   },
+  SUBSCRIBER_ID_PHONE: {
+    label: 'Phone Number',
+    defaultCountryCode: 'TR',
+    input: {
+      name: 'subscriberId',
+      type: 'phone',
+      placeholder: 'Write your phone number',
+      'data-rules': 'required|phone',
+      'data-mask': '+90 (###)###-####',
+    }
+  },
   AGREEMENT_CHECKBOX: {
-    label: `I read and agree to <a target="_blank" href="#">distance sales agreement</a> and <a href="#" target="_blank">information form</a>`,
+    label: 'I read and agree to <a target="_blank" href="#">distance sales agreement</a> and <a href="#" target="_blank">information form</a>',
     className: 'zotlo-checkout__agreement',
     input: {
       name: 'acceptPolicy',

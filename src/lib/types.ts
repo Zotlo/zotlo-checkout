@@ -66,9 +66,10 @@ type FormDesign = {
 };
 
 type FormSetting = {
+  sendMailOnSuccess: boolean;
   paymentMethods: string[];
   registration: 'email' | 'phoneNumber';
-  allowEditingEmail: boolean;
+  allowSubscriberIdEditing: boolean;
 };
 
 export type FormConfig = {
