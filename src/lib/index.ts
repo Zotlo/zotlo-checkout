@@ -11,7 +11,7 @@ import { getCountryByCode, getMaskByCode } from "../utils";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   // TODO: initialize the checkout form here
-  let config = { settings: { registration: 'phoneNumber' }, design: {} } as FormConfig;
+  let config = { settings: {}, design: {} } as FormConfig;
   let containerId = '';
   let subscriberId = '';
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};

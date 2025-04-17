@@ -242,14 +242,9 @@ export function createForm(params: {
     })
   }).join('');
 
-  const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer ? `
-  <div>
-    Supported by Online reseller & Merchant of Record, Zotlo.com<br/>
-    <nav>
-      <a href="#">Terms of service</a>
-      <a href="#">Privacy policy</a>
-    </nav>
-  </div>` : '';
+  const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
+    ? `<div>By proceeding, you confirm that you acknowledge and accept <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a> of the service.</div>`
+    : '';
 
   return newForm
     .replace(/\{\{CARD_SUBMIT\}\}/gm, cardSubmit)
