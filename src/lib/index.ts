@@ -13,7 +13,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   // TODO: initialize the checkout form here
   let config = { settings: {}, design: {} } as FormConfig;
   let containerId = '';
-  let subscriberId = '';
+  const subscriberId = '';
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};

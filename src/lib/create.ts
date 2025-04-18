@@ -39,7 +39,7 @@ export function createSelect(payload: {
   });
 
   let selectedIndex = -1;
-  let items = [];
+  const items = [];
   let selectOptions = '';
 
   function prepareItem(option: typeof payload['options'][0], text?: string) {
@@ -152,7 +152,7 @@ export function createInput(payload: {
     .replace(/\{\{INPUT_ATTRIBUTES\}\}/gm, inputAttrs)
     .replace(/\{\{MESSAGE\}}/gm, payload.message || '')
     .replace(/\{\{HINT\}}/gm, inputHint)
-    .replace(/data\-left\>/gm, `>${select}`)
+    .replace(/data-left>/gm, `>${select}`)
     .replace(/\{\{TAG\}}/gm, tag);
 }
 
