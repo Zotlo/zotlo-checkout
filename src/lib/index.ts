@@ -160,7 +160,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     function selectItem(this: HTMLElement) {
-      const target = this;
+      const target = this as HTMLElement;
       const value = target?.getAttribute('data-value');
 
       for (const item of items) {
