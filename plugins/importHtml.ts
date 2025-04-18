@@ -6,7 +6,7 @@ import htmlMinifier from '@node-minify/html-minifier';
 const htmlFileRegex = /\.html$/;
 const postfixRE = /[?#].*$/s
 
-function cleanUrl(url) {
+function cleanUrl(url: string) {
   return url.replace(postfixRE, '')
 }
 
@@ -33,7 +33,7 @@ function htmlImportBuild(): PluginOption {
     apply: 'build',
     async resolveId(id, importer, options) {
       if (htmlFileRegex.test(id) && !options.isEntry) {
-        let res = await this.resolve(id, importer, {
+        const res = await this.resolve(id, importer, {
           skipSelf: true,
           ...options,
         });
