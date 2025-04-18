@@ -84,9 +84,12 @@
 .zotlo-checkout__agreement {
   color: var(--zc-form-consent-color);
   font-size: var(--zc-form-consent-fontSize);
-  font-weight: var(--zc-form-consent-fontWeight);
   font-style: var(--zc-form-consent-fontStyle);
   text-decoration: var(--zc-form-consent-textDecoration);
+}
+.zotlo-checkout__agreement .tw-checkbox-label,
+.zotlo-checkout__agreement .tw-checkbox-label a {
+  font-weight: var(--zc-form-consent-fontWeight);
 }
 
 .zotlo-checkout__total {

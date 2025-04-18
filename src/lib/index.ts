@@ -116,8 +116,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
     }
 
-    // Destroy previous form events
-    destroy();
+    // Destroy everything before re-rendering
+    unmount();
 
     const form = createForm({ subscriberId, config });
     const style = createStyle(config);
@@ -312,7 +312,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     params.events?.onLoad?.();
   }
 
-  function destroy() {
+  function unmount() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     formElement?.removeEventListener('submit', handleForm);
 
@@ -342,7 +342,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   return {
     mount,
     refresh,
-    destroy
+    unmount
   }
 }
 

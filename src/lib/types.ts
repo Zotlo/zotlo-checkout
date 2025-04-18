@@ -11,7 +11,7 @@ export interface IZotloCheckoutParams {
 export interface IZotloCheckoutReturn {
   mount: (containerId: string) => void;
   refresh: () => void;
-  destroy: () => void;
+  unmount: () => void;
 }
 
 type TextStyle = {
