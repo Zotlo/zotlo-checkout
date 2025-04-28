@@ -95,11 +95,14 @@
 .zotlo-checkout__total {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 24px;
-  margin-top: 32px;
+  margin-top: 16px;
   color: var(--zc-form-totalPrice-color);
   font-size: 18px;
   font-weight: 600;
+}
+
+.zotlo-checkout__total--basic {
+  margin: 0 !important;
 }
 
 .zotlo-checkout__card-logos {
@@ -128,6 +131,10 @@
   cursor: pointer;
   min-height: 48px;
   border: 0;
+}
+
+.zotlo-checkout__cardSubmit {
+  margin-top: 32px;
 }
 
 .zotlo-checkout__button.provider {
@@ -170,6 +177,12 @@
   border-color: var(--zc-form-submit-hover-borderColor);
 }
 
+.zotlo-checkout__card-title {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
 .zotlo-checkout__seperator {
   display: flex;
   align-items: center;
@@ -208,11 +221,5 @@
   .zotlo-checkout {
     padding: 24px;
     border: var(--zc-form-borderWidth, 1px) solid var(--zc-form-borderColor, #E7EAEE);
-  }
-}
-
-@media (min-width: 1024px) {
-  .zotlo-checkout__total {
-    margin-bottom: 32px;
   }
 }

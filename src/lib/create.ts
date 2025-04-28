@@ -1,4 +1,5 @@
-import form from '../html/form.html'
+import paymentElement from '../html/payment.html'
+import formElement from '../html/form.html'
 import inputElement from '../html/input.html'
 import checkboxElement from '../html/checkbox.html'
 import buttonElement from '../html/button.html'
@@ -9,12 +10,7 @@ import { FORM_ITEMS } from './fields';
 import { getCDNUrl } from '../utils/getCDNUrl'
 import type { FormConfig } from './types'
 import Countries from '../countries.json'
-import { getMaskByCode } from '../utils'
-
-function generateAttributes(attrs: Record<string, string | number | boolean>) {
-  if (!attrs) return '';
-  return Object.entries(attrs).map(([key, value]) => value !== undefined && value !== null ? `${key}="${value}"` : '').join(' ')
-}
+import { getMaskByCode, template, generateAttributes } from '../utils'
 
 export function createSelect(payload: {
   name: string;
@@ -45,12 +41,14 @@ export function createSelect(payload: {
   function prepareItem(option: typeof payload['options'][0], text?: string) {
     const selectOption = `<option value="${option.value}" ${option.selected ? 'selected' : ''} ${option.disabled ? 'disabled' : ''}>${option.label}</option>`
 
-    const item = selectItemElement
-      .replace(/\{\{SELECTED\}\}/gm, option.selected ? 'true' : 'false')
-      .replace(/\{\{TITLE\}\}/gm, option.label)
-      .replace(/\{\{VALUE\}\}/gm, option.value)
-      .replace(/\{\{ICON\}\}/gm, option.icon ? `<img src="${option.icon}" role="graphic" />` : '')
-      .replace(/\{\{TEXT\}\}/gm, text || option.label)
+    const item = template(selectItemElement, {
+      SELECTED: option.selected ? 'true' : 'false',
+      TITLE: option.label,
+      VALUE: option.value,
+      ICON: option.icon ? `<img src="${option.icon}" role="graphic" />` : '',
+      TEXT: text || option.label,
+    });
+
     return {
       item,
       selectOption
@@ -69,17 +67,19 @@ export function createSelect(payload: {
 
   const inputWrapperClassName = payload?.attrs?.disabled ? 'disabled' : '';
 
-  return selectElement
-    .replace(/\{\{ATTRIBUTES\}\}/gm, attrs)
-    .replace(/\{\{CLASS_NAME\}\}/gm, inputWrapperClassName)
-    .replace(/\{\{TOGGLE\}\}/gm, payload.showSelectedValue
-      ? prepareItem(options[selectedIndex], options[selectedIndex].value).item
-      : items[selectedIndex]
-    )
-    .replace(/\{\{NAME\}\}/gm, payload.name)
-    .replace(/\{\{SELECT_ATTRIBUTES\}\}/gm, selectAttrs)
-    .replace(/\{\{OPTIONS\}\}/gm, selectOptions)
-    .replace(/\{\{LIST\}\}/gm, items.join(''));
+  return template(selectElement, {
+    ATTRIBUTES: attrs,
+    CLASS_NAME: inputWrapperClassName,
+    TOGGLE: (
+      payload.showSelectedValue
+        ? prepareItem(options[selectedIndex], options[selectedIndex].value).item
+        : items[selectedIndex]
+    ),
+    NAME: payload.name,
+    SELECT_ATTRIBUTES: selectAttrs,
+    OPTIONS: selectOptions,
+    LIST: items.join('')
+  });
 }
 
 export function createInput(payload: {
@@ -142,18 +142,18 @@ export function createInput(payload: {
     });
   };
 
-  return inputElement
-    .replace(/\{\{TYPE\}\}/gm, typeName)
-    .replace(/\{\{CLASS_NAME\}\}/gm, payload.className || '')
-    .replace(/\{\{ATTRIBUTES\}\}/gm, generateAttributes(payload.attrs || {}))
-    .replace(/\{\{LABEL\}\}/gm, payload.label)
-    .replace(/\{\{INPUT_WRAPPER_CLASS_NAME\}\}/gm, inputWrapperClassName)
-    .replace(/\{\{INPUT_NAME\}\}/gm, payload.input.name)
-    .replace(/\{\{INPUT_ATTRIBUTES\}\}/gm, inputAttrs)
-    .replace(/\{\{MESSAGE\}}/gm, payload.message || '')
-    .replace(/\{\{HINT\}}/gm, inputHint)
-    .replace(/data-left>/gm, `>${select}`)
-    .replace(/\{\{TAG\}}/gm, tag);
+  return template(inputElement, {
+    TYPE: typeName,
+    CLASS_NAME: payload.className || '',
+    ATTRIBUTES: generateAttributes(payload.attrs || {}),
+    LABEL: payload.label,
+    INPUT_WRAPPER_CLASS_NAME: inputWrapperClassName,
+    INPUT_NAME: payload.input.name,
+    INPUT_ATTRIBUTES: inputAttrs,
+    MESSAGE: payload.message || '',
+    HINT: inputHint,
+    TAG: tag
+  }).replace(/data-left>/gm, `>${select}`);
 }
 
 export function createCheckbox(payload: {
@@ -168,15 +168,16 @@ export function createCheckbox(payload: {
     ...(payload?.input?.value ? { value: payload?.input?.value } : {}),
     ...(payload?.input?.disabled ? { disabled: '' } : {}),
     ...(payload?.input?.checked ? { checked: '' } : {}),
-  })
+  });
 
-  return checkboxElement
-    .replace(/\{\{CLASS_NAME\}\}/gm, payload.className || '')
-    .replace(/\{\{ATTRIBUTES\}\}/gm, generateAttributes(payload.attrs || {}))
-    .replace(/\{\{INPUT_ATTRIBUTES\}\}/gm, inputAttrs)
-    .replace(/\{\{LABEL\}\}/gm, payload.label)
-    .replace(/\{\{NAME\}\}/gm, payload.input?.name)
-    .replace(/\{\{MESSAGE\}}/gm, payload.message || '')
+  return template(checkboxElement, {
+    CLASS_NAME: payload.className || '',
+    ATTRIBUTES: generateAttributes(payload.attrs || {}),
+    INPUT_ATTRIBUTES: inputAttrs,
+    LABEL: payload.label,
+    NAME: payload.input?.name,
+    MESSAGE: payload.message || ''
+  });
 }
 
 export function createButton(payload: {
@@ -185,19 +186,25 @@ export function createButton(payload: {
   className?: string;
   attrs?: Record<string, string | number | boolean>;
 }) {
-  return buttonElement
-    .replace(/\{\{CLASS_NAME\}\}/gm, payload.className || '')
-    .replace(/\{\{ATTRIBUTES\}\}/gm, generateAttributes(payload.attrs || {}))
-    .replace(/\{\{CONTENT\}\}/gm, payload.content || '')
-    .replace(/\{\{DESC\}\}/gm, payload.description || '')
+  return template(buttonElement, {
+    CLASS_NAME: payload.className || '',
+    ATTRIBUTES: generateAttributes(payload.attrs || {}),
+    CONTENT: payload.content || '',
+    DESC: payload.description || ''
+  });
 }
 
-export function createForm(params: {
-  subscriberId: string;
+export function createCreditCardForm(params: {
+  subscriberId: string
   config: FormConfig;
+  formType?: 'creditCard' | 'subscriberId' | 'both';
+  seperator?: 'top' | 'bottom' | 'both';
 }) {
-  const { subscriberId, config } = params;
-  let newForm = form;
+  const { config, subscriberId, seperator, formType = 'both' } = params;
+  let newForm = template(formElement, { FORM_TYPE: formType });
+  let cardTop = '';
+  let cardBottom = '';
+  const seperatorText = `<div class="zotlo-checkout__seperator"><span>or</span></div>`;
   const isPhoneRegister = config.settings.registration === 'phoneNumber';
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
@@ -205,7 +212,7 @@ export function createForm(params: {
       isPhoneRegister && key === 'SUBSCRIBER_ID_EMAIL' ||
       !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE'
     ) {
-      newForm = newForm.replace(new RegExp(`{{${key}}}`, 'gm'), '');
+      newForm = template(newForm, { [key]: '' });
       continue;
     }
 
@@ -219,37 +226,100 @@ export function createForm(params: {
         } : {})
       }
     }
-    newForm = newForm.replace(
-      new RegExp(`{{${key}}}`, 'gm'),
-      key === 'AGREEMENT_CHECKBOX' ? createCheckbox(options) : createInput(options)
-    );
+
+    newForm = template(newForm, {
+      [key]: key === 'AGREEMENT_CHECKBOX' ? createCheckbox(options) : createInput(options)
+    });
   }
-  
+
   const cardSubmit = createButton({
     content: 'Start {TRIAL_PERIOD} Trial',
     className: 'zotlo-checkout__cardSubmit',
     attrs: { type: 'submit' }
+  });
+
+  if (seperator === 'top' || seperator === 'both') {
+    cardTop = seperatorText + `<div class="zotlo-checkout__card-title">Pay with credit card</div>`;
+  }
+  
+  if (seperator === 'bottom' || seperator === 'both') {
+    cardBottom = seperatorText;
+  }
+
+  return template(newForm, {
+    CARD_TOP: cardTop,
+    CARD_BOTTOM: cardBottom,
+    CARD_SUBMIT: cardSubmit,
+    CDN_URL: getCDNUrl(''),
+    TOTAL_PRICE: '0.00 USD'
   })
+}
 
-  const providerButtons = ['paypal', 'googlePay', 'applePay'].map(provider => {
-    const canDarkMode = config.design.darkMode && ['googlePay', 'applePay'].includes(provider)
-    const postfix = canDarkMode ? '_black' : '';
+export function createProivderButton(params: {
+  provider: string;
+  config: FormConfig;
+}) {
+  const { provider, config } = params;
+  const canDarkMode = config.design.darkMode && ['googlePay', 'applePay'].includes(provider);
+  const postfix = canDarkMode ? '_black' : '';
 
-    return createButton({
-      content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
-      className: 'provider '+provider,
-      description: provider === 'paypal' ? 'The safer, easier way to pay' : undefined,
-    })
+  return createButton({
+    content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
+    className: 'provider '+provider,
+    description: provider === 'paypal' ? 'The safer, easier way to pay' : undefined,
+  })
+}
+
+export function createForm(params: {
+  subscriberId: string;
+  config: FormConfig;
+}) {
+  const { config } = params;
+
+  let providerButtons = params.config.settings.paymentMethods.map((method, index) => {
+    if (method.providerKey !== 'creditCard') {
+      return createProivderButton({
+        provider: method.providerKey,
+        config
+      });
+    }
+
+    if (method.providerKey === 'creditCard') {
+      const isFirstItem = index === 0;
+      const isLastItem = index === params.config.settings.paymentMethods.length - 1;
+      const isOnlyItem = params.config.settings.paymentMethods.length === 1;
+      const isMiddleItem = !isFirstItem && !isLastItem;
+      let seperator = undefined as undefined | 'top' | 'bottom' | 'both';
+
+      if (!isOnlyItem && !isFirstItem && isMiddleItem) {
+        seperator = 'both';
+      } else if (!isOnlyItem && isFirstItem) {
+        seperator = 'bottom';
+      } else if (!isOnlyItem && isLastItem) {
+        seperator = 'top';
+      }
+
+      return createCreditCardForm({
+        ...params,
+        formType: isFirstItem ? 'both' : 'creditCard',
+        seperator,
+      });
+    }
   }).join('');
+
+  if (params.config.settings.paymentMethods?.[0]?.providerKey !== 'creditCard') {
+    providerButtons = createCreditCardForm({
+      ...params,
+      formType: 'subscriberId'
+    }) + providerButtons;
+  }
 
   const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
     ? `<div>By proceeding, you confirm that you acknowledge and accept <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a> of the service.</div>`
     : '';
 
-  return newForm
-    .replace(/\{\{CARD_SUBMIT\}\}/gm, cardSubmit)
-    .replace(/\{\{TOTAL_PRICE\}\}/gm, '0.00 USD')
-    .replace(/\{\{PROVIDERS\}\}/gm, providerButtons)
-    .replace(/\{\{DISCLAIMER\}\}/gm, disclaimer)
-    .replace(/\{\{CDN_URL\}\}/gm, getCDNUrl(''))
+  return template(paymentElement, {
+    PROVIDERS: providerButtons,
+    DISCLAIMER: disclaimer
+  });
 }
