@@ -68,7 +68,6 @@ export type FormDesign = {
 export type FormSetting = {
   sendMailOnSuccess: boolean;
   paymentMethods: {
-    order: number;
     providerKey: 'paypal' | 'creditCard' | 'googlePay' | 'applePay' | 'stripe';
     status: 'active' | 'passive' | 'pending';
     countries?: string[];
