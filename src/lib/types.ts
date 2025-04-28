@@ -20,7 +20,7 @@ type TextStyle = {
   underline: boolean;
 }
 
-type FormDesign = {
+export type FormDesign = {
   theme: 'horizontal' | 'vertical';
   darkMode: boolean;
   fontFamily: string;
@@ -65,9 +65,14 @@ type FormDesign = {
   }
 };
 
-type FormSetting = {
+export type FormSetting = {
   sendMailOnSuccess: boolean;
-  paymentMethods: string[];
+  paymentMethods: {
+    order: number;
+    providerKey: 'paypal' | 'creditCard' | 'googlePay' | 'applePay' | 'stripe';
+    status: 'active' | 'passive' | 'pending';
+    countries?: string[];
+  }[];
   registration: 'email' | 'phoneNumber';
   allowSubscriberIdEditing: boolean;
 };
