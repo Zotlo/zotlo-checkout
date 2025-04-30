@@ -205,7 +205,7 @@ export function createCreditCardForm(params: {
   let cardTop = '';
   let cardBottom = '';
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>or</span></div>`;
-  const isPhoneRegister = config.settings.registration === 'phoneNumber';
+  const isPhoneRegister = config.settings.registerType === 'phoneNumber';
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
     if (
@@ -251,7 +251,7 @@ export function createCreditCardForm(params: {
     CARD_BOTTOM: cardBottom,
     CARD_SUBMIT: cardSubmit,
     CDN_URL: getCDNUrl(''),
-    TOTAL_PRICE: '0.00 USD'
+    TOTAL_PRICE: `0.00 ${config.general.currency}`
   })
 }
 
@@ -276,7 +276,8 @@ export function createForm(params: {
 }) {
   const { config } = params;
 
-  let providerButtons = params.config.settings.paymentMethods.map((method, index) => {
+  const paymentMethods = params.config.settings.paymentMethodSetting;
+  let providerButtons = paymentMethods.map((method, index) => {
     if (method.providerKey !== 'creditCard') {
       return createProivderButton({
         provider: method.providerKey,
@@ -286,8 +287,8 @@ export function createForm(params: {
 
     if (method.providerKey === 'creditCard') {
       const isFirstItem = index === 0;
-      const isLastItem = index === params.config.settings.paymentMethods.length - 1;
-      const isOnlyItem = params.config.settings.paymentMethods.length === 1;
+      const isLastItem = index === paymentMethods.length - 1;
+      const isOnlyItem = paymentMethods.length === 1;
       const isMiddleItem = !isFirstItem && !isLastItem;
       let seperator = undefined as undefined | 'top' | 'bottom' | 'both';
 
@@ -307,7 +308,7 @@ export function createForm(params: {
     }
   }).join('');
 
-  if (params.config.settings.paymentMethods?.[0]?.providerKey !== 'creditCard') {
+  if (paymentMethods?.[0]?.providerKey !== 'creditCard') {
     providerButtons = createCreditCardForm({
       ...params,
       formType: 'subscriberId'
