@@ -342,6 +342,7 @@ export function createForm(params: {
     : '';
 
   return template(paymentElement, {
+    DIR: ['he', 'ar'].includes(config.general.language) ? 'rtl' : 'ltr',
     PROVIDERS: providerButtons,
     // TODO: PRICE_INFO will be changed to a dynamic text by package
     PRICE_INFO: $t('footer.priceInfo.package_with_trial'),
