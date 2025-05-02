@@ -9,6 +9,7 @@ export function createStyle(config: FormConfig) {
 
   return design ? `
 .zotlo-checkout {
+  --zc-color: ${config.design.darkMode ? '#FFFFFF' : '#000000'};
   --zc-fontFamily: ${fontFamily || 'inherit'};
   --zc-form-backgroundColor: ${backgroundColor || '#FFFFFF'};
   --zc-form-borderRadius: ${borderRadius || '8'}px;
