@@ -21,3 +21,13 @@
   font-weight: 500;
   padding: 16px;
 }
+
+.zotlo-checkout[dir="rtl"] .zotlo-checkout__tooltip {
+  right: auto;
+  left: -8px;
+}
+
+.zotlo-checkout[dir="rtl"] .zotlo-checkout__tooltip__arrow {
+  right: auto;
+  left: 8px;
+}
