@@ -53,9 +53,9 @@ export type FormDesign = {
       backgroundColor: string;
     },
     text: {
-      trialActivationState: string;
-      subscriptionActivationState: string;
-      onetimePayment: string;
+      trialActivationState: number | string;
+      subscriptionActivationState: number | string;
+      onetimePayment: number | string;
     }
   },
   footer: {

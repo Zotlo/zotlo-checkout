@@ -11,6 +11,7 @@ import { getCDNUrl } from '../utils/getCDNUrl'
 import type { FormConfig } from './types'
 import Countries from '../countries.json'
 import { getMaskByCode, template, generateAttributes } from '../utils'
+import { useI18n } from '../utils/i18n'
 
 export function createSelect(payload: {
   name: string;
@@ -201,10 +202,11 @@ export function createCreditCardForm(params: {
   seperator?: 'top' | 'bottom' | 'both';
 }) {
   const { config, subscriberId, seperator, formType = 'both' } = params;
+  const { $t } = useI18n(config.general.localization);
   let newForm = template(formElement, { FORM_TYPE: formType });
   let cardTop = '';
   let cardBottom = '';
-  const seperatorText = `<div class="zotlo-checkout__seperator"><span>or</span></div>`;
+  const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
   const isPhoneRegister = config.settings.registerType === 'phoneNumber';
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
@@ -218,28 +220,39 @@ export function createCreditCardForm(params: {
 
     const options = {
       ...inputOptions,
+      label: $t(`form.${key}.label`),
       input: {
         ...inputOptions.input,
         ...(key.startsWith('SUBSCRIBER_ID') && subscriberId ? {
           value: subscriberId,
           disabled: (!config.settings.allowSubscriberIdEditing && !!subscriberId) || undefined
-        } : {})
+        } : {}),
+        placeholder: $t(`form.${key}.placeholder`),
       }
     }
 
     newForm = template(newForm, {
-      [key]: key === 'AGREEMENT_CHECKBOX' ? createCheckbox(options) : createInput(options)
+      [key]: key === 'AGREEMENT_CHECKBOX'
+        ? createCheckbox({
+          ...options,
+          label: $t(`form.${key}.label`, {
+            distance: `<a href="#" target="_blank">${$t(`form.${key}.keyword.distance`)}</a>`,
+            info: `<a href="#" target="_blank">${$t(`form.${key}.keyword.info`)}</a>`
+          })
+        })
+        : createInput(options)
     });
   }
 
   const cardSubmit = createButton({
-    content: 'Start {TRIAL_PERIOD} Trial',
+    // TODO: This text will be changed to a dynamic text by package
+    content: $t(`form.button.text.subscriptionActivationState.`+config.design.button.text.subscriptionActivationState),
     className: 'zotlo-checkout__cardSubmit',
     attrs: { type: 'submit' }
   });
 
   if (seperator === 'top' || seperator === 'both') {
-    cardTop = seperatorText + `<div class="zotlo-checkout__card-title">Pay with credit card</div>`;
+    cardTop = seperatorText + `<div class="zotlo-checkout__card-title">${$t('form.payWithCreditCard')}</div>`;
   }
   
   if (seperator === 'bottom' || seperator === 'both') {
@@ -251,6 +264,7 @@ export function createCreditCardForm(params: {
     CARD_BOTTOM: cardBottom,
     CARD_SUBMIT: cardSubmit,
     CDN_URL: getCDNUrl(''),
+    TOTAL_LABEL: $t('form.total.label'),
     TOTAL_PRICE: `0.00 ${config.general.currency}`
   })
 }
@@ -260,13 +274,14 @@ export function createProivderButton(params: {
   config: FormConfig;
 }) {
   const { provider, config } = params;
+  const { $t } = useI18n(config.general.localization);
   const canDarkMode = config.design.darkMode && ['googlePay', 'applePay'].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
 
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
-    description: provider === 'paypal' ? 'The safer, easier way to pay' : undefined,
+    description: provider === 'paypal' ? $t('paypalMotto') : undefined,
   })
 }
 
@@ -275,6 +290,7 @@ export function createForm(params: {
   config: FormConfig;
 }) {
   const { config } = params;
+  const { $t } = useI18n(config.general.localization);
 
   const paymentMethods = params.config.settings.paymentMethodSetting.filter((item) => {
     if (item.providerKey === 'paypal') return config.general.showPaypal;
@@ -319,11 +335,19 @@ export function createForm(params: {
   }
 
   const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
-    ? `<div>By proceeding, you confirm that you acknowledge and accept <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a> of the service.</div>`
+    ? $t('footer.disclaimer', {
+      termsOfUse: `<a href="#">${$t('common.termsOfUse')}</a>`,
+      privacyPolicy: `<a href="#">${$t('common.privacyPolicy')}</a>`,
+    })
     : '';
 
   return template(paymentElement, {
     PROVIDERS: providerButtons,
-    DISCLAIMER: disclaimer
+    // TODO: PRICE_INFO will be changed to a dynamic text by package
+    PRICE_INFO: $t('footer.priceInfo.package_with_trial'),
+    FOOTER_DESC: $t('footer.desc'),
+    DISCLAIMER: disclaimer && `<div>${disclaimer}</div>`,
+    ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
+    ZOTLO_LEGALS_LINKS: `<a href="#">${$t('common.termsOfService')}</a><a href="#">${$t('common.privacyPolicy')}</a>`
   });
 }

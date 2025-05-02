@@ -1,7 +1,7 @@
 import type { FormConfig, IZotloCheckoutParams, IZotloCheckoutReturn } from "./types"
 import { createForm } from "./create";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
-import { validateInput, ValidationResult } from "../utils/validation";
+import { validateInput, type ValidationResult, updateValidationMessages } from "../utils/validation";
 import { FORM_ITEMS } from "./fields";
 import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
@@ -115,6 +115,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if ((globalThis as any)?.getZotloConfig) {
       config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
     }
+    
+    updateValidationMessages(config.general.localization.form.validation.rule);
 
     // Destroy everything before re-rendering
     unmount();

@@ -15,6 +15,38 @@ interface ValidateInput {
   destroy: () => void;
 }
 
+const ValidationMessages = {
+  messages: {
+    _default: 'Invalid field',
+    required: 'This field is required',
+    minLength: 'Minimum item size should be 0:{min}',
+    email: 'Invalid email format',
+    expirationDate: 'Expiration Date is not valid.',
+    card: 'Invalid card format',
+    length: 'This field must be 0:{length} long',
+    min: 'Minimum 0:{min} characters required',
+    phone: 'Invalid phone number format'
+  } as Record<string, string>
+}
+
+function getValidationMessage(key: string, params: any[] = []) {
+  let message = ValidationMessages.messages[key] || ValidationMessages.messages._default;
+  const parameters = [...new Set(message.match(/\d:\{(\w+)\}/gm) || [])];
+
+  // Apply parameters
+  for (const item of parameters) {
+    const [strIndex] = item.split(':');
+    message = message.replace(new RegExp(item, 'gm'), params[parseFloat(strIndex)] || '');
+  }
+
+  return message.replace(/\\d:\{(.*?)\}/g, (_, index) => params[index] || '');
+}
+
+export function updateValidationMessages(messages: Record<string, string>) {
+  if (typeof messages !== 'object' || messages === null) return false;
+  ValidationMessages.messages = messages;
+}
+
 export class Validator {
   private rules: Map<string, ValidationRule> = new Map();
 
@@ -36,7 +68,7 @@ export class Validator {
       const result = rule?.(value, [param]);
 
       if (rule && typeof result === 'string') {
-        errors.push(result || 'Invalid field');
+        errors.push(result || getValidationMessage('_default'));
       }
     }
 
@@ -53,24 +85,24 @@ export const ValidationRules = {
     if (value !== undefined && value !== null && value !== '' && value !== false) {
       return true;
     }
-    return 'This field is required'
+    return getValidationMessage('required')
   },
   minLength(value: string, params: any[]) {
     const min = params[0];
-    if (value.length < min) return `Minimum length is ${min}`
+    if (value.length < min) return getValidationMessage('minLength', [min]);
     return true;
   },
   email(value: string) {
     if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       return true
     }
-    return 'Invalid email format'
+    return getValidationMessage('email');
   },
   expirationDate(value: string) {
     const pattern = /^(0[1-9]|1[0-2])\d{2}$/;
     const filteredValue = value.replace(/\//g, ""); // remove slashes
     if (!pattern.test(filteredValue)) {
-      return 'Expiration Date is not valid.';
+      return  getValidationMessage('expirationDate');
     }
     return true;
   },
@@ -78,17 +110,17 @@ export const ValidationRules = {
     const card = getCardMask(value);
     const filteredValue = value.replace(/\s/g, ''); // remove spaces
     if (filteredValue.length === card.length) return true;
-    return 'Invalid card format';
+    return getValidationMessage('card');
   },
   length(value: string, params: any[]) {
     const length = params[0];
     if (value.length === length) return true;
-    return `Length must be ${length}`;
+    return getValidationMessage('length', [length])
   },
   min(value: string, params: any[]) {
     const length = params[0];
     if (value.length >= length) return true;
-    return `Minimum ${length} characters required`;
+    return getValidationMessage('min', [length]);
   },
   phone(value: string) {
     const clearPattern = /[\s-()+]/g
@@ -96,7 +128,7 @@ export const ValidationRules = {
     const country = getCountryByCode(code);
 
     if (value.replace(clearPattern, '').length !== country?.maskLength) {
-      return 'Invalid phone number format';
+      return getValidationMessage('phone');
     }
     return true;
   }
