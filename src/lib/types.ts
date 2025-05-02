@@ -78,11 +78,11 @@ export type FormSetting = {
 
 export type FormConfig = {
   general: {
+    isLive: boolean;
+    showPaypal: boolean;
     language: string;
     countryCode: string;
     currency: string;
-    isLive: boolean;
-    showPaypal: boolean;
     localization: Record<string, any>;
   };
   settings: FormSetting;

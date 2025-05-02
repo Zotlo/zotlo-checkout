@@ -276,7 +276,10 @@ export function createForm(params: {
 }) {
   const { config } = params;
 
-  const paymentMethods = params.config.settings.paymentMethodSetting;
+  const paymentMethods = params.config.settings.paymentMethodSetting.filter((item) => {
+    if (item.providerKey === 'paypal') return config.general.showPaypal;
+    return true;
+  });
   let providerButtons = paymentMethods.map((method, index) => {
     if (method.providerKey !== 'creditCard') {
       return createProivderButton({
