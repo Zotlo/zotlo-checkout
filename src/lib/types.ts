@@ -69,7 +69,6 @@ export type FormSetting = {
   sendMailOnSuccess: boolean;
   paymentMethodSetting: {
     providerKey: 'paypal' | 'creditCard' | 'googlePay' | 'applePay' | 'stripe';
-    status: 'active' | 'passive' | 'pending';
     countries?: string[];
   }[];
   registerType: 'email' | 'phoneNumber';
