@@ -1,6 +1,8 @@
 export interface IZotloCheckoutParams {
   token: string;
   packageId: string;
+  language?: string;
+  subscriberId?: string;
   events?: {
     onLoad?: () => void;
     onUpdate?: () => void;

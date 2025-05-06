@@ -5,6 +5,8 @@ import { ZotloCheckout } from './lib'
   const checkout = await ZotloCheckout({
     token: '123ASDASsqasdas=',
     packageId: 'zotlo-123',
+    language: 'en',
+    subscriberId: '',
     events: {
       onLoad() {
         console.log('DONE DEV!')
