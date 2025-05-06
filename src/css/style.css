@@ -220,6 +220,33 @@
   gap: 12px;
 }
 
+.zotlo-checkout__noMethod {
+  max-width: 242px;
+  margin: 0 auto;
+  min-height: 530px;
+  display: flex;
+  align-items: center;
+}
+
+.zotlo-checkout__noMethod__wrapper {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  max-width: 242px;
+  text-align: center;
+  background-color: #F6F7F9;
+  border-radius: 16px;
+  font-size: 14px;
+  color: #A9A7B1;
+}
+
+.zotlo-checkout__noMethod__title {
+  font-weight: 600;
+}
+
 @media (min-width: 640px) {
   .zotlo-checkout {
     padding: 24px;

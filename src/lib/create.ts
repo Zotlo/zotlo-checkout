@@ -6,6 +6,7 @@ import buttonElement from '../html/button.html'
 import tooltipElement from '../html/tooltip.html'
 import selectElement from '../html/select.html'
 import selectItemElement from '../html/select-item.html'
+import noMethodElement from '../html/nomethod.html'
 import { FORM_ITEMS } from './fields';
 import { getCDNUrl } from '../utils/getCDNUrl'
 import type { FormConfig } from './types'
@@ -291,8 +292,11 @@ export function createForm(params: {
 }) {
   const { config } = params;
   const { $t } = useI18n(config.general.localization);
+  const paymentMethodSetting = config.settings.paymentMethodSetting;
+  const hasPaypal = paymentMethodSetting.some((item) => item.providerKey === 'paypal');
+  const hasOnlyPaypalButNotShown = hasPaypal && !config.general.showPaypal && paymentMethodSetting.length === 1;
 
-  const paymentMethods = params.config.settings.paymentMethodSetting.filter((item) => {
+  const paymentMethods = paymentMethodSetting.filter((item) => {
     if (item.providerKey === 'paypal') return config.general.showPaypal;
     return true;
   });
@@ -341,8 +345,20 @@ export function createForm(params: {
     })
     : '';
 
+  const dir = ['he', 'ar'].includes(config.general.language) ? 'rtl' : 'ltr';
+
+  if (hasOnlyPaypalButNotShown) {
+    providerButtons = '';
+
+    return template(noMethodElement, {
+      DIR: dir,
+      TITLE: $t('empty.noMethod.title'),
+      DESC: $t('empty.noMethod.desc'),
+    });
+  }
+
   return template(paymentElement, {
-    DIR: ['he', 'ar'].includes(config.general.language) ? 'rtl' : 'ltr',
+    DIR: dir,
     PROVIDERS: providerButtons,
     // TODO: PRICE_INFO will be changed to a dynamic text by package
     PRICE_INFO: $t('footer.priceInfo.package_with_trial'),
