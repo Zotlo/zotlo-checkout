@@ -10,8 +10,12 @@ import { loadFontsOnPage } from "../utils/fonts";
 import { getCountryByCode, getMaskByCode } from "../utils";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
-  // TODO: initialize the checkout form here
   let config = { general: {}, settings: {}, design: {} } as FormConfig;
+
+  if (!import.meta.env.VITE_CONSOLE) {
+    // TODO: initialize the checkout form here
+  }
+
   let containerId = '';
   const subscriberId = params.subscriberId || '';
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
@@ -112,8 +116,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   function refresh() {
     if (!containerId) return;
 
-    if ((globalThis as any)?.getZotloConfig) {
-      config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
+    if (import.meta.env.VITE_CONSOLE) {
+      if ((globalThis as any)?.getZotloConfig) {
+        config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
+      }
     }
     
     updateValidationMessages(config.general.localization.form.validation.rule);
