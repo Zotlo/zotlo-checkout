@@ -8,12 +8,18 @@ import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
 import { getCountryByCode, getMaskByCode } from "../utils";
+import { getConfig } from "../utils/getConfig";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {} } as FormConfig;
 
   if (!import.meta.env.VITE_CONSOLE) {
-    // TODO: initialize the checkout form here
+    config = await getConfig({ 
+      token: params.token,
+      packageId: params.packageId,
+      language: params.language,
+      subscriberId: params.subscriberId, 
+    });
   }
 
   let containerId = '';
