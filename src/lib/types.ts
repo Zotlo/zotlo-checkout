@@ -68,7 +68,7 @@ export type FormDesign = {
 };
 
 export type FormSetting = {
-  sendMailOnSuccess: boolean;
+  sendMailOnSuccess?: boolean;
   paymentMethodSetting: {
     providerKey: 'paypal' | 'creditCard' | 'googlePay' | 'applePay' | 'stripe';
     countries?: string[];
@@ -77,15 +77,26 @@ export type FormSetting = {
   allowSubscriberIdEditing: boolean;
 };
 
+export type FormPaymentData = {
+  package: Record<string, any>;
+  providers: Record<string, any>;
+  selectedPrice: Record<string, any>;
+  subscriberCountry: string;
+}
+
 export type FormConfig = {
   general: {
-    isLive: boolean;
+    isLive?: boolean;
     showPaypal: boolean;
     language: string;
     countryCode: string;
     currency: string;
     localization: Record<string, any>;
+    tosUrl: string;
+    privacyUrl: string;
+    privacyAndTosUrlStatus: boolean;
   };
   settings: FormSetting;
   design: FormDesign;
+  paymentData?: FormPaymentData;
 }

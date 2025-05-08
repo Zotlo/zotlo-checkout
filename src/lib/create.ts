@@ -260,17 +260,20 @@ export function createCreditCardForm(params: {
     cardBottom = seperatorText;
   }
 
+  const totalPrice = config.paymentData?.selectedPrice.price || "0.00";
+  const currency = config.paymentData?.selectedPrice.currency || config.general.currency || "USD";
+
   return template(newForm, {
     CARD_TOP: cardTop,
     CARD_BOTTOM: cardBottom,
     CARD_SUBMIT: cardSubmit,
     CDN_URL: getCDNUrl(''),
     TOTAL_LABEL: $t('form.total.label'),
-    TOTAL_PRICE: `0.00 ${config.general.currency}`
+    TOTAL_PRICE: `${totalPrice} ${currency}`
   })
 }
 
-export function createProivderButton(params: {
+export function createProviderButton(params: {
   provider: string;
   config: FormConfig;
 }) {
@@ -295,6 +298,8 @@ export function createForm(params: {
   const paymentMethodSetting = config.settings.paymentMethodSetting;
   const hasPaypal = paymentMethodSetting.some((item) => item.providerKey === 'paypal');
   const hasOnlyPaypalButNotShown = hasPaypal && !config.general.showPaypal && paymentMethodSetting.length === 1;
+  const privacyUrl = config.general.privacyUrl;
+  const tosUrl = config.general.tosUrl;
 
   const paymentMethods = paymentMethodSetting.filter((item) => {
     if (item.providerKey === 'paypal') return config.general.showPaypal;
@@ -302,7 +307,7 @@ export function createForm(params: {
   });
   let providerButtons = paymentMethods.map((method, index) => {
     if (method.providerKey !== 'creditCard') {
-      return createProivderButton({
+      return createProviderButton({
         provider: method.providerKey,
         config
       });
@@ -340,8 +345,8 @@ export function createForm(params: {
 
   const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
     ? $t('footer.disclaimer', {
-      termsOfUse: `<a href="#">${$t('common.termsOfUse')}</a>`,
-      privacyPolicy: `<a href="#">${$t('common.privacyPolicy')}</a>`,
+      termsOfUse: `<a href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
+      privacyPolicy: `<a href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
     })
     : '';
 
@@ -365,6 +370,6 @@ export function createForm(params: {
     FOOTER_DESC: $t('footer.desc'),
     DISCLAIMER: disclaimer && `<div>${disclaimer}</div>`,
     ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a href="#">${$t('common.termsOfService')}</a><a href="#">${$t('common.privacyPolicy')}</a>`
+    ZOTLO_LEGALS_LINKS: `<a href="${tosUrl}">${$t('common.termsOfService')}</a><a href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`
   });
 }
