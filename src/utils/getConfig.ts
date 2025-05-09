@@ -21,7 +21,7 @@ type InitResult = {
 };
 
 export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
-  let config = { general: {}, settings: {}, design: {}, paymentData: {} } as FormConfig;
+  const config = { general: {}, settings: {}, design: {}, paymentData: {} } as FormConfig;
 
   const {
     token,
@@ -65,7 +65,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
     }
     config.paymentData = paymentInitData as FormConfig["paymentData"];
-  } catch (error) {
+  } catch {
     return config;
   }
 
