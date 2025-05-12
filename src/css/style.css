@@ -247,9 +247,74 @@
   font-weight: 600;
 }
 
+.zotlo-checkout__tab {
+  display: flex;
+  gap: 8px;
+}
+
+.zotlo-checkout__tab > div {
+  flex: 1;
+}
+
+.zotlo-checkout__tab__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  flex: 1;
+}
+
+.zotlo-checkout__tab__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  flex: 1;
+  padding: 12px;
+  gap: 4px;
+  color: #000000;
+  border: 1px solid #e7eaee;
+  background-color: transparent;
+  transition: background-color 0.2s linear, border-color 0.2s linear;
+}
+
+.zotlo-checkout__tab__button[data-active="true"] {
+  background-color: rgba(86, 196, 214, 0.1);
+  border-color: #56C4D6;
+}
+
+.zotlo-checkout__tab__button img {
+  max-height: 1rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.zotlo-checkout__tab__button[data-tab="googlePay"] img,
+.zotlo-checkout__tab__button[data-tab="applePay"] img {
+  max-height: 32px;
+}
+
+.zotlo-checkout .zotlo-checkout__payment-provider[data-tab-active="false"] {
+  display: none;
+  visibility: hidden;
+}
+
+.zotlo-checkout .zotlo-checkout__payment-provider[data-tab-active="true"] {
+  display: block;
+  visibility: visible;
+}
+
+.zotlo-checkout[data-dark="true"] .zotlo-checkout__tab__button {
+  color: white;
+}
+
 @media (min-width: 640px) {
   .zotlo-checkout {
     padding: 24px;
     border: var(--zc-form-borderWidth, 1px) solid var(--zc-form-borderColor, #E7EAEE);
+  }
+
+  .zotlo-checkout__tab__button {
+    height: 64px;
   }
 }

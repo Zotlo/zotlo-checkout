@@ -1,7 +1,7 @@
-import type { FormConfig, IZotloCheckoutParams, IZotloCheckoutReturn } from "./types"
+import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn } from "./types"
 import { createForm } from "./create";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
-import { validateInput, type ValidationResult, updateValidationMessages } from "../utils/validation";
+import { validateInput, type ValidationResult, updateValidationMessages, validatorInstance } from "../utils/validation";
 import { FORM_ITEMS } from "./fields";
 import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
@@ -91,9 +91,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     return  document.getElementById(containerId);
   }
 
-  function handleForm(e: Event) {
+  function handleForm(e: SubmitEvent) {
     e.preventDefault();
     const validation = validateForm();
+    const providerKey = (e.submitter as HTMLButtonElement).getAttribute('data-provider') || PaymentProvider.CREDIT_CARD;
 
     if (!validation.isValid) return;
 
@@ -101,7 +102,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const [cardExpirationMonth, cardExpirationYear] = result.cardExpiration.split('/');
 
     const payload = {
-      providerKey: 'creditCard',
+      providerKey,
       packageId: params.packageId,
       acceptPolicy: result.acceptPolicy,
       creditCardDetails: {
@@ -117,6 +118,52 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     console.log('Form submitted!', payload, result);
 
     params.events?.onSubmit?.();
+  }
+
+  function handleTabView() {
+    if (config.design.theme === 'vertical') {
+      initFormInputs();
+      return;
+    }
+
+    const tabItems = document.querySelectorAll('.zotlo-checkout button[data-tab]');
+    const tabContents = document.querySelectorAll('.zotlo-checkout [data-tab-content]');
+    const tabSubscriberIdContent = document.querySelector('.zotlo-checkout [data-tab-content="subscriberId"]');
+
+    function handleTabClick(e: Event) {
+      const target = e.target as HTMLElement;
+      const tabName = target.getAttribute('data-tab');
+      const tabContent =  document.querySelector(`.zotlo-checkout [data-tab-content="${tabName}"]`) as HTMLElement;
+
+      if (tabContent) {
+        destroyFormInputs();
+
+        for (const item of tabItems) {
+          item.setAttribute('data-active', 'false');
+        }
+
+        for (const item of tabContents) {
+          item.setAttribute('data-tab-active', 'false');
+        }
+
+        target.setAttribute('data-active', 'true');
+        tabContent.setAttribute('data-tab-active', 'true');
+
+        if (tabName !== PaymentProvider.CREDIT_CARD) {
+          tabSubscriberIdContent?.setAttribute('data-tab-active', 'true');
+        } else {
+          tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
+        }
+
+        initFormInputs();
+      }
+    }
+
+    for (const item of tabItems) {
+      item.addEventListener('click', handleTabClick);
+    }
+
+    tabItems.item(0).dispatchEvent(new Event('click'));
   }
 
   function refresh() {
@@ -215,11 +262,11 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
-  function init() {
+  function initFormInputs() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-    const maskInputs = formElement?.querySelectorAll('input[data-mask]');
-    const ruleInputs = formElement?.querySelectorAll('input[data-rules]');
-    const selectboxes = getContainerElement()?.querySelectorAll('[data-select]');
+    const maskInputs = formElement?.querySelectorAll('[data-tab-active="true"] input[data-mask]');
+    const ruleInputs = formElement?.querySelectorAll('[data-tab-active="true"] input[data-rules]');
+    const selectboxes = getContainerElement()?.querySelectorAll('[data-tab-active="true"] [data-select]');
 
     function updatePhoneMask(code: string, input: HTMLInputElement) {
       const country = getCountryByCode(code);
@@ -322,26 +369,37 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     applyMaskAndValidation();
 
     formElement?.addEventListener('submit', handleForm);
-
-    params.events?.onLoad?.();
   }
 
-  function unmount() {
+  function destroyFormInputs() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     formElement?.removeEventListener('submit', handleForm);
 
-    for (const mask of Object.values(maskItems)) {
+    for (const [key, mask] of Object.entries(maskItems)) {
       mask.destroy();
+      delete maskItems[key];
     }
 
     for (const item of Object.values(validations)) {
       item.destroy();
+      delete validations[item.name];
     }
 
-    for (const item of Object.values(selectboxList)) {
+    for (const [key, item] of Object.entries(selectboxList)) {
       item.destroy();
+      delete selectboxList[key];
     }
 
+    validatorInstance?.clearRules();
+  }
+
+  function init() {
+    handleTabView();
+    params.events?.onLoad?.();
+  }
+
+  function unmount() {
+    destroyFormInputs();
     const container = getContainerElement();
     if (container) container.innerHTML = '';
   }

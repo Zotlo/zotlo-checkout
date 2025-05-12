@@ -67,10 +67,17 @@ export type FormDesign = {
   }
 };
 
+export enum PaymentProvider {
+  PAYPAL = 'paypal',
+  GOOGLE_PAY = 'googlePay',
+  APPLE_PAY = 'applePay',
+  CREDIT_CARD = 'creditCard'
+};
+
 export type FormSetting = {
   sendMailOnSuccess?: boolean;
   paymentMethodSetting: {
-    providerKey: 'paypal' | 'creditCard' | 'googlePay' | 'applePay' | 'stripe';
+    providerKey: PaymentProvider;
     countries?: string[];
   }[];
   registerType: 'email' | 'phoneNumber';
