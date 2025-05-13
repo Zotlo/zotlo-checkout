@@ -89,7 +89,7 @@ export class API {
             const responseData = this.getResponseData(xhr, mergedHeaders);
             reject(responseData);
           }
-        } catch (e) {
+        } catch {
           const responseData = this.getResponseData(xhr, mergedHeaders);
           reject(responseData);
         }

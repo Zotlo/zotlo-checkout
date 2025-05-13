@@ -10,6 +10,7 @@ import noMethodElement from '../html/nomethod.html'
 import { FORM_ITEMS } from './fields';
 import { getCDNUrl } from '../utils/getCDNUrl'
 import type { FormConfig } from './types'
+import { PaymentProvider } from './types'
 import Countries from '../countries.json'
 import { getMaskByCode, template, generateAttributes } from '../utils'
 import { useI18n } from '../utils/i18n'
@@ -187,9 +188,11 @@ export function createButton(payload: {
   description?: string;
   className?: string;
   attrs?: Record<string, string | number | boolean>;
+  wrapperAttrs?: Record<string, string | number | boolean>;
 }) {
   return template(buttonElement, {
     CLASS_NAME: payload.className || '',
+    WRAPPER_ATTRIBUTES: generateAttributes(payload.wrapperAttrs || {}),
     ATTRIBUTES: generateAttributes(payload.attrs || {}),
     CONTENT: payload.content || '',
     DESC: payload.description || ''
@@ -201,14 +204,20 @@ export function createCreditCardForm(params: {
   config: FormConfig;
   formType?: 'creditCard' | 'subscriberId' | 'both';
   seperator?: 'top' | 'bottom' | 'both';
+  className?: string;
+  attrs?: Record<string, string | number | boolean>;
 }) {
-  const { config, subscriberId, seperator, formType = 'both' } = params;
+  const { config, subscriberId, seperator, formType = 'both', className } = params;
+  const attrs = generateAttributes({
+    ...(params.attrs || {})
+  });
   const { $t } = useI18n(config.general.localization);
-  let newForm = template(formElement, { FORM_TYPE: formType });
+  let newForm = template(formElement, { FORM_TYPE: formType, ATTRIBUTES: attrs, CLASS_NAME: className || '' });
   let cardTop = '';
   let cardBottom = '';
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
   const isPhoneRegister = config.settings.registerType === 'phoneNumber';
+  const isVerticalTheme = config.design.theme === 'vertical';
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
     if (
@@ -249,14 +258,14 @@ export function createCreditCardForm(params: {
     // TODO: This text will be changed to a dynamic text by package
     content: $t(`form.button.text.subscriptionActivationState.`+config.design.button.text.subscriptionActivationState),
     className: 'zotlo-checkout__cardSubmit',
-    attrs: { type: 'submit' }
+    attrs: { type: 'submit', 'data-provider': PaymentProvider.CREDIT_CARD },
   });
 
-  if (seperator === 'top' || seperator === 'both') {
+  if (isVerticalTheme && (seperator === 'top' || seperator === 'both')) {
     cardTop = seperatorText + `<div class="zotlo-checkout__card-title">${$t('form.payWithCreditCard')}</div>`;
   }
   
-  if (seperator === 'bottom' || seperator === 'both') {
+  if (isVerticalTheme && (seperator === 'bottom' || seperator === 'both')) {
     cardBottom = seperatorText;
   }
 
@@ -274,18 +283,20 @@ export function createCreditCardForm(params: {
 }
 
 export function createProviderButton(params: {
-  provider: string;
+  provider: PaymentProvider;
   config: FormConfig;
 }) {
   const { provider, config } = params;
   const { $t } = useI18n(config.general.localization);
-  const canDarkMode = config.design.darkMode && ['googlePay', 'applePay'].includes(provider);
+  const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
 
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
-    description: provider === 'paypal' ? $t('paypalMotto') : undefined,
+    description: provider === PaymentProvider.PAYPAL ? $t('paypalMotto') : undefined,
+    attrs: { 'data-provider': provider },
+    wrapperAttrs: { class: 'zotlo-checkout__payment-provider', 'data-tab-content': provider, 'data-tab-active': 'true' }
   })
 }
 
@@ -296,24 +307,25 @@ export function createForm(params: {
   const { config } = params;
   const { $t } = useI18n(config.general.localization);
   const paymentMethodSetting = config.settings.paymentMethodSetting;
-  const hasPaypal = paymentMethodSetting.some((item) => item.providerKey === 'paypal');
+  const hasPaypal = paymentMethodSetting.some((item) => item.providerKey === PaymentProvider.PAYPAL);
   const hasOnlyPaypalButNotShown = hasPaypal && !config.general.showPaypal && paymentMethodSetting.length === 1;
   const privacyUrl = config.general.privacyUrl;
   const tosUrl = config.general.tosUrl;
+  const isTabTheme = config.design.theme === 'horizontal';
 
   const paymentMethods = paymentMethodSetting.filter((item) => {
-    if (item.providerKey === 'paypal') return config.general.showPaypal;
+    if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
     return true;
   });
   let providerButtons = paymentMethods.map((method, index) => {
-    if (method.providerKey !== 'creditCard') {
+    if (method.providerKey !== PaymentProvider.CREDIT_CARD) {
       return createProviderButton({
         provider: method.providerKey,
         config
       });
     }
 
-    if (method.providerKey === 'creditCard') {
+    if (method.providerKey === PaymentProvider.CREDIT_CARD) {
       const isFirstItem = index === 0;
       const isLastItem = index === paymentMethods.length - 1;
       const isOnlyItem = paymentMethods.length === 1;
@@ -330,16 +342,23 @@ export function createForm(params: {
 
       return createCreditCardForm({
         ...params,
-        formType: isFirstItem ? 'both' : 'creditCard',
+        formType: isFirstItem || isTabTheme ? 'both' : 'creditCard',
         seperator,
+        className: 'zotlo-checkout__payment-provider',
+        attrs: { 'data-tab-content': PaymentProvider.CREDIT_CARD, 'data-tab-active': 'true' }
       });
     }
   }).join('');
 
-  if (paymentMethods?.[0]?.providerKey !== 'creditCard') {
+  if (paymentMethods?.[0]?.providerKey !== PaymentProvider.CREDIT_CARD || isTabTheme) {
     providerButtons = createCreditCardForm({
       ...params,
-      formType: 'subscriberId'
+      formType: 'subscriberId',
+      className: 'zotlo-checkout__payment-provider',
+      attrs: {
+        'data-tab-content': 'subscriberId',
+        'data-tab-active': 'true'
+      }
     }) + providerButtons;
   }
 
@@ -362,8 +381,40 @@ export function createForm(params: {
     });
   }
 
+  let tabButtons = '';
+
+  if (isTabTheme) {
+    const theme = {
+      [PaymentProvider.CREDIT_CARD]: { dark: '.png', light: '_black.png' },
+      [PaymentProvider.PAYPAL]: { dark: '_disabled.png', light: '.png' },
+      [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
+      [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' }
+    }
+
+    tabButtons = paymentMethods.reduce((acc, item, index) => {
+      const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
+      const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
+
+      return acc + createButton({
+        content: `<img src="${imgSrc}" alt="${item.providerKey}">${
+          item.providerKey === PaymentProvider.CREDIT_CARD ? $t('common.card') : ''
+        }`,
+        className: 'zotlo-checkout__tab__button',
+        attrs: {
+          type: 'button',
+          'data-active': index === 0 ? 'true' : 'false',
+          'data-tab': item.providerKey,
+          'aria-label': item.providerKey
+        }
+      });
+    }, '');
+  }
+
   return template(paymentElement, {
     DIR: dir,
+    DARK_MODE: config.design.darkMode ? 'true' : 'false',
+    THEME: config.design.theme,
+    TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
     // TODO: PRICE_INFO will be changed to a dynamic text by package
     PRICE_INFO: $t('footer.priceInfo.package_with_trial'),

@@ -57,6 +57,18 @@ export class Validator {
     return this;
   }
 
+  removeRule(field: string) {
+    if (this.rules.has(field)) {
+      this.rules.delete(field);
+    }
+    return this;
+  }
+
+  clearRules() {
+    this.rules.clear();
+    return this;
+  }
+
   validate(value: any, rules: string): ValidationResult {
     // required|minLength:5|email
     const ruleList = (rules?.split('|') || []);
@@ -134,7 +146,7 @@ export const ValidationRules = {
   }
 };
 
-let validatorInstance = null as Validator | null;
+export let validatorInstance = null as Validator | null;
 
 export function validateInput(input: HTMLInputElement, options?: {
   validateOnBlur?: boolean;
