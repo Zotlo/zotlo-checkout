@@ -342,7 +342,7 @@ export function createForm(params: {
 
       return createCreditCardForm({
         ...params,
-        formType: isFirstItem ? 'both' : 'creditCard',
+        formType: isFirstItem || isTabTheme ? 'both' : 'creditCard',
         seperator,
         className: 'zotlo-checkout__payment-provider',
         attrs: { 'data-tab-content': PaymentProvider.CREDIT_CARD, 'data-tab-active': 'true' }
