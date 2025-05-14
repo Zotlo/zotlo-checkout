@@ -97,6 +97,7 @@ export function createInput(payload: {
     type?: string;
     value?: string;
     placeholder?: string;
+    disabled?: boolean;
   } & Record<string, any>;
 }) {
 
@@ -315,12 +316,11 @@ export function createForm(params: {
   const hasOnlyPaypalButNotShown = hasPaypal && !config.general.showPaypal && paymentMethodSetting.length === 1;
   const privacyUrl = config.general.privacyUrl;
   const tosUrl = config.general.tosUrl;
-  const isTabTheme = config.design.theme === 'horizontal';
-
   const paymentMethods = paymentMethodSetting.filter((item) => {
     if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
     return true;
   });
+  const isTabTheme = config.design.theme === 'horizontal' && paymentMethods.length > 1;
   let providerButtons = paymentMethods.map((method, index) => {
     if (method.providerKey !== PaymentProvider.CREDIT_CARD) {
       return createProviderButton({
@@ -416,8 +416,8 @@ export function createForm(params: {
 
   return template(paymentElement, {
     DIR: dir,
-    DARK_MODE: config.design.darkMode ? 'true' : 'false',
-    THEME: config.design.theme,
+    DARK_MODE: config.design.darkMode ? 'dark' : 'light',
+    THEME: config.design.theme === 'horizontal' && paymentMethods.length > 1 ? 'horizontal' : 'vertical',
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
     // TODO: PRICE_INFO will be changed to a dynamic text by package

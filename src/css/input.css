@@ -49,8 +49,7 @@
 }
 
 .zotlo-checkout__input:focus-within {
-  border-color: #4329CC;
-  box-shadow: 0 0 0 0.25rem #EDEFFC;
+  border-color: var(--zc-form-submit-backgroundColor);
 }
 
 .zotlo-checkout__input:not(.error):not(:focus-within) {
@@ -85,7 +84,6 @@
 
 .zotlo-checkout__input.error:focus-within {
   border-color: #E13023;
-  box-shadow: 0 0 0 0.25rem #FFF1F0;
 }
 
 .zotlo-checkout__input.error input {
@@ -159,4 +157,31 @@
   border-radius: 50%;
   justify-content: center;
   vertical-align: middle;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__input {
+  background-color: #19191C;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__input:not(.error):not(:focus-within) {
+  border-color: #6B7283;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__input input {
+  color: white;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__input input::placeholder {
+  color: #818A9C;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__input.disabled {
+  border-color: #3F4147 !important;
+  background-color: #313134;
+  color: #6B6E74;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__input.disabled input
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__input.disabled input::placeholder {
+  color: #6B6E74 !important;
 }

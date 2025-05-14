@@ -64,8 +64,8 @@
 }
 
 .zotlo-checkout__select__list__item[data-selected="true"] {
-  color: #FFFFFF;
-  background-color: #56c4d6;
+  color: var(--zc-form-submit-color);
+  background-color: var(--zc-form-submit-backgroundColor);
 }
 
 .zotlo-checkout__select__list__item__img {
@@ -110,4 +110,34 @@
 
 .zotlo-checkout__select.disabled {
   pointer-events: none;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__select__list {
+  background-color: #19191C;
+  outline: 1px solid #3c4353;
+  box-shadow: 0 0.25rem 1rem #1b212c;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__select__list__item {
+  color: white;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__select__list__item:hover,
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__select__list__item:focus {
+  color: #1a1822;
+  background-color: #a9a7b1;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__select__list__item[data-selected="true"] {
+  color: var(--zc-form-submit-color);
+  background-color: var(--zc-form-submit-backgroundColor);
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__select__toggle .zotlo-checkout__select__list__item {
+  color: white;
+  background-color: transparent;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__select__toggle::after {
+  filter: invert(1);
 }

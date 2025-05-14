@@ -31,3 +31,15 @@
   right: auto;
   left: 8px;
 }
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__tooltip {
+  filter: drop-shadow(0px 0px 1px #3C4353) drop-shadow(0px 0px 4px #242A38);
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__tooltip__arrow {
+  color: #19191C;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__tooltip__content {
+  background-color: #19191C;
+}

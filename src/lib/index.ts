@@ -121,7 +121,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function handleTabView() {
-    if (config.design.theme === 'vertical') {
+    const paymentMethods = config.settings.paymentMethodSetting.filter((item) => {
+      if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
+      return true;
+    });
+
+    if (paymentMethods.length < 2 || config.design.theme === 'vertical') {
       initFormInputs();
       return;
     }
@@ -194,6 +199,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   function loadSelectbox(item: HTMLElement, options: {
     onSelect: (value: string) => void;
   }) {
+    if (item.getAttribute('disabled') === 'true') {
+      return {};
+    }
+
     const toggle = item.querySelector('[data-select-toggle]') as HTMLElement;
     const items = item.querySelectorAll('[data-select-list] [data-select-item]') as NodeListOf<HTMLElement>;
     const selectbox = item.querySelector('select') as HTMLSelectElement;
@@ -217,6 +226,22 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       if (dataToggle === 'open') {
         document.addEventListener('click', clickOutside);
         item.querySelector('[data-select-list] [data-selected="true"]')?.scrollIntoView({ block: 'center' });
+        (item.querySelector('[data-select-list] [data-selected="true"]') as HTMLElement)?.focus();
+      }
+    }
+
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleSelectbox();
+      }
+    }
+
+    function handleItemKeydown(e: KeyboardEvent) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const activeItem = item.querySelector('[data-select-list] [data-selected]:focus');
+        if (activeItem) selectItem.bind(activeItem as HTMLElement)();
       }
     }
 
@@ -239,14 +264,17 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     function init() {
       toggle?.addEventListener('click', toggleSelectbox);
+      toggle?.addEventListener('keydown', handleKeydown);
 
       for (const item of items) {
         item.addEventListener('click', selectItem);
+        item.addEventListener('keydown', handleItemKeydown);
       }
     }
 
     function destroy() {
-      toggle.removeEventListener('click', toggleSelectbox);
+      toggle?.removeEventListener('click', toggleSelectbox);
+      toggle?.removeEventListener('keydown', handleKeydown);
       document.removeEventListener('click', clickOutside);
 
       for (const item of items) {
@@ -386,7 +414,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     for (const [key, item] of Object.entries(selectboxList)) {
-      item.destroy();
+      item?.destroy?.();
       delete selectboxList[key];
     }
 

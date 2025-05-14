@@ -7,6 +7,8 @@ export function createStyle(config: FormConfig) {
     borderRadius, borderWidth, label
   } = design || {}
 
+  const opacity = config.design.darkMode ? '4A' : '1A';
+
   return design ? `
 .zotlo-checkout {
   --zc-color: ${config.design.darkMode ? '#FFFFFF' : '#000000'};
@@ -42,6 +44,8 @@ export function createStyle(config: FormConfig) {
   --zc-form-submit-hover-color: ${design?.button?.hover?.color || '#FFFFFF'};
   --zc-form-submit-hover-borderColor: ${design?.button?.hover?.borderColor || '#301BA3'};
   --zc-form-submit-hover-backgroundColor: ${design?.button?.hover?.backgroundColor || '#301BA3'};
+  
+  --zc-tab-button-backgroundColor: ${(design?.button?.backgroundColor + opacity) || '#301BA3'};
 
   --zc-form-provider-backgroundColor: ${design?.darkMode ? '#FFFFFF' : '#000000'};
 
