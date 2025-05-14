@@ -18,6 +18,7 @@ type InitResult = {
   localization: Record<string, any>;
   showPaypal: boolean;
   currency: string;
+  isPolicyRequired: boolean;
 };
 
 export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
@@ -58,6 +59,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       tosUrl: initData?.tosUrl,
       privacyUrl: initData?.privacyUrl,
       privacyAndTosUrlStatus: !!+initData?.privacyAndTosUrlStatus,
+      isPolicyRequired: initData?.isPolicyRequired,
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],

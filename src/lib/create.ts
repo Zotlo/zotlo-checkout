@@ -243,13 +243,17 @@ export function createCreditCardForm(params: {
 
     newForm = template(newForm, {
       [key]: key === 'AGREEMENT_CHECKBOX'
-        ? createCheckbox({
-          ...options,
-          label: $t(`form.${key}.label`, {
-            distance: `<a href="#" target="_blank">${$t(`form.${key}.keyword.distance`)}</a>`,
-            info: `<a href="#" target="_blank">${$t(`form.${key}.keyword.info`)}</a>`
-          })
-        })
+        ? (
+          config.general.isPolicyRequired ?
+              createCheckbox({
+              ...options,
+              label: $t(`form.${key}.label`, {
+                distance: `<a href="#" target="_blank">${$t(`form.${key}.keyword.distance`)}</a>`,
+                info: `<a href="#" target="_blank">${$t(`form.${key}.keyword.info`)}</a>`
+              })
+            })
+          : ''
+        )
         : createInput(options)
     });
   }

@@ -102,6 +102,7 @@ export type FormConfig = {
     tosUrl: string;
     privacyUrl: string;
     privacyAndTosUrlStatus: boolean;
+    isPolicyRequired: boolean;
   };
   settings: FormSetting;
   design: FormDesign;
