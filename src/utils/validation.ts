@@ -10,7 +10,7 @@ export interface ValidationResult {
 
 interface ValidateInput {
   name: string;
-  validate: () => ValidationResult;
+  validate: (bypass?: boolean) => ValidationResult;
   updateRule: (ruleString: string) => void;
   destroy: () => void;
 }
@@ -169,9 +169,9 @@ export function validateInput(input: HTMLInputElement, options?: {
     rules = ruleString?.split('|') || [];
   }
 
-  function validate(): ValidationResult {
+  function validate(bypass?: boolean): ValidationResult {
     const value = input.type === 'checkbox' ? input.checked : input.value;
-    if (!validatorInstance) return { isValid: false, errors: [] };    
+    if (!validatorInstance || bypass) return { isValid: !!bypass, errors: [] };
     const result = validatorInstance.validate(value, ruleString);
     options?.onValidate?.(result);
     return result;

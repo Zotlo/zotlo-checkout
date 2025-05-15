@@ -30,12 +30,16 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function getFormValues(form: HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
+    const activeForm = config.design.theme === 'horizontal'
+      ? form.querySelector('[data-tab-active="true"]')?.querySelectorAll('input, select') as NodeListOf<HTMLInputElement>
+      : form.elements;
 
-    for (const item of Object.values(FORM_ITEMS)) {
-      const name = item.input.name;
+    if (!activeForm) return payload;
+
+    for (const item of activeForm as NodeListOf<HTMLInputElement>) {
+      const name = item?.name;
       if (name) {
-        const input = form.elements.namedItem(name) as HTMLInputElement;
-        payload[name] = input?.type === 'checkbox' ? !!input?.checked : input?.value || '';
+        payload[name] = item?.type === 'checkbox' ? !!item?.checked : item?.value || '';
       }
     }
 
@@ -71,12 +75,20 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
-  function validateForm() {
-    const errors = []
+  function validateForm(providerKey: PaymentProvider) {
+    const errors = [];
+    const bypassProtectedFields = [
+      FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
+      FORM_ITEMS.AGREEMENT_CHECKBOX.input.name
+    ]
+
     for (const validation of Object.values(validations)) {
-      const result = validation.validate();
+      const name = validation.name;
+      const bypass = providerKey !== PaymentProvider.CREDIT_CARD ? !bypassProtectedFields.includes(name) : false;
+
+      const result = validation.validate(bypass);
       if (!result.isValid) {
-        errors.push({ name: validation.name, result });
+        errors.push({ name, result });
       }
     }
 
@@ -93,13 +105,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function handleForm(e: SubmitEvent) {
     e.preventDefault();
-    const validation = validateForm();
-    const providerKey = (e.submitter as HTMLButtonElement).getAttribute('data-provider') || PaymentProvider.CREDIT_CARD;
+    const providerKey = (e.submitter as HTMLButtonElement).getAttribute('data-provider') as PaymentProvider || PaymentProvider.CREDIT_CARD;
+    const validation = validateForm(providerKey);
 
     if (!validation.isValid) return;
 
     const result = getFormValues(e.target as HTMLFormElement);
-    const [cardExpirationMonth, cardExpirationYear] = result.cardExpiration.split('/');
+    const [cardExpirationMonth, cardExpirationYear] = result.cardExpiration?.split('/') || [];
 
     const payload = {
       providerKey,
@@ -107,7 +119,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       acceptPolicy: result.acceptPolicy,
       creditCardDetails: {
         email: result.subscriberId,
-        cardNumber: result.cardNumber.replace(/\s/g, ''),
+        cardNumber: result.cardNumber?.replace(/\s/g, '') || '',
         cardHolder: result.cardHolder,
         cardCVV: result.cardCVV,
         cardExpirationMonth: cardExpirationMonth,
