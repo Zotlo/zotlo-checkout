@@ -1,6 +1,6 @@
 import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams } from "../lib/types";
 import { API } from "../utils/api";
-import { setCookie, getCookie, COOKIE } from "./cookie";
+import { setCookie, COOKIE } from "./cookie";
 
 type InitResult = {
   uuid: string;
@@ -37,16 +37,16 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     ...(subscriberId && { subscriberId }),
   };
 
-  const existingUuid = getCookie(COOKIE.UUID);
-  const reqConfig = { headers: { Language: language, ...(existingUuid && { Uuid: existingUuid }) } };
+  const reqConfig = { headers: { Language: language } };
 
   try {
     const initRes = await API.post("/init", payload, reqConfig);
     const initData = initRes?.result as InitResult;
     if (!initData || Array.isArray(initData)) return config;
-    setCookie(COOKIE.UUID, initData?.uuid, 30);
+    const pathName = globalThis?.location?.pathname || "/";
+    setCookie(COOKIE.UUID, initData?.uuid, 30, pathName);
 
-    const paymentRes = await API.get("/payment/init", { headers: { Uuid: initData?.uuid }});
+    const paymentRes = await API.get("/payment/init");
     const paymentInitData = paymentRes?.result || {};
 
     config.design = initData?.settings || {};

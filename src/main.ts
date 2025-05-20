@@ -7,11 +7,20 @@ import { ZotloCheckout } from './lib'
     packageId: 'zotlo-123',
     language: 'en',
     subscriberId: '',
+    returnUrl: '',
     events: {
       onLoad() {
         console.log('DONE DEV!')
       },
-      onSubmit() {}
+      onSubmit(e) {
+        console.log('Form submit', e);
+      },
+      onSuccess() {
+        console.log('Payment success!');
+      },
+      onFail(e) {
+        console.log('Payment failed!', e);
+      },
     }
   });
   

@@ -317,8 +317,9 @@ export function createForm(params: {
   const privacyUrl = config.general.privacyUrl;
   const tosUrl = config.general.tosUrl;
   const paymentMethods = paymentMethodSetting.filter((item) => {
-    if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
-    return true;
+    const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
+    if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal && isAvailable;
+    return isAvailable;
   });
   const isTabTheme = config.design.theme === 'horizontal' && paymentMethods.length > 1;
   let providerButtons = paymentMethods.map((method, index) => {
