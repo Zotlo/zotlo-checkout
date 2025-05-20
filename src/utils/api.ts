@@ -1,3 +1,5 @@
+import { getCookie, COOKIE } from "./cookie";
+
 interface RequestConfig {
   headers?: Record<string, string>;
   timeout?: number;
@@ -59,12 +61,17 @@ export class API {
 
       const url = this.buildUrl(endpoint);
       const xhr = new XMLHttpRequest();
+      const existingUuid = getCookie(COOKIE.UUID);
 
       // Initialize the request
       xhr.open(method, url, true);
 
       // Set default headers and custom headers
-      const mergedHeaders = { ...this.defaultHeaders, ...headers };
+      const mergedHeaders = { 
+        ...this.defaultHeaders,
+        ...(existingUuid && { Uuid: existingUuid } as Record<string, string>),
+        ...headers 
+      };
       Object.keys(mergedHeaders).forEach((key) => {
         // Skip content-type header for FormData
         if (key.toLowerCase() === "content-type" && data instanceof FormData) return;

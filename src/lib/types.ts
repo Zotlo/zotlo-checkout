@@ -3,10 +3,13 @@ export interface IZotloCheckoutParams {
   packageId: string;
   language?: string;
   subscriberId?: string;
+  returnUrl?: string;
   events?: {
     onLoad?: () => void;
     onUpdate?: () => void;
-    onSubmit?: () => void;
+    onSubmit?: (e?: Record<string, any>) => void;
+    onSuccess?: () => void;
+    onFail?: (e?: FailEventData) => void;
   }
 }
 
@@ -14,6 +17,11 @@ export interface IZotloCheckoutReturn {
   mount: (containerId: string) => void;
   refresh: () => void;
   unmount: () => void;
+}
+
+interface FailEventData {
+  message?: string;
+  data: Record<string, any>;
 }
 
 type TextStyle = {
@@ -73,6 +81,16 @@ export enum PaymentProvider {
   APPLE_PAY = 'applePay',
   CREDIT_CARD = 'creditCard'
 };
+
+export enum PaymentResultStatus {
+  REDIRECT = 'REDIRECT',
+  COMPLETE = 'COMPLETE'
+}
+
+export enum PaymentCallbackStatus {
+  SUCCESS = 'success',
+  FAIL = 'fail'
+}
 
 export type FormSetting = {
   sendMailOnSuccess?: boolean;

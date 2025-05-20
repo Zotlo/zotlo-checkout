@@ -9,6 +9,8 @@ import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
 import { getCountryByCode, getMaskByCode } from "../utils";
 import { getConfig } from "../utils/getConfig";
+import { sendPayment } from "../utils/sendPayment";
+import { handleUrlQuery } from "../utils/handleUrlQuery";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {} } as FormConfig;
@@ -18,7 +20,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       token: params.token,
       packageId: params.packageId,
       language: params.language,
-      subscriberId: params.subscriberId, 
+      subscriberId: params.subscriberId,
+      returnUrl: params.returnUrl 
     });
   }
 
@@ -111,25 +114,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (!validation.isValid) return;
 
     const result = getFormValues(e.target as HTMLFormElement);
-    const [cardExpirationMonth, cardExpirationYear] = result.cardExpiration?.split('/') || [];
 
-    const payload = {
-      providerKey,
-      packageId: params.packageId,
-      acceptPolicy: result.acceptPolicy,
-      creditCardDetails: {
-        email: result.subscriberId,
-        cardNumber: result.cardNumber?.replace(/\s/g, '') || '',
-        cardHolder: result.cardHolder,
-        cardCVV: result.cardCVV,
-        cardExpirationMonth: cardExpirationMonth,
-        cardExpirationYear: cardExpirationYear
-      }
-    }
+    sendPayment(providerKey, { packageId: params.packageId, ...result }, params);
 
-    console.log('Form submitted!', payload, result);
-
-    params.events?.onSubmit?.();
+    params.events?.onSubmit?.(result);
   }
 
   function handleTabView() {
@@ -436,6 +424,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   function init() {
     handleTabView();
     params.events?.onLoad?.();
+    handleUrlQuery(params);
   }
 
   function unmount() {
