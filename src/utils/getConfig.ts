@@ -52,7 +52,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     config.design = initData?.settings || {};
     config.general = {
       localization: initData?.localization,
-      showPaypal: initData?.showPaypal,
+      showPaypal: !!paymentInitData?.providers?.paypal,
       language: initData?.language,
       countryCode: initData?.countryCode,
       currency: initData?.currency,
