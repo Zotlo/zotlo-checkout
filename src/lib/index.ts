@@ -116,7 +116,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (import.meta.env.VITE_API_URL) {
       const result = getFormValues(e.target as HTMLFormElement);
   
-      sendPayment(providerKey, { packageId: params.packageId, ...result }, params);
+      sendPayment(providerKey, { packageId: params.packageId, ...result }, params, config);
   
       params.events?.onSubmit?.(result);
     }
