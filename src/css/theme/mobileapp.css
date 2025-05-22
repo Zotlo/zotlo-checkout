@@ -1,10 +1,10 @@
 .zotlo-checkout.zotlo-checkout--mobileapp {
-  padding: 0 16px 16px;
+  padding: 16px;
 }
 
 .zotlo-checkout.zotlo-checkout--mobileapp .zotlo-checkout__header {
   padding: 8px 16px;
-  margin: 0 -16px;
+  margin: -16px -16px 0;
 }
 
 .zotlo-checkout--mobileapp .zotlo-checkout__tab {

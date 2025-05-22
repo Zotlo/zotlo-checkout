@@ -130,6 +130,7 @@ export function generateThemeMobileApp(params: {
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
+    SHOW_HEADER: !!config.general.appName || !!config.general.appLogo,
     APP_NAME: config.general.appName,
     LOGO: config.general.appLogo,
     PACKAGE_NAME: config.general.packageName,

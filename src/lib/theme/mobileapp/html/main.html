@@ -1,10 +1,12 @@
 <form id="zotlo-checkout-form" class="zotlo-checkout zotlo-checkout--mobileapp" dir="{{DIR}}" data-theme="{{DARK_MODE}}">
+  <% IF(SHOW_HEADER===true) %>
   <div class="zotlo-checkout__header">
     <div class="zotlo-checkout__header__info">
       <img src="{{LOGO}}" role="presentation" />
       <span>{{APP_NAME}}</span>
     </div>
   </div>
+  <% ENDIF %>
   
   <div class="zotlo-checkout__mobileapp__package">
     <% IF(PACKAGE_IMAGE) %>
