@@ -37,8 +37,11 @@
 }
 
 .zotlo-checkout__package__summary tr:first-child td {
-  font-weight: 600;
   font-size: 13px;
+}
+
+.zotlo-checkout__package__summary tr:first-child td:last-child {
+  font-weight: 600;
 }
 
 td.zotlo-checkout__package__summary__price {

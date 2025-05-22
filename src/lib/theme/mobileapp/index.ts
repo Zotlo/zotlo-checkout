@@ -73,25 +73,27 @@ export function generateThemeMobileApp(params: {
     [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' }
   }
 
-  const tabButtons = providerGroups.length > 1
-    ? providerGroups.reduce((acc, item, index) => {
-    const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
-    const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
+  let tabButtons = '';
 
-    return acc + createButton({
-      content: `<img src="${imgSrc}" alt="${item.providerKey}">${
-        item.providerKey === PaymentProvider.CREDIT_CARD ? $t('common.card') : ''
-      }`,
-      className: 'zotlo-checkout__tab__button',
-      attrs: {
-        type: 'button',
-        'data-active': index === 0 ? 'true' : 'false',
-        'data-tab': item.providerKey,
-        'aria-label': item.providerKey
-      }
-    });
-      }, '')
-    : '';
+  if (providerGroups.length > 1) {
+    tabButtons = providerGroups.reduce((acc, item, index) => {
+      const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
+      const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
+
+      return acc + createButton({
+        content: `<img src="${imgSrc}" alt="${item.providerKey}">${
+          item.providerKey === PaymentProvider.CREDIT_CARD ? $t('common.card') : ''
+        }`,
+        className: 'zotlo-checkout__tab__button',
+        attrs: {
+          type: 'button',
+          'data-active': index === 0 ? 'true' : 'false',
+          'data-tab': item.providerKey,
+          'aria-label': item.providerKey
+        }
+      });
+    }, '')
+  }
 
   let primaryProvider = prepareProvider({
     subscriberId: params.subscriberId,
@@ -131,10 +133,10 @@ export function generateThemeMobileApp(params: {
     DIR: dir,
     DARK_MODE: themePreference,
     SHOW_HEADER: !!config.general.appName || !!config.general.appLogo,
-    APP_NAME: config.general.appName,
-    LOGO: config.general.appLogo,
-    PACKAGE_NAME: config.general.packageName,
-    PACKAGE_IMAGE: config.general.productImage,
+    APP_NAME: config.general.appName || '',
+    LOGO: config.general.appLogo || '',
+    PACKAGE_NAME: config.general.packageName || '',
+    PACKAGE_IMAGE: config.general.productImage || '',
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,

@@ -79,6 +79,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
+  font-weight: 500;
 }
 
 .zotlo-checkout table td {
@@ -93,6 +94,10 @@
 .zotlo-checkout table td:last-child {
   text-align: right;
   white-space: nowrap;
+}
+
+.zotlo-checkout table tbody tr:not(:first-child) td {
+  color: #68686A;
 }
 
 .zotlo-checkout tfoot tr:first-child td {
