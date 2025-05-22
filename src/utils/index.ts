@@ -1,5 +1,9 @@
 import Countries from '../countries.json';
 
+export { getCDNUrl } from './getCDNUrl';
+
+export { useI18n } from './i18n';
+
 type Country = typeof Countries[0];
 
 export function getCountryCodeByNumber(phoneNumber: string | number, matchLength = true): string {
@@ -38,7 +42,7 @@ export function getMaskByCode(country: any) {
   return mask;
 }
 
-function isJSON(val: string) {
+export function isJSON(val: string) {
   try { JSON.parse(val); } catch { return false }
   return true;
 } 
@@ -52,13 +56,13 @@ function toPrimitive(val: string) {
     const obj = JSON.parse(val);
     if (Array.isArray(obj)) return obj;
   }
-  return val.replace(/^('|")/g, '').replace(/('|")$/g, '');
+  return val?.replace(/^('|")/g, '')?.replace(/('|")$/g, '');
 }
 
 export function template(templateString: string, data: Record<string, any>) {
   let newString = templateString;
   const parameters = [...new Set(templateString.match(/\{\{(\w+)\}\}/gm) || [])];
-  const conditionsRegex = /<% IF\((?<condition>(.*?))\) %>(?<content>(.*?))<% ENDIF %>/gms;
+  const conditionsRegex = /<% IF\((?<condition>(.*?))\) %>(?<content>(.*?))<% ENDIF %>/gms;  
 
   let matched;
   while ((matched = conditionsRegex.exec(templateString)) !== null) {
@@ -71,7 +75,9 @@ export function template(templateString: string, data: Record<string, any>) {
     const hasCondition = (
       Array.isArray(parsedValue)
         ? parsedValue.includes(dataValue)
-        : dataValue === parsedValue
+        : value === undefined
+          ? !!dataValue
+          : dataValue === parsedValue
     );
 
     // If the condition is true, we get the content

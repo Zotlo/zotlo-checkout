@@ -1,4 +1,4 @@
-import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams } from "../lib/types";
+import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData } from "../lib/types";
 import { API } from "../utils/api";
 import { setCookie, COOKIE } from "./cookie";
 
@@ -19,7 +19,21 @@ type InitResult = {
   showPaypal: boolean;
   currency: string;
   isPolicyRequired: boolean;
+  appName?: string;
+  appLogo?: string;
+  productImage?: string;
+  additionalText?: string;
 };
+
+async function getPaymentData() {
+  try {
+    const paymentRes = await API.get("/payment/init");
+    const paymentInitData = paymentRes?.result || {};
+    return paymentInitData as FormPaymentData;
+  } catch {
+    return {} as FormPaymentData;
+  }
+}
 
 export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
   const config = { general: {}, settings: {}, design: {}, paymentData: {} } as FormConfig;
@@ -46,8 +60,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     const pathName = globalThis?.location?.pathname || "/";
     setCookie(COOKIE.UUID, initData?.uuid, 30, pathName);
 
-    const paymentRes = await API.get("/payment/init");
-    const paymentInitData = paymentRes?.result || {};
+    const paymentInitData = await getPaymentData();
 
     config.design = initData?.settings || {};
     config.general = {
@@ -60,6 +73,11 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       privacyUrl: initData?.privacyUrl,
       privacyAndTosUrlStatus: !!+initData?.privacyAndTosUrlStatus,
       isPolicyRequired: initData?.isPolicyRequired,
+      appName: initData?.appName || '',
+      appLogo: initData?.appLogo || '',
+      packageName: paymentInitData?.package?.name || '',
+      productImage: initData?.productImage || '',
+      additionalText: initData?.additionalText || '',
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],

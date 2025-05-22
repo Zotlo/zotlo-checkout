@@ -1,5 +1,5 @@
 import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn } from "./types"
-import { createForm } from "./create";
+import { generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, type ValidationResult, updateValidationMessages, validatorInstance } from "../utils/validation";
 import { FORM_ITEMS } from "./fields";
@@ -170,7 +170,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       item.addEventListener('click', handleTabClick);
     }
 
-    tabItems.item(0).dispatchEvent(new Event('click'));
+    tabItems.item(0)?.dispatchEvent(new Event('click'));
   }
 
   function refresh() {
@@ -187,7 +187,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     // Destroy everything before re-rendering
     unmount();
 
-    const form = createForm({ subscriberId, config });
+    const form = generateTheme({ subscriberId, config });
     const style = createStyle(config);
     const container = getContainerElement();
 
@@ -293,10 +293,11 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function initFormInputs() {
+    const wrapper = config.design.theme !== 'mobileapp' ? '[data-tab-active="true"] ' : '';
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-    const maskInputs = formElement?.querySelectorAll('[data-tab-active="true"] input[data-mask]');
-    const ruleInputs = formElement?.querySelectorAll('[data-tab-active="true"] input[data-rules]');
-    const selectboxes = getContainerElement()?.querySelectorAll('[data-tab-active="true"] [data-select]');
+    const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
+    const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');
+    const selectboxes = getContainerElement()?.querySelectorAll(wrapper + '[data-select]');
 
     function updatePhoneMask(code: string, input: HTMLInputElement) {
       const country = getCountryByCode(code);

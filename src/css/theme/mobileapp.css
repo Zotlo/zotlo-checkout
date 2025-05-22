@@ -1,0 +1,64 @@
+.zotlo-checkout.zotlo-checkout--mobileapp {
+  padding: 0 16px 16px;
+}
+
+.zotlo-checkout.zotlo-checkout--mobileapp .zotlo-checkout__header {
+  padding: 8px 16px;
+  margin: 0 -16px;
+}
+
+.zotlo-checkout--mobileapp .zotlo-checkout__tab {
+  border: 1px solid #E7EAEE;
+  border-radius: 8px;
+  padding: 2px;
+  gap: 0;
+}
+
+.zotlo-checkout--mobileapp[data-theme="dark"] .zotlo-checkout__tab {
+  border-color: #6B7283;
+}
+
+.zotlo-checkout--mobileapp .zotlo-checkout__tab__button {
+  border: none;
+  border-radius: 6px;
+  padding: 4px;
+  min-height: 46px;
+  flex-direction: column;
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.zotlo-checkout--mobileapp .zotlo-checkout__tab__button[data-active="true"] {
+  background-color: #DDE8EA;
+}
+
+.zotlo-checkout--mobileapp[data-theme="dark"] .zotlo-checkout__tab__button[data-active="true"] {
+  background-color: #303032;
+}
+
+.zotlo-checkout__package__summary tr:first-child td {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+td.zotlo-checkout__package__summary__price {
+  font-size: 16px !important;
+}
+
+.zotlo-checkout__mobileapp__package__image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.zotlo-checkout__mobileapp__package__image img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.zotlo-checkout--mobileapp .zotlo-checkout__seperator span {
+  font-size: 12px;
+  font-weight: 500;
+}

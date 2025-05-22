@@ -3,6 +3,9 @@
 @import "./checkbox.css";
 @import "./tooltip.css";
 @import "./select.css";
+@import "./button.css";
+@import "./theme/default.css";
+@import "./theme/mobileapp.css";
 
 .zotlo-checkout {
   --zc-color: #000000;
@@ -72,9 +75,60 @@
   max-width: 100%;
 }
 
+.zotlo-checkout table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.zotlo-checkout table td {
+  border-bottom: 1px solid #EBEBEB;
+  padding: 8px 0;
+}
+
+.zotlo-checkout[data-theme="dark"] table td {
+  border-bottom-color: #333333;
+}
+
+.zotlo-checkout table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.zotlo-checkout tfoot tr:first-child td {
+  padding-top: 24px;
+}
+
+.zotlo-checkout tfoot tr:last-child td {
+  border-bottom: none;
+}
+
 .zotlo-checkout a { color: #007AFF; }
 .zotlo-checkout a:hover {
   text-decoration: underline;
+}
+
+.zotlo-checkout__header {
+  border-bottom: 1px solid #EBEBEB;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__header {
+  border-bottom-color: #333333;
+}
+
+.zotlo-checkout__header__info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.zotlo-checkout__header__info img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .zotlo-checkout__form__col2 {
@@ -120,22 +174,6 @@
   max-height: 33px;
 }
 
-.zotlo-checkout__button {
-  font-weight: 700;
-  padding: 8px 16px;
-  display: inline-flex;
-  background-color: #4329CC;
-  width: 100%;
-  color: white;
-  border-radius: 8px;
-  font-size: 14px;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  min-height: 48px;
-  border: 0;
-}
-
 .zotlo-checkout__cardSubmit {
   margin-top: 32px;
 }
@@ -150,18 +188,6 @@
 
 .zotlo-checkout__button.provider.paypal {
   background-color: #f6c444;
-}
-
-.zotlo-checkout__button-desc {
-  display: block;
-  margin-top: 4px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.zotlo-checkout__button-desc:empty {
-  display: none;
 }
 
 .zotlo-checkout__cardSubmit {
@@ -264,53 +290,6 @@
   font-weight: 600;
 }
 
-.zotlo-checkout__tab {
-  display: flex;
-  gap: 8px;
-}
-
-.zotlo-checkout__tab > div {
-  flex: 1;
-}
-
-.zotlo-checkout__tab__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 56px;
-  flex: 1;
-}
-
-.zotlo-checkout__tab__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 56px;
-  flex: 1;
-  padding: 12px;
-  gap: 4px;
-  color: #000000;
-  border: 1px solid #818A9C;
-  background-color: transparent;
-  transition: background-color 0.2s linear, border-color 0.2s linear;
-}
-
-.zotlo-checkout__tab__button[data-active="true"] {
-  background-color: var(--zc-tab-button-backgroundColor);
-  border-color: var(--zc-form-submit-backgroundColor);
-}
-
-.zotlo-checkout__tab__button img {
-  max-height: 1rem;
-  flex-shrink: 0;
-  pointer-events: none;
-}
-
-.zotlo-checkout__tab__button[data-tab="googlePay"] img,
-.zotlo-checkout__tab__button[data-tab="applePay"] img {
-  max-height: 32px;
-}
-
 .zotlo-checkout .zotlo-checkout__payment-provider[data-tab-active="false"] {
   display: none;
   visibility: hidden;
@@ -321,17 +300,9 @@
   visibility: visible;
 }
 
-.zotlo-checkout[data-theme="dark"] .zotlo-checkout__tab__button {
-  color: white;
-}
-
 @media (min-width: 640px) {
   .zotlo-checkout {
     padding: 24px;
     border: var(--zc-form-borderWidth, 1px) solid var(--zc-form-borderColor, #E7EAEE);
-  }
-
-  .zotlo-checkout__tab__button {
-    height: 64px;
   }
 }

@@ -1,0 +1,27 @@
+.zotlo-checkout__button {
+  font-weight: 700;
+  padding: 8px 16px;
+  display: inline-flex;
+  background-color: #4329CC;
+  width: 100%;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  min-height: 48px;
+  border: 0;
+}
+
+.zotlo-checkout__button-desc {
+  display: block;
+  margin-top: 4px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.zotlo-checkout__button-desc:empty {
+  display: none;
+}

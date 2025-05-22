@@ -31,7 +31,7 @@ type TextStyle = {
 }
 
 export type FormDesign = {
-  theme: 'horizontal' | 'vertical';
+  theme: 'horizontal' | 'vertical' | 'mobileapp';
   darkMode: boolean;
   fontFamily: string;
   borderColor: string;
@@ -121,6 +121,11 @@ export type FormConfig = {
     privacyUrl: string;
     privacyAndTosUrlStatus: boolean;
     isPolicyRequired: boolean;
+    packageName?: string;
+    appName?: string;
+    appLogo?: string;
+    productImage?: string;
+    additionalText?: string;
   };
   settings: FormSetting;
   design: FormDesign;
