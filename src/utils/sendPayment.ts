@@ -1,4 +1,4 @@
-import { PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams } from "../lib/types";
+import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams } from "../lib/types";
 import { API } from "./api";
 
 function preparePayload(providerKey: PaymentProvider, formData: Record<string, any>, params: IZotloCheckoutParams) {
@@ -39,9 +39,12 @@ function preparePayload(providerKey: PaymentProvider, formData: Record<string, a
   }
 }
 
-async function registerPaymentUser(subscriberId: string) {
+async function registerPaymentUser(subscriberId: string, registerType: FormConfig['settings']['registerType']) {
   try {
     if (!subscriberId) return null;
+    if (registerType === 'phoneNumber') {
+      subscriberId = subscriberId.replace(/[^0-9]/g, '');
+    }
     const response = await API.post("/payment/register", { subscriberId });
     return response;
   } catch {
@@ -49,12 +52,17 @@ async function registerPaymentUser(subscriberId: string) {
   }
 }
 
-export async function sendPayment(providerKey: PaymentProvider, formData: Record<string, any>, params: IZotloCheckoutParams) {
+export async function sendPayment(providerKey: PaymentProvider, formData: Record<string, any>, params: IZotloCheckoutParams, config: FormConfig) {
   try {
     const { subscriberId = "" } = formData || {};
 
     // Register user
-    await registerPaymentUser(subscriberId);
+    const response = await registerPaymentUser(subscriberId, config.settings.registerType);
+
+    if (!response) {
+      params.events?.onFail?.({ message: "Failed to register user", data: {} });
+      return;
+    }
     
     // Send payment
     const payload = preparePayload(providerKey, formData, params);
