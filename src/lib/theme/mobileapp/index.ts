@@ -113,7 +113,7 @@ export function generateThemeMobileApp(params: {
     }) + primaryProvider;
   }
 
-  let providerButtons = providerGroups.map((method, index) => prepareProvider({
+  const providerButtons = providerGroups.map((method, index) => prepareProvider({
     subscriberId: params.subscriberId,
     config,
     paymentMethods,

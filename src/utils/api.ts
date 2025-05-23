@@ -20,7 +20,7 @@ interface ApiResponse {
  * API utility class for making HTTP requests using XMLHttpRequest
  */
 export class API {
-  private static baseUrl: string = import.meta.env.VITE_API_URL || "";
+  private static baseUrl: string = import.meta.env.VITE_SDK_API_URL || "";
   private static defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
   };

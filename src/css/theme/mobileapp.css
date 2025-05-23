@@ -59,6 +59,7 @@ td.zotlo-checkout__package__summary__price {
   width: 90px;
   height: 90px;
   object-fit: contain;
+  object-position: center;
 }
 
 .zotlo-checkout--mobileapp .zotlo-checkout__seperator span {

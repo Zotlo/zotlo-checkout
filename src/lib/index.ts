@@ -16,7 +16,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   let config = { general: {}, settings: {}, design: {} } as FormConfig;
   let providerConfigs = {};
 
-  if (import.meta.env.VITE_API_URL) {
+  if (import.meta.env.VITE_SDK_API_URL) {
     config = await getConfig({ 
       token: params.token,
       packageId: params.packageId,
@@ -115,7 +115,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     if (!validation.isValid) return;
 
-    if (import.meta.env.VITE_API_URL) {
+    if (import.meta.env.VITE_SDK_API_URL) {
       const result = getFormValues(e.target as HTMLFormElement);
   
       sendPayment(providerKey, { packageId: params.packageId, ...result }, params, config);

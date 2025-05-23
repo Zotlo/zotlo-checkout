@@ -121,10 +121,10 @@ export type FormConfig = {
     privacyUrl: string;
     privacyAndTosUrlStatus: boolean;
     isPolicyRequired: boolean;
-    packageName?: string;
-    appName?: string;
     appLogo?: string;
+    appName?: string;
     productImage?: string;
+    packageName?: string;
     additionalText?: string;
   };
   settings: FormSetting;

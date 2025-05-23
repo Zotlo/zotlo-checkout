@@ -227,6 +227,7 @@ export function createCreditCardForm(params: {
 
     const options = {
       ...inputOptions,
+      defaultCountryCode: config.general.countryCode,
       label: $t(`form.${key}.label`),
       input: {
         ...inputOptions.input,
