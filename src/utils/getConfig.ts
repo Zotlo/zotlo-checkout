@@ -1,4 +1,5 @@
 import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData } from "../lib/types";
+import { PaymentProvider } from "../lib/types";
 import { API } from "../utils/api";
 import { setCookie, COOKIE } from "./cookie";
 
@@ -81,7 +82,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],
-      registerType:  initData?.registerType,
+      registerType: initData?.registerType,
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
     }
     config.paymentData = paymentInitData as FormConfig["paymentData"];
@@ -90,4 +91,104 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
   }
 
   return config;
+}
+
+export async function getProviderConfig(providerKey: PaymentProvider) {
+  try {
+    const res = await API.post(`/payment/init`, { providerKey });
+    const data = res?.result || {};
+    return data;
+  } catch {
+    return {};
+  }
+}
+
+export async function getProvidersConfigData(paymentInitData?:FormPaymentData) {
+  const { providers = {} } = paymentInitData || {};
+  const providersHasConfig = [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY];
+  const providerKeys = providersHasConfig.filter(key => !!providers[key]);
+  if (!providerKeys?.length) return {};
+  const promises = providerKeys.map((providerKey) => getProviderConfig(providerKey as PaymentProvider));
+  const results = await Promise.all(promises);
+  const reducedObj = results.reduce((acc, result, index) => {
+    const key = providerKeys?.[index];
+    const returnObj = { 
+      ...result,
+      configs: {
+        ...acc.configs,
+        [key]: {
+          ...result?.configs?.[key],
+          transactionId: result?.transactionId,
+        },
+      },
+    } as any;
+    // transactionId is different for each provider in configs key
+    delete returnObj?.transactionId;
+    return returnObj;
+  }, {configs: {}} as Record<string, any>);
+  return reducedObj;
+}
+
+export async function getProvidersConfig(paymentInitData?: FormPaymentData, countryCode?: string) {
+  if (!paymentInitData) return {};
+  const configData = await getProvidersConfigData(paymentInitData);
+  const isGooglePayProd = import.meta.env.VITE_GOOGLE_PAY_ENVIRONMENT === "PRODUCTION";
+
+  const { currency, price, merchantId = '', appName = '' } = configData || {};
+  // Apple Pay
+  const applePayConfig = configData?.configs?.applePay || {};
+  const applePayParams = configData?.configs?.applePay?.parameters || {};
+  // Google Pay
+  const googlePayConfig = configData?.configs?.googlePay || {};
+  const googlePayTokenizationSpecification = googlePayConfig?.tokenizationSpecification || {};
+  const baseRequest = {
+    apiVersion: 2,
+    apiVersionMinor: 0
+  };
+  const baseCardPaymentMethod = {
+    type: googlePayConfig?.type,
+    parameters: googlePayConfig?.parameters
+  };
+  const cardPaymentMethod = {
+    ...baseCardPaymentMethod,
+    tokenizationSpecification: googlePayTokenizationSpecification
+  };
+  const transactionInfo = {
+    countryCode,
+    currencyCode: currency,
+    totalPriceStatus: 'FINAL',
+    totalPrice: price
+  }
+
+  return {
+    [PaymentProvider.APPLE_PAY]: {
+      requestPayload: {
+        ...applePayParams,
+        currencyCode: currency,
+        total: {
+          label: appName,
+          amount: price
+        }
+      },
+      transactionId: applePayConfig?.transactionId,
+    },
+    [PaymentProvider.GOOGLE_PAY]: {
+      isReadyToPayRequest: {
+        ...baseRequest,
+        allowedPaymentMethods: [baseCardPaymentMethod]
+      },
+      transactionInfo,
+      paymentDataRequest: {
+        ...baseRequest,
+        transactionInfo,
+        merchantInfo: {
+          merchantName: appName,
+          ...(isGooglePayProd && { merchantId })
+        },
+        allowedPaymentMethods: [cardPaymentMethod]
+      },
+      tokenization: googlePayTokenizationSpecification,
+      transactionId: googlePayConfig?.transactionId,
+    }
+  }
 }

@@ -8,12 +8,13 @@ import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
 import { getCountryByCode, getMaskByCode } from "../utils";
-import { getConfig } from "../utils/getConfig";
+import { getConfig, getProvidersConfig } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {} } as FormConfig;
+  let providerConfigs = {};
 
   if (import.meta.env.VITE_API_URL) {
     config = await getConfig({ 
@@ -23,6 +24,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       subscriberId: params.subscriberId,
       returnUrl: params.returnUrl 
     });
+    providerConfigs = await getProvidersConfig(config?.paymentData, config?.general?.countryCode);
   }
 
   let containerId = '';
