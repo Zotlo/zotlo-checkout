@@ -24,6 +24,9 @@ type InitResult = {
   appLogo?: string;
   productImage?: string;
   additionalText?: string;
+  packageName?: string;
+  customPrice?: string;
+  customCurrency?: string;
 };
 
 async function getPaymentData() {
@@ -76,9 +79,11 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       isPolicyRequired: initData?.isPolicyRequired,
       appName: initData?.appName || '',
       appLogo: initData?.appLogo || '',
-      packageName: paymentInitData?.package?.name || '',
+      packageName: paymentInitData?.package?.name || initData?.packageName || '',
       productImage: initData?.productImage || '',
       additionalText: initData?.additionalText || '',
+      customPrice: initData?.customPrice || '',
+      customCurrency: initData?.customCurrency || ''
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],

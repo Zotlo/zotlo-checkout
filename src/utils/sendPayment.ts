@@ -1,3 +1,4 @@
+import { createPaymentSuccessForm } from "../lib/create";
 import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams } from "../lib/types";
 import { API } from "./api";
 
@@ -52,7 +53,15 @@ async function registerPaymentUser(subscriberId: string, registerType: FormConfi
   }
 }
 
-export async function sendPayment(providerKey: PaymentProvider, formData: Record<string, any>, params: IZotloCheckoutParams, config: FormConfig) {
+export async function sendPayment(paymentParams: {
+  providerKey: PaymentProvider;
+  formData: Record<string, any>;
+  params: IZotloCheckoutParams;
+  config: FormConfig;
+  containerId: string
+}) {
+  const { providerKey, formData, params, config, containerId } = paymentParams;
+
   try {
     const { subscriberId = "" } = formData || {};
 
@@ -76,6 +85,7 @@ export async function sendPayment(providerKey: PaymentProvider, formData: Record
         globalThis.location.href = redirectUrl;
       }
       if (status === PaymentResultStatus.COMPLETE && payment) {
+        createPaymentSuccessForm({ containerId, config });
         params.events?.onSuccess?.();
       }
     }

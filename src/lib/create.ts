@@ -5,6 +5,7 @@ import buttonElement from '../html/button.html'
 import tooltipElement from '../html/tooltip.html'
 import selectElement from '../html/select.html'
 import selectItemElement from '../html/select-item.html'
+import paymentSuccessElement from '../html/payment-success.html'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
 import { type FormConfig, PaymentProvider } from './types'
@@ -271,8 +272,8 @@ export function createCreditCardForm(params: {
     cardBottom = seperatorText;
   }
 
-  const totalPrice = config.paymentData?.selectedPrice.price || "0.00";
-  const currency = config.paymentData?.selectedPrice.currency || config.general.currency || "USD";
+  const totalPrice = config.general.customPrice || config.paymentData?.selectedPrice.price || "0.00";
+  const currency = config.general.customCurrency || config.paymentData?.selectedPrice.currency || config.general.currency || "USD";
 
   return template(newForm, {
     CARD_TOP: cardTop,
@@ -304,4 +305,54 @@ export function createProviderButton(params: {
       ...(tabAvailable ? { 'data-tab-content': provider, 'data-tab-active': 'true'} : {})
     }
   })
+}
+
+export function createPaymentSuccessForm(params: {
+  containerId: string;
+  config: FormConfig;
+}) {
+  if (!params.config?.success?.show) return false;
+
+  const { containerId, config } = params;
+  const delay = config.success.waitTime; // seconds
+  const container = document.getElementById(containerId);
+  const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
+  const { $t } = useI18n(config.general.localization);
+  const buttonText = config?.success?.button?.text || 0;
+  const htmlText = template(paymentSuccessElement, {
+    TITLE: $t('paymentSuccess.title'),
+    BUTTON_TEXT: typeof buttonText === 'number'
+      ? $t(`paymentSuccess.button.${buttonText}`)
+      : buttonText,
+    TIMER_TEXT: $t('paymentSuccess.timer', { second: delay }),
+    AUTO_REDIRECT: config.success.autoRedirect,
+  });
+
+  function startTimer(timeInSeconds: number) {
+    let seconds = timeInSeconds;
+    const timer = setInterval(() => {
+      seconds--;
+      const successMessage = form.querySelector('[data-timer]') as HTMLDivElement;
+      if (successMessage) {
+        successMessage.innerHTML = $t('paymentSuccess.timer', { second: seconds })
+      }
+      if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.href = config.success.redirectUrl; // Redirect to the game or desired URL
+      }
+    }, 1000);
+  }
+
+  if (container) {
+    const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, 'text/html');
+
+    for (const item of itemsExceptHeader) {
+      (item as HTMLDivElement).style.display = 'none';
+    }
+    
+    form?.appendChild(doc.body.firstChild as HTMLElement);
+    if (config.success.redirectUrl && config.success.autoRedirect) startTimer(delay);
+  }
 }

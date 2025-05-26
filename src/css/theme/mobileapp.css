@@ -23,9 +23,6 @@
   border-radius: 6px;
   padding: 4px;
   min-height: 46px;
-  flex-direction: column;
-  font-size: 10px;
-  font-weight: normal;
 }
 
 .zotlo-checkout--mobileapp .zotlo-checkout__tab__button[data-active="true"] {

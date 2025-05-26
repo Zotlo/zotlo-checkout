@@ -109,25 +109,52 @@ export type FormPaymentData = {
   subscriberCountry: string;
 }
 
+export type FormGeneral = {
+  isLive?: boolean;
+  showPaypal: boolean;
+  language: string;
+  countryCode: string;
+  currency: string;
+  localization: Record<string, any>;
+  tosUrl: string;
+  privacyUrl: string;
+  privacyAndTosUrlStatus: boolean;
+  isPolicyRequired: boolean;
+  appLogo?: string;
+  appName?: string;
+  productImage?: string;
+  packageName?: string;
+  additionalText?: string;
+  customPrice?: string;
+  customCurrency?: string;
+}
+
+export type FormSuccess = {
+  show: boolean;
+  waitTime: number;
+  redirectUrl: string;
+  autoRedirect: boolean;
+  color: string;
+  button: {
+    color: string;
+    borderColor: string;
+    backgroundColor: string;
+    borderRadius: string;
+    borderWidth: string;
+    textStyle: TextStyle;
+    hover: {
+      color: string;
+      borderColor: string;
+      backgroundColor: string;
+    },
+    text: number | string;
+  }
+}
+
 export type FormConfig = {
-  general: {
-    isLive?: boolean;
-    showPaypal: boolean;
-    language: string;
-    countryCode: string;
-    currency: string;
-    localization: Record<string, any>;
-    tosUrl: string;
-    privacyUrl: string;
-    privacyAndTosUrlStatus: boolean;
-    isPolicyRequired: boolean;
-    appLogo?: string;
-    appName?: string;
-    productImage?: string;
-    packageName?: string;
-    additionalText?: string;
-  };
+  general: FormGeneral;
   settings: FormSetting;
   design: FormDesign;
+  success: FormSuccess;
   paymentData?: FormPaymentData;
 }

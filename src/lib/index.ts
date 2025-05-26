@@ -122,7 +122,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (import.meta.env.VITE_SDK_API_URL) {
       const result = getFormValues(e.target as HTMLFormElement);
   
-      sendPayment(providerKey, { packageId: params.packageId, ...result }, params, config);
+      sendPayment({
+        providerKey,
+        formData: { packageId: params.packageId, ...result },
+        params,
+        config,
+        containerId
+      });
   
       params.events?.onSubmit?.(result);
     }
@@ -433,7 +439,11 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   function init() {
     handleTabView();
     params.events?.onLoad?.();
-    handleUrlQuery(params);
+    handleUrlQuery({
+      params,
+      config,
+      containerId
+    });
   }
 
   function unmount() {
