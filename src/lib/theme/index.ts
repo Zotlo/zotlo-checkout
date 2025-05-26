@@ -9,14 +9,15 @@ export function generateTheme(params: {
   config: FormConfig;
 }){
   const { config } = params;
-  const { $t } = useI18n(config.general.localization);
-  const dir = ['he', 'ar'].includes(config.general.language) ? 'rtl' : 'ltr';
-  const themePreference = config.design.darkMode ? 'dark' : 'light';
-  const paymentMethodSetting = config.settings.paymentMethodSetting;
+  const { $t } = useI18n(config.general?.localization);
+  const dir = ['he', 'ar'].includes(config?.general.language) ? 'rtl' : 'ltr';
+  const themePreference = config?.design?.darkMode ? 'dark' : 'light';
+  const paymentMethodSetting = config?.settings?.paymentMethodSetting;
   const hasPaypal = paymentMethodSetting?.some((item) => item.providerKey === PaymentProvider.PAYPAL);
   const hasOnlyPaypalButNotShown = hasPaypal && !config.general.showPaypal && paymentMethodSetting.length === 1;
+  const hasAnyConfig = Object.keys(config?.settings).length > 0;
 
-  if (hasOnlyPaypalButNotShown) {
+  if (!hasAnyConfig || hasOnlyPaypalButNotShown) {
     return template(noMethodElement, {
       DIR: dir,
       TITLE: $t('empty.noMethod.title'),
@@ -33,13 +34,13 @@ export function generateTheme(params: {
     })
     : '';
 
-  const paymentMethods = paymentMethodSetting.filter((item) => {
+  const paymentMethods = paymentMethodSetting?.filter((item) => {
     const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
     const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : (globalThis as any)?.ApplePaySession?.canMakePayments();
     if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
     if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
     return isAvailable;
-  });
+  }) || [];
 
   const footerInfo = {
     // TODO: PRICE_INFO will be changed to a dynamic text by package

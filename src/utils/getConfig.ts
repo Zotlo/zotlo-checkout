@@ -44,7 +44,16 @@ async function getPaymentData() {
 }
 
 export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
-  const config = { general: {}, settings: {}, design: {}, paymentData: {} } as FormConfig;
+  const config = { general: {
+    localization: {
+      empty: {
+        noMethod: {
+          title: 'An error occured',
+          desc: 'Cannot load form, please try again later.',
+        }
+      }
+    } as any
+  }, settings: {}, design: {}, paymentData: {} } as FormConfig;
 
   const {
     token,
@@ -75,7 +84,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     config.success = settings?.success || {};
 
     config.general = {
-      localization: initData?.localization,
+      localization: initData?.localization || config.general.localization,
       showPaypal: !!paymentInitData?.providers?.paypal,
       language: initData?.language,
       countryCode: initData?.countryCode,

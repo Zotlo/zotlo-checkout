@@ -135,8 +135,14 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
+  function hasAnyConfig() {
+    return Object.keys(config.settings).length > 0;
+  }
+
   function handleTabView() {
-    const paymentMethods = config.settings.paymentMethodSetting.filter((item) => {
+    if (!hasAnyConfig()) return;
+
+    const paymentMethods = config?.settings?.paymentMethodSetting?.filter((item) => {
       if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
       return true;
     });
@@ -194,8 +200,11 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
       }
     }
-    
-    updateValidationMessages(config.general.localization.form.validation.rule);
+
+    if (hasAnyConfig()) {
+      updateValidationMessages(config.general.localization.form.validation.rule);
+      loadFontsOnPage([config.design.fontFamily]);
+    }
 
     // Destroy everything before re-rendering
     unmount();
@@ -203,8 +212,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const form = generateTheme({ subscriberId, config });
     const style = createStyle(config);
     const container = getContainerElement();
-
-    loadFontsOnPage([config.design.fontFamily]);
 
     if (container) container.innerHTML = `<style>${style}</style>` + form;
 
