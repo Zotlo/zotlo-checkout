@@ -79,7 +79,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       isPolicyRequired: initData?.isPolicyRequired,
       appName: initData?.appName || '',
       appLogo: initData?.appLogo || '',
-      packageName: paymentInitData?.package?.name || initData?.packageName || '',
+      packageName: initData?.packageName || paymentInitData?.package?.name || '',
       productImage: initData?.productImage || '',
       additionalText: initData?.additionalText || '',
       customPrice: initData?.customPrice || '',
