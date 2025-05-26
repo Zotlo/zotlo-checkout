@@ -1,5 +1,5 @@
 import mainHTML from './html/main.html';
-import { getCDNUrl, template, useI18n } from '../../../utils'
+import { generateAttributes, getCDNUrl, template, useI18n } from '../../../utils'
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
 import { createProviderButton, createButton, createCreditCardForm } from '../../create'
 
@@ -122,8 +122,8 @@ export function generateThemeMobileApp(params: {
     tabAvailable: true
   })).join('');
 
-  const totalPrice = config.paymentData?.selectedPrice.price || "0.00";
-  const currency = config.paymentData?.selectedPrice.currency || config.general.currency || "USD";
+  const totalPrice = config.general.customPrice || config.paymentData?.selectedPrice.price || "0.00";
+  const currency = config.general.customCurrency || config.paymentData?.selectedPrice.currency || config.general.currency || "USD";
 
   if (providerButtons) {
     primaryProvider += `<div class="zotlo-checkout__seperator"><span>${$t('common.orAnotherWay')}</span></div>`
@@ -149,6 +149,7 @@ export function generateThemeMobileApp(params: {
     FOOTER_DESC: footerInfo.FOOTER_DESC,
     DISCLAIMER: footerInfo.DISCLAIMER,
     ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
-    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS
+    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    ATTRIBUTES: generateAttributes({ autocomplete: 'off' })
   })
 }

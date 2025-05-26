@@ -1,6 +1,6 @@
 import mainHTML from './html/main.html'
 import { type FormSetting, PaymentProvider, type FormConfig } from '../../types'
-import { template, useI18n, getCDNUrl } from '../../../utils'
+import { template, useI18n, getCDNUrl, generateAttributes } from '../../../utils'
 import { createButton, createCreditCardForm, createProviderButton } from '../../create'
 
 export function generateThemeDefault(params: {
@@ -107,6 +107,7 @@ export function generateThemeDefault(params: {
     FOOTER_DESC: footerInfo.FOOTER_DESC,
     DISCLAIMER: footerInfo.DISCLAIMER,
     ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
-    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS
+    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    ATTRIBUTES: generateAttributes({ autocomplete: 'off' })
   });
 }

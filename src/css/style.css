@@ -40,6 +40,15 @@
   --zc-footer-color: #737380;
   --zc-footer-fontSize: 10px;
   --zc-form-provider-backgroundColor: #000000;
+  --zc-success-button-color: #FFFFFF;
+  --zc-success-button-backgroundColor: #4329CC;
+  --zc-success-button-borderColor: #4329CC;
+  --zc-success-button-backgroundColor: #4329CC;
+  --zc-success-button-borderWidth: 0px;
+  --zc-success-button-borderRadius: 8px;
+  --zc-success-button-hover-color: #FFFFFF;
+  --zc-success-button-hover-borderColor: #301BA3;
+  --zc-success-button-hover-backgroundColor: #301BA3;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -58,7 +67,8 @@
   gap: 24px;
   min-width: 320px;
   max-width: 460px;
-  color: var(--zc-color)
+  color: var(--zc-color);
+  position: relative;
 }
 
 .zotlo-checkout,
@@ -115,6 +125,8 @@
 
 .zotlo-checkout__header {
   border-bottom: 1px solid #EBEBEB;
+  position: relative;
+  z-index: 10;
 }
 
 .zotlo-checkout[data-theme="dark"] .zotlo-checkout__header {
@@ -304,6 +316,54 @@
 .zotlo-checkout .zotlo-checkout__payment-provider[data-tab-active="true"] {
   display: block;
   visibility: visible;
+}
+
+.zotlo-checkout__success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 5;
+  height: 520px;
+  padding: 0 14px;
+  margin-top: -24px;
+  text-align: center;
+  color: var(--zc-success-color);
+  background-color: var(--zc-form-backgroundColor);
+}
+
+.zotlo-checkout__success .zotlo-checkout__button {
+  margin: 16px 0;
+  color: var(--zc-success-button-color);
+  border: var(--zc-success-button-borderWidth) solid var(--zc-success-button-borderColor);
+  border-radius: var(--zc-success-button-borderRadius);
+  background-color: var(--zc-success-button-backgroundColor);
+}
+
+.zotlo-checkout__success .zotlo-checkout__button:hover {
+  margin: 16px 0;
+  color: var(--zc-success-button-hover-color);
+  border-color: var(--zc-success-button-hover-borderColor);
+  background-color: var(--zc-success-button-hover-backgroundColor);
+}
+
+.zotlo-checkout__success__title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.zotlo-checkout__success__desc {
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.zotlo-checkout__success__timer {
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 4px;
+  color: #68686A;
 }
 
 @media (min-width: 640px) {
