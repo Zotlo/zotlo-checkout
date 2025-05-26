@@ -127,7 +127,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         formData: { packageId: params.packageId, ...result },
         params,
         config,
-        containerId
+        containerId,
+        providerConfigs
       });
   
       params.events?.onSubmit?.(result);

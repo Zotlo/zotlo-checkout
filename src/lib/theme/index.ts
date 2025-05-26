@@ -35,6 +35,8 @@ export function generateTheme(params: {
 
   const paymentMethods = paymentMethodSetting.filter((item) => {
     const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
+    const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : (globalThis as any)?.ApplePaySession?.canMakePayments();
+    if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
     if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
     return isAvailable;
   });
