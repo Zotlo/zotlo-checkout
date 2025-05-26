@@ -14,7 +14,7 @@ import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { loadProviderSDKs } from "../utils/loadProviderSdks";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
-  let config = { general: {}, settings: {}, design: {} } as FormConfig;
+  let config = { general: {}, settings: {}, design: {}, success: {} } as FormConfig;
   let providerConfigs = {};
 
   if (import.meta.env.VITE_SDK_API_URL) {

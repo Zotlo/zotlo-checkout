@@ -319,13 +319,14 @@ export function createPaymentSuccessForm(params: {
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
   const buttonText = config?.success?.button?.text || 0;
+  const canAutoRedirect = !!config.success.redirectUrl && config.success.autoRedirect;
   const htmlText = template(paymentSuccessElement, {
     TITLE: $t('paymentSuccess.title'),
     BUTTON_TEXT: typeof buttonText === 'number'
       ? $t(`paymentSuccess.button.${buttonText}`)
       : buttonText,
     TIMER_TEXT: $t('paymentSuccess.timer', { second: delay }),
-    AUTO_REDIRECT: config.success.autoRedirect,
+    AUTO_REDIRECT: canAutoRedirect,
   });
 
   function startTimer(timeInSeconds: number) {
@@ -353,6 +354,6 @@ export function createPaymentSuccessForm(params: {
     }
     
     form?.appendChild(doc.body.firstChild as HTMLElement);
-    if (config.success.redirectUrl && config.success.autoRedirect) startTimer(delay);
+    if (canAutoRedirect) startTimer(delay);
   }
 }

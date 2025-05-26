@@ -1,4 +1,4 @@
-import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData } from "../lib/types";
+import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess } from "../lib/types";
 import { PaymentProvider } from "../lib/types";
 import { API } from "../utils/api";
 import { setCookie, COOKIE } from "./cookie";
@@ -9,7 +9,10 @@ type InitResult = {
   registerBypass: boolean;
   language: string;
   countryCode: string;
-  settings: FormDesign;
+  settings: {
+    design: FormDesign;
+    success: FormSuccess;
+  };
   paymentMethodSetting: FormSetting["paymentMethodSetting"];
   registerType: FormSetting["registerType"];
   allowSubscriberIdEditingOnRegisterPayment: string;
@@ -65,8 +68,11 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     setCookie(COOKIE.UUID, initData?.uuid, 30, pathName);
 
     const paymentInitData = await getPaymentData();
+    const settings = initData?.settings;
 
-    config.design = initData?.settings || {};
+    config.design = (settings?.design ? settings.design : (settings as any)) || {};
+    config.success = settings?.success || {};
+
     config.general = {
       localization: initData?.localization,
       showPaypal: !!paymentInitData?.providers?.paypal,

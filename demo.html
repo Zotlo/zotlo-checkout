@@ -31,11 +31,22 @@
         const checkout = await window.ZotloCheckout({
           token: '123ASDASsqasdas=',
           packageId: 'zotlo-123',
+          language: 'en',
+          subscriberId: '',
+          returnUrl: '',
           events: {
             onLoad() {
-              console.log('OK!')
+              console.log('DONE DEV!')
             },
-            onSubmit() {}
+            onSubmit(e) {
+              console.log('Form submit', e);
+            },
+            onSuccess() {
+              console.log('Payment success!');
+            },
+            onFail(e) {
+              console.log('Payment failed!', e);
+            },
           }
         });
         
