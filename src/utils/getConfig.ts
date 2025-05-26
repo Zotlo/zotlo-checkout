@@ -16,6 +16,7 @@ type InitResult = {
   paymentMethodSetting: FormSetting["paymentMethodSetting"];
   registerType: FormSetting["registerType"];
   allowSubscriberIdEditingOnRegisterPayment: string;
+  hideSubscriberIdIfAlreadySet: string;
   privacyAndTosUrlStatus: number;
   privacyUrl: string;
   tosUrl: string;
@@ -95,6 +96,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       paymentMethodSetting: initData?.paymentMethodSetting || [],
       registerType: initData?.registerType,
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
+      hideSubscriberIdIfAlreadySet: !!+initData?.hideSubscriberIdIfAlreadySet,
     }
     config.paymentData = paymentInitData as FormConfig["paymentData"];
   } catch {

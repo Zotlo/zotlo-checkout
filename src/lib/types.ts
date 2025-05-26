@@ -99,6 +99,7 @@ export type FormSetting = {
     countries?: string[];
   }[];
   registerType: 'email' | 'phoneNumber';
+  hideSubscriberIdIfAlreadySet: boolean;
   allowSubscriberIdEditing: boolean;
 };
 

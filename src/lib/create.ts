@@ -218,6 +218,13 @@ export function createCreditCardForm(params: {
   const isVerticalTheme = config.design.theme === 'vertical';
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
+    if (config.settings.hideSubscriberIdIfAlreadySet) {
+      if (key.startsWith('SUBSCRIBER_ID') && subscriberId) {
+        newForm = template(newForm, { [key]: '' });
+        continue; // Skip if subscriber ID is already set and the field is hidden
+      }
+    }
+
     if (
       isPhoneRegister && key === 'SUBSCRIBER_ID_EMAIL' ||
       !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE'

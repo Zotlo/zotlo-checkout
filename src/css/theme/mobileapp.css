@@ -45,6 +45,10 @@ td.zotlo-checkout__package__summary__price {
   font-size: 16px !important;
 }
 
+.zotlo-checkout__package__summary tfoot tr {
+  color: var(--zc-form-totalPrice-color);
+}
+
 .zotlo-checkout__mobileapp__package__image {
   display: flex;
   align-items: center;
