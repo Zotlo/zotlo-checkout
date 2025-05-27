@@ -1,4 +1,5 @@
 import Countries from '../countries.json';
+import { type FormConfig, PaymentProvider } from '../lib/types';
 
 export { getCDNUrl } from './getCDNUrl';
 
@@ -109,4 +110,22 @@ export function template(templateString: string, data: Record<string, any>) {
 export function generateAttributes(attrs: Record<string, string | number | boolean>) {
   if (!attrs) return '';
   return Object.entries(attrs).map(([key, value]) => value !== undefined && value !== null ? `${key}="${value}"` : '').join(' ')
+}
+
+export function canMakeApplePayPayments() {
+  try {
+    return (globalThis as any)?.ApplePaySession?.canMakePayments();
+  } catch {
+    return false;
+  }
+}
+
+export function preparePaymentMethods(config: FormConfig) {
+  return config?.settings?.paymentMethodSetting?.filter((item) => {
+    const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
+    const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : canMakeApplePayPayments();
+    if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
+    if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
+    return isAvailable;
+  }) || [];
 }

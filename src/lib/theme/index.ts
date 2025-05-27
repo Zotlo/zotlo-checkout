@@ -1,4 +1,4 @@
-import { template, useI18n } from "../../utils";
+import { preparePaymentMethods, template, useI18n } from "../../utils";
 import { FormConfig, PaymentProvider } from "../types";
 import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";
@@ -34,21 +34,8 @@ export function generateTheme(params: {
     })
     : '';
 
-  function canMakeApplePayPayments() {
-    try {
-      return (globalThis as any)?.ApplePaySession?.canMakePayments();
-    } catch {
-      return false;
-    }
-  }
 
-  const paymentMethods = paymentMethodSetting?.filter((item) => {
-    const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
-    const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : canMakeApplePayPayments();
-    if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
-    if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
-    return isAvailable;
-  }) || [];
+  const paymentMethods = preparePaymentMethods(config);
 
   const footerInfo = {
     // TODO: PRICE_INFO will be changed to a dynamic text by package

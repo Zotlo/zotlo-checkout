@@ -7,7 +7,7 @@ import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
-import { getCountryByCode, getMaskByCode } from "../utils";
+import { getCountryByCode, getMaskByCode, preparePaymentMethods } from "../utils";
 import { getConfig, getProvidersConfig } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
@@ -142,12 +142,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   function handleTabView() {
     if (!hasAnyConfig()) return;
 
-    const paymentMethods = config?.settings?.paymentMethodSetting?.filter((item) => {
-      if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
-      return true;
-    });
+    const paymentMethods = preparePaymentMethods(config);
 
-    if (paymentMethods.length < 2 || config.design.theme === 'vertical') {
+    if (
+      config.design.theme === 'vertical' ||
+      paymentMethods.length < 2 && config.design.theme === 'horizontal' ||
+      paymentMethods.length <= 2 && config.design.theme === 'mobileapp'
+    ) {
       initFormInputs();
       return;
     }
