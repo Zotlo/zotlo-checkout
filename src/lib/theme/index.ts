@@ -34,9 +34,17 @@ export function generateTheme(params: {
     })
     : '';
 
+  function canMakeApplePayPayments() {
+    try {
+      return (globalThis as any)?.ApplePaySession?.canMakePayments();
+    } catch {
+      return false;
+    }
+  }
+
   const paymentMethods = paymentMethodSetting?.filter((item) => {
     const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
-    const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : (globalThis as any)?.ApplePaySession?.canMakePayments();
+    const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : canMakeApplePayPayments();
     if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
     if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
     return isAvailable;
