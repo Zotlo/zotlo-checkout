@@ -99,7 +99,8 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       productImage: initData?.productImage || '',
       additionalText: initData?.additionalText || '',
       customPrice: initData?.customPrice || '',
-      customCurrency: initData?.customCurrency || ''
+      customCurrency: initData?.customCurrency || '',
+      subscriberId: initData?.subscriberId || ''
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],

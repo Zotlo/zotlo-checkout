@@ -5,7 +5,6 @@ import { generateThemeMobileApp } from "./mobileapp";
 import noMethodElement from '../../html/nomethod.html'
 
 export function generateTheme(params: {
-  subscriberId: string;
   config: FormConfig;
 }){
   const { config } = params;

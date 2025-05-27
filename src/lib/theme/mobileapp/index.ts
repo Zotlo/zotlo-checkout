@@ -5,7 +5,6 @@ import { createProviderButton, createButton, createCreditCardForm } from '../../
 
 function prepareProvider(params: {
   config: FormConfig;
-  subscriberId: string;
   paymentMethods: FormSetting['paymentMethodSetting'];
   method: FormSetting['paymentMethodSetting'][number];
   index: number;
@@ -48,7 +47,6 @@ function prepareProvider(params: {
 }
 
 export function generateThemeMobileApp(params: {
-  subscriberId: string;
   config: FormConfig;
   dir: 'rtl' | 'ltr';
   themePreference: 'dark' | 'light';
@@ -96,7 +94,6 @@ export function generateThemeMobileApp(params: {
   }
 
   let primaryProvider = prepareProvider({
-    subscriberId: params.subscriberId,
     config,
     paymentMethods,
     method: firstProvider,
@@ -114,7 +111,6 @@ export function generateThemeMobileApp(params: {
   }
 
   const providerButtons = providerGroups.map((method, index) => prepareProvider({
-    subscriberId: params.subscriberId,
     config,
     paymentMethods,
     method,

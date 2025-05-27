@@ -4,7 +4,6 @@ import { template, useI18n, getCDNUrl, generateAttributes } from '../../../utils
 import { createButton, createCreditCardForm, createProviderButton } from '../../create'
 
 export function generateThemeDefault(params: {
-  subscriberId: string;
   config: FormConfig;
   dir: 'rtl' | 'ltr';
   themePreference: 'dark' | 'light';

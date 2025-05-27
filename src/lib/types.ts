@@ -98,7 +98,7 @@ export type FormSetting = {
     providerKey: PaymentProvider;
     countries?: string[];
   }[];
-  registerType: 'email' | 'phoneNumber';
+  registerType: 'email' | 'phoneNumber' | 'other';
   hideSubscriberIdIfAlreadySet: boolean;
   allowSubscriberIdEditing: boolean;
 };
@@ -128,6 +128,7 @@ export type FormGeneral = {
   additionalText?: string;
   customPrice?: string;
   customCurrency?: string;
+  subscriberId?: string
 }
 
 export type FormSuccess = {
