@@ -9,17 +9,11 @@ import { ZotloCheckout } from './lib'
     subscriberId: '',
     returnUrl: '',
     events: {
-      onLoad() {
-        console.log('DONE DEV!')
-      },
-      onSubmit(e) {
-        console.log('Form submit', e);
-      },
-      onSuccess() {
-        console.log('Payment success!');
-      },
+      onLoad() {},
+      onSubmit() {},
+      onSuccess() {},
       onFail(e) {
-        console.log('Payment failed!', e);
+        (window as any)?.VueApp?.addToaster('Error', e?.message)
       },
     }
   });
