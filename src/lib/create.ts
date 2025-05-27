@@ -197,7 +197,6 @@ export function createButton(payload: {
 }
 
 export function createCreditCardForm(params: {
-  subscriberId: string
   config: FormConfig;
   formType?: 'creditCard' | 'subscriberId' | 'both';
   seperator?: 'top' | 'bottom' | 'both';
@@ -205,7 +204,8 @@ export function createCreditCardForm(params: {
   attrs?: Record<string, string | number | boolean>;
   showPrice: boolean;
 }) {
-  const { config, subscriberId, seperator, formType = 'both', className, showPrice } = params;
+  const { config, seperator, formType = 'both', className, showPrice } = params;
+  const subscriberId = config.general.subscriberId || '';
   const attrs = generateAttributes({
     ...(params.attrs || {})
   });
@@ -214,7 +214,8 @@ export function createCreditCardForm(params: {
   let cardTop = '';
   let cardBottom = '';
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
-  const isPhoneRegister = config.settings.registerType === 'phoneNumber';
+  const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
+  const isPhoneRegister = registerType === 'phoneNumber';
   const isVerticalTheme = config.design.theme === 'vertical';
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {

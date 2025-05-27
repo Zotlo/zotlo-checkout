@@ -32,7 +32,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   let containerId = '';
-  const subscriberId = params.subscriberId || '';
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
@@ -210,7 +209,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     // Destroy everything before re-rendering
     unmount();
 
-    const form = generateTheme({ subscriberId, config });
+    const form = generateTheme({ config });
     const style = createStyle(config);
     const container = getContainerElement();
 
