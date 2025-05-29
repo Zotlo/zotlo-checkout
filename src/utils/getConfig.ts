@@ -2,6 +2,7 @@ import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPay
 import { PaymentProvider } from "../lib/types";
 import { API } from "../utils/api";
 import { setCookie, COOKIE } from "./cookie";
+import { getPackageInfo } from "./getPackageInfo";
 
 type InitResult = {
   uuid: string;
@@ -31,6 +32,11 @@ type InitResult = {
   packageName?: string;
   customPrice?: string;
   customCurrency?: string;
+  zotloUrls: {
+    privacyPolicy?: string;
+    termsOfService?: string;
+    cookiePolicy?: string;
+  }
 };
 
 async function getPaymentData() {
@@ -53,7 +59,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
         }
       }
     } as any
-  }, settings: {}, design: {}, paymentData: {} } as FormConfig;
+  }, settings: {}, design: {}, paymentData: {}, packageInfo: {} } as FormConfig;
 
   const {
     token,
@@ -100,7 +106,12 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       additionalText: initData?.additionalText || '',
       customPrice: initData?.customPrice || '',
       customCurrency: initData?.customCurrency || '',
-      subscriberId: initData?.subscriberId || ''
+      subscriberId: initData?.subscriberId || '',
+      zotloUrls: {
+        privacyPolicy: initData?.zotloUrls?.privacyPolicy || '',
+        termsOfService: initData?.zotloUrls?.termsOfService || '',
+        cookiePolicy: initData?.zotloUrls?.cookiePolicy || '',
+      }
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],
@@ -109,6 +120,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       hideSubscriberIdIfAlreadySet: !!+initData?.hideSubscriberIdIfAlreadySet,
     }
     config.paymentData = paymentInitData as FormConfig["paymentData"];
+    config.packageInfo = getPackageInfo(config);
   } catch {
     return config;
   }

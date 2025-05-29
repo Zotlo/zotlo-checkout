@@ -1,4 +1,5 @@
 import { preparePaymentMethods, template, useI18n } from "../../utils";
+import { getPackageTemplateParams } from "../../utils/getPackageInfo";
 import { FormConfig, PaymentProvider } from "../types";
 import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";
@@ -36,13 +37,19 @@ export function generateTheme(params: {
 
   const paymentMethods = preparePaymentMethods(config);
 
+  const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
+  const footerPriceInfo = template($t(`footer.priceInfo.${packageCondition}`), {
+    ...getPackageTemplateParams(config)
+  });
+
+  const zotloUrls = config?.general?.zotloUrls || {};
+
   const footerInfo = {
-    // TODO: PRICE_INFO will be changed to a dynamic text by package
-    PRICE_INFO: $t('footer.priceInfo.package_with_trial'),
+    PRICE_INFO: footerPriceInfo,
     FOOTER_DESC: $t('footer.desc'),
     DISCLAIMER: disclaimer && `<div>${disclaimer}</div>`,
     ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a href="${tosUrl}">${$t('common.termsOfService')}</a><a href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`
+    ZOTLO_LEGALS_LINKS: `<a href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
   }
 
   if (params.config.design.theme === 'mobileapp') {
