@@ -118,8 +118,8 @@ export function generateThemeMobileApp(params: {
     tabAvailable: true
   })).join('');
 
-  const totalPrice = config.general.customPrice || config.paymentData?.selectedPrice.price || "0.00";
-  const currency = config.general.customCurrency || config.paymentData?.selectedPrice.currency || config.general.currency || "USD";
+  const totalPrice = config.packageInfo?.totalPayableAmount || '0.00 USD';
+  const currency = config.packageInfo?.currency || "USD";
 
   if (providerButtons) {
     primaryProvider += `<div class="zotlo-checkout__seperator"><span>${$t('common.orAnotherWay')}</span></div>`
@@ -136,7 +136,7 @@ export function generateThemeMobileApp(params: {
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
-    TOTAL_PRICE: `${totalPrice} ${currency}`,
+    TOTAL_PRICE: `${totalPrice}`,
     ADDITIONAL_TEXT: config.general.additionalText || '',
     ADDITIONAL_PRICE: `0.00 ${currency}`,
     STATIC_SUBTOTAL: $t('common.subtotal'),

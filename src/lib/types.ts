@@ -103,11 +103,59 @@ export type FormSetting = {
   allowSubscriberIdEditing: boolean;
 };
 
+export enum PackageType {
+  SUBSCRIPTION = 'subscription',
+  CONSUMABLE = 'consumable',
+  EPIN = 'epin'
+}
+
+export enum TrialPackageType {
+  FREE_TRIAL = 'freeTrial',
+  STARTING_PRICE = 'startingPrice',
+  NO = 'no'
+}
+
+export type PackageData = {
+  period: number;
+  name: string;
+  packageId: string;
+  packageType: PackageType;
+  trialPeriod: number;
+  periodType: string;
+  trialPeriodType: string;
+  trialPackageType: TrialPackageType;
+};
+
+export type SelectedPriceData = {
+  type: string;
+  currency: string;
+  price: string;
+  trialPrice: string;
+  dailyPrice: string;
+  weeklyPrice: string;
+};
+
 export type FormPaymentData = {
-  package: Record<string, any>;
+  package: PackageData;
   providers: Record<string, any>;
-  selectedPrice: Record<string, any>;
+  sandboxPayment: boolean;
+  selectedPrice: SelectedPriceData;
   subscriberCountry: string;
+}
+
+export type PackageInfoType = {
+  price: string;
+  trialPrice: string;
+  dailyPrice: string;
+  weeklyPrice: string;
+  trialPeriod: number;
+  trialPeriodType: string;
+  period: number;
+  periodType: string;
+  totalPayableAmount: string;
+  currency: string;
+  condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
+  state: keyof FormConfig['design']['button']['text'];
 }
 
 export type FormGeneral = {
@@ -128,7 +176,12 @@ export type FormGeneral = {
   additionalText?: string;
   customPrice?: string;
   customCurrency?: string;
-  subscriberId?: string
+  subscriberId?: string;
+  zotloUrls?: {
+    privacyPolicy?: string;
+    termsOfService?: string;
+    cookiePolicy?: string;
+  };
 }
 
 export type FormSuccess = {
@@ -159,4 +212,5 @@ export type FormConfig = {
   design: FormDesign;
   success: FormSuccess;
   paymentData?: FormPaymentData;
+  packageInfo?: PackageInfoType;
 }

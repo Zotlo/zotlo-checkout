@@ -8,6 +8,7 @@ import selectItemElement from '../html/select-item.html'
 import paymentSuccessElement from '../html/payment-success.html'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
+import { getPackageTemplateParams } from '../utils/getPackageInfo'
 import { type FormConfig, PaymentProvider } from './types'
 import { FORM_ITEMS } from './fields'
 
@@ -265,9 +266,13 @@ export function createCreditCardForm(params: {
     });
   }
 
+  const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
+  const buttonContent = template($t(`form.button.text.${packageState}.${config?.design.button.text?.[packageState]}`), {
+    ...getPackageTemplateParams(config)
+  });
+
   const cardSubmit = createButton({
-    // TODO: This text will be changed to a dynamic text by package
-    content: $t(`form.button.text.subscriptionActivationState.`+config.design.button.text.subscriptionActivationState),
+    content: buttonContent,
     className: 'zotlo-checkout__cardSubmit',
     attrs: { type: 'submit', 'data-provider': PaymentProvider.CREDIT_CARD },
   });
@@ -280,8 +285,7 @@ export function createCreditCardForm(params: {
     cardBottom = seperatorText;
   }
 
-  const totalPrice = config.general.customPrice || config.paymentData?.selectedPrice.price || "0.00";
-  const currency = config.general.customCurrency || config.paymentData?.selectedPrice.currency || config.general.currency || "USD";
+  const totalPrice = config.packageInfo?.totalPayableAmount || '0.00 USD';
 
   return template(newForm, {
     CARD_TOP: cardTop,
@@ -289,7 +293,7 @@ export function createCreditCardForm(params: {
     CARD_SUBMIT: cardSubmit,
     CDN_URL: getCDNUrl(''),
     TOTAL_LABEL: $t('form.total.label'),
-    TOTAL_PRICE: `${totalPrice} ${currency}`
+    TOTAL_PRICE: `${totalPrice}`
   })
 }
 
