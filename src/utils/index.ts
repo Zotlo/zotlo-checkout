@@ -129,3 +129,37 @@ export function preparePaymentMethods(config: FormConfig) {
     return isAvailable;
   }) || [];
 }
+
+function disableTabKeyNavigation(formEl: HTMLFormElement, disable:boolean = true) {
+  const formElements = formEl.querySelectorAll('input, select, textarea, button, a');
+  formElements.forEach(element => {
+    if (disable) {
+      element.setAttribute('tabindex', '-1');
+    } else {
+      element.removeAttribute('tabindex');
+    }
+  });
+}
+
+export function setFormLoading(loading: boolean = true) {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  if (!formElement) return;
+  let loaderEl = formElement.querySelector('.zotlo-checkout__loader') as HTMLDivElement;
+  if (loading) {
+    if (!loaderEl) {
+      loaderEl = document.createElement('div');
+      loaderEl.className = 'zotlo-checkout__loader';
+      formElement.insertBefore(loaderEl, formElement.firstChild);
+    }
+    disableTabKeyNavigation(formElement);
+    formElement.style.pointerEvents = 'none';
+    formElement.style.userSelect = 'none';
+    formElement.setAttribute('data-loading', 'true');
+  } else {
+    disableTabKeyNavigation(formElement, false);
+    loaderEl?.remove();
+    formElement.removeAttribute('data-loading');
+    formElement.style.pointerEvents = '';
+    formElement.style.userSelect = '';
+  }
+}

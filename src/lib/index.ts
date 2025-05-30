@@ -7,7 +7,7 @@ import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
-import { getCountryByCode, getMaskByCode, preparePaymentMethods } from "../utils";
+import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading } from "../utils";
 import { getConfig, getProvidersConfig } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
@@ -108,10 +108,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function getContainerElement() {
     if (!containerId) return null;
-    return  document.getElementById(containerId);
+    return document.getElementById(containerId);
   }
 
-  function handleForm(e: SubmitEvent) {
+  async function handleForm(e: SubmitEvent) {
     e.preventDefault();
     const providerKey = (e.submitter as HTMLButtonElement).getAttribute('data-provider') as PaymentProvider || PaymentProvider.CREDIT_CARD;
     const validation = validateForm(providerKey);
@@ -120,17 +120,21 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     if (import.meta.env.VITE_SDK_API_URL) {
       const result = getFormValues(e.target as HTMLFormElement);
-  
-      sendPayment({
-        providerKey,
-        formData: { packageId: params.packageId, ...result },
-        params,
-        config,
-        containerId,
-        providerConfigs
-      });
-  
       params.events?.onSubmit?.(result);
+
+      try {
+        setFormLoading(true);
+        await sendPayment({
+          providerKey,
+          formData: { packageId: params.packageId, ...result },
+          params,
+          config,
+          containerId,
+          providerConfigs
+        });
+      } finally {
+        setFormLoading(false);
+      }
     }
   }
 
