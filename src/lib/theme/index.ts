@@ -3,7 +3,7 @@ import { getPackageTemplateParams } from "../../utils/getPackageInfo";
 import { FormConfig, PaymentProvider } from "../types";
 import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";
-import noMethodElement from '../../html/nomethod.html'
+import noMethodElement from '../../html/nomethod.html?raw'
 
 export function generateTheme(params: {
   config: FormConfig;

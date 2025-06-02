@@ -22,25 +22,26 @@
     <script src="https://unpkg.com/vue@3.5.15/dist/vue.global.prod.js"></script>
     <script src="./dist/toaster.js"></script>
     <script>
-      (async () => {
-        const checkout = await window.ZotloCheckout({
-          token: '123ASDASsqasdas=',
-          packageId: 'zotlo-123',
-          language: 'en',
-          subscriberId: '',
-          returnUrl: '',
-          events: {
-            onLoad() {},
-            onSubmit() {},
-            onSuccess() {},
-            onFail(e) {
-              if (window.VueApp) window.VueApp.addToaster('Error', e?.message)
-            },
-          }
-        });
-        
+      let checkout;
+
+      ZotloCheckout({
+        token: '123ASDASsqasdas=',
+        packageId: 'zotlo-123',
+        language: 'en',
+        subscriberId: '',
+        returnUrl: '',
+        events: {
+          onLoad() {},
+          onSubmit() {},
+          onSuccess() {},
+          onFail(e) {
+            if (window.VueApp) window.VueApp.addToaster('Error', e?.message)
+          },
+        }
+      }).then((zcInstance) => {
+        checkout = zcInstance;
         checkout.mount('zotlo-checkout')
-      })()
+      });
     </script>
   </body>
 </html>
