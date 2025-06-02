@@ -94,7 +94,7 @@ After initialized checkout form, you can use these methods:
 ### mount
 Render checkout form
 ```typescript
-checkout.mount(countainerId: string);
+checkout.mount(containerId: string);
 ```
 
 ### refresh
