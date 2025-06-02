@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite';
-import importHtml from './plugins/importHtml';
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
@@ -25,7 +24,6 @@ export default defineConfig({
     }
   },
   plugins: [
-    importHtml(),
     dts()
   ]
 });

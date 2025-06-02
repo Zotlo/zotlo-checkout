@@ -1,4 +1,4 @@
-import mainHTML from './html/main.html';
+import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, template, useI18n } from '../../../utils'
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
 import { createProviderButton, createButton, createCreditCardForm } from '../../create'
