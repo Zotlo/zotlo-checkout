@@ -89,7 +89,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     config.design = (settings?.design ? settings.design : (settings as any)) || {};
     config.success = {
       ...(settings?.success || {}),
-      theme: settings?.success?.theme || 'web2app'
+      theme: settings?.success?.theme || 'app2web'
     };
 
     config.general = {
