@@ -9,7 +9,7 @@ import paymentSuccessElement from '../html/payment-success.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
 import { getPackageTemplateParams } from '../utils/getPackageInfo'
-import { type FormConfig, type PaymentDetail, PaymentProvider } from './types'
+import { type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider } from './types'
 import { FORM_ITEMS } from './fields'
 
 export function createSelect(payload: {
@@ -338,7 +338,7 @@ export function prepareButtonSuccessLink(params: {
         return paymentDetail?.application.links.deeplinkWeb || '';
     }
   } else {
-    if (config.success.genericButton.show) {
+    if (config.success?.genericButton?.show) {
       return paymentDetail.application.links.genericDownloadUrl || '';
     }
 
@@ -368,7 +368,7 @@ export function createPaymentSuccessForm(params: {
   const { $t } = useI18n(config.general.localization);
   const buttonText = successTheme === 'app2web'
     ? (config?.success?.button?.text || 0)
-    : (config.success.genericButton.text || 0);
+    : (config.success?.genericButton?.text || 0);
   const redirectUrl = prepareButtonSuccessLink({ config, paymentDetail }) || config?.success?.redirectUrl || '';
   const canAutoRedirect = successTheme === 'app2web' && !!redirectUrl && config.success.autoRedirect;
   const storeUrls = {
@@ -382,7 +382,8 @@ export function createPaymentSuccessForm(params: {
   const storeButtons = successTheme === 'web2app'
     ? Object.entries(storeUrls)
       .map(([store, link]) => {
-        if (!link) return '';
+        const canVisible = !!config?.success?.storeButtons?.[store as keyof FormSuccess['storeButtons']] && !!link;
+        if (!canVisible) return '';
         const img = getCDNUrl(`editor/store-badges/${store}${config.design.darkMode ? '' : '_dark' }.png`);
         return `<a href="${link}" target="_blank" class="zotlo-checkout__store-button ${store}"><img src="${img}" alt="${store}"></a>`;
       }).join('')
@@ -399,7 +400,7 @@ export function createPaymentSuccessForm(params: {
     AUTO_REDIRECT: canAutoRedirect,
     STORE_BUTTONS: storeButtons,
     WEB2APP_DESC: $t('paymentSuccess.desc2'),
-    SHOW_BUTTON: successTheme === 'app2web' || (successTheme === 'web2app' && config.success.genericButton.show),
+    SHOW_BUTTON: successTheme === 'app2web' || (successTheme === 'web2app' && config.success?.genericButton?.show),
   });
 
   function startTimer(timeInSeconds: number) {

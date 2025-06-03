@@ -194,6 +194,13 @@ export type FormSuccess = {
     show: boolean;
     text: number | string;
   };
+  storeButtons: {
+    google: boolean;
+    apple: boolean;
+    amazon: boolean;
+    microsoft: boolean;
+    huawei: boolean;
+  };
   color: string;
   button: {
     color: string;
