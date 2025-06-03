@@ -189,6 +189,7 @@ export type FormSuccess = {
   waitTime: number;
   redirectUrl: string;
   autoRedirect: boolean;
+  theme: 'app2web' | 'web2app';
   color: string;
   button: {
     color: string;
@@ -213,4 +214,59 @@ export type FormConfig = {
   success: FormSuccess;
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
+}
+
+export type PaymentDetail = {
+  isSandbox: boolean;
+  application: {
+    id: number;
+    name: string;
+    zotloId: number;
+    teamId: number;
+    links: {
+      genericDownloadUrl: string;
+      appStoreUrl: string;
+      googlePlayStoreUrl: string;
+      amazonStoreUrl: string;
+      microsoftStoreUrl: string;
+      huaweiAppGalleryUrl: string;
+      customerSupportUrl: string;
+      privacyUrl: string;
+      termsOfServiceUrl: string;
+      deeplinkIos: string;
+      deeplinkAndroid: string;
+      deeplinkWeb: string;
+    }
+  };
+  client: {
+    selectedOs: 'android' | 'ios' | 'desktop';
+    subscriberId: string;
+    appToWebEmail: string;
+    fullName: string | null;
+    country: string;
+    language: string;
+  };
+  payment: {
+    package: {
+      id: number;
+      selectedCountry: string;
+      period: number;
+      name: string;
+      packageId: string;
+      packageType: string;
+      trialPeriod: number;
+      periodType: string;
+      trialPeriodType: string;
+      trialPackageType: string;
+      currency: string;
+      price: number;
+      trialPrice: number;
+      countryPrices: Record<string, {
+        country: string;
+        price: number;
+        trialPrice: number;
+        currency: string;
+      }>;
+    };
+  };
 }

@@ -12,6 +12,11 @@
   cursor: pointer;
   min-height: 48px;
   border: 0;
+  text-decoration: none;
+}
+
+.zotlo-checkout__button:hover {
+  text-decoration: none !important;
 }
 
 .zotlo-checkout__button-desc {

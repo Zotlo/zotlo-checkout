@@ -50,3 +50,8 @@ export function getCookie(name: string): string | null {
 export function deleteCookie(name: string, path: string = "/"): void {
   setCookie(name, "", -1, path);
 }
+
+export function deleteUuidCookie(): void {
+  const pathName = globalThis?.location?.pathname || "/";
+  deleteCookie(COOKIE.UUID, pathName);
+}

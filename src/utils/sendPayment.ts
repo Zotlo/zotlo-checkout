@@ -1,6 +1,8 @@
+import { setFormLoading } from "./index";
 import { createPaymentSuccessForm } from "../lib/create";
-import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams } from "../lib/types";
+import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail } from "../lib/types";
 import { API } from "./api";
+import { deleteUuidCookie } from "./cookie";
 
 function preparePayload(providerKey: PaymentProvider, formData: Record<string, any>, params: IZotloCheckoutParams) {
   const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV } = formData || {};
@@ -56,7 +58,28 @@ async function registerPaymentUser(subscriberId: string, config: FormConfig, par
   }
 }
 
-function handleCheckoutResponse(payload: {
+export async function handlePaymentSuccess(payload: { params: IZotloCheckoutParams; }) {
+  try {
+    setFormLoading(true);
+    const { params } = payload;
+    const { result, meta } = await API.get("/payment/detail");
+
+    if (meta?.errorCode) {
+      params.events?.onFail?.({ message: meta?.message, data: meta });
+      return null
+    }
+
+    deleteUuidCookie();
+    params.events?.onSuccess?.();
+    return result as PaymentDetail;
+  } catch (e) {
+    return null;
+  } finally {
+    setFormLoading(false);
+  }
+}
+
+async function handleCheckoutResponse(payload: {
   checkoutResponse: Record<string, any>;
   params: IZotloCheckoutParams;
   containerId: string;
@@ -82,8 +105,8 @@ function handleCheckoutResponse(payload: {
     }
     if (status === PaymentResultStatus.COMPLETE && payment) {
       if (actions?.completeAction) actions.completeAction();
-      createPaymentSuccessForm({ containerId, config });
-      params.events?.onSuccess?.();
+      const paymentDetail = await handlePaymentSuccess({ params });
+      if (paymentDetail) createPaymentSuccessForm({ containerId, config, paymentDetail });
     }
   }
 }
@@ -133,7 +156,7 @@ async function handleApplePayPayment(payload: {
       };
       try {
         const checkoutResponse = await API.post("/payment/checkout", payload);
-        handleCheckoutResponse({
+        await handleCheckoutResponse({
           checkoutResponse,
           params,
           config,

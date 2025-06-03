@@ -9,7 +9,7 @@ import paymentSuccessElement from '../html/payment-success.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
 import { getPackageTemplateParams } from '../utils/getPackageInfo'
-import { type FormConfig, PaymentProvider } from './types'
+import { type FormConfig, type PaymentDetail, PaymentProvider } from './types'
 import { FORM_ITEMS } from './fields'
 
 export function createSelect(payload: {
@@ -319,26 +319,80 @@ export function createProviderButton(params: {
   })
 }
 
+export function prepareButtonSuccessLink(params: {
+  config: FormConfig;
+  paymentDetail: PaymentDetail;
+}) {
+  const { config, paymentDetail } = params;
+  const theme = config.success.theme;
+  const os = paymentDetail.client.selectedOs || 'desktop';
+
+  if (theme === 'app2web') {
+    switch (os) {
+      case 'android':
+        return paymentDetail?.application.links.deeplinkAndroid || '';
+      case 'ios':
+        return paymentDetail?.application.links.deeplinkIos || '';
+      case 'desktop':
+      default:
+        return paymentDetail?.application.links.deeplinkWeb || '';
+    }
+  } else {
+    switch (os) {
+      case 'android':
+        return paymentDetail?.application.links.googlePlayStoreUrl || '';
+      case 'ios':
+        return paymentDetail?.application.links.appStoreUrl || '';
+      default:
+        return paymentDetail?.application.links.genericDownloadUrl || '';
+    }
+  }
+}
+
 export function createPaymentSuccessForm(params: {
   containerId: string;
   config: FormConfig;
+  paymentDetail: PaymentDetail;
 }) {
   if (!params.config?.success?.show) return false;
-
-  const { containerId, config } = params;
+  
+  const { containerId, config, paymentDetail } = params;
+  const successTheme = config.success.theme;
   const delay = config.success.waitTime; // seconds
   const container = document.getElementById(containerId);
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
   const buttonText = config?.success?.button?.text || 0;
-  const canAutoRedirect = !!config.success.redirectUrl && config.success.autoRedirect;
+  const redirectUrl = prepareButtonSuccessLink({ config, paymentDetail }) || config?.success?.redirectUrl || '';
+  const canAutoRedirect = successTheme === 'app2web' && !!redirectUrl && config.success.autoRedirect;
+  const storeUrls = {
+    apple: paymentDetail?.application?.links?.appStoreUrl,
+    google: paymentDetail?.application?.links?.googlePlayStoreUrl,
+    amazon: paymentDetail?.application?.links?.amazonStoreUrl,
+    microsoft: paymentDetail?.application?.links?.microsoftStoreUrl,
+    huawei: paymentDetail?.application?.links?.huaweiAppGalleryUrl,
+  }
+
+  const storeButtons = successTheme === 'web2app'
+    ? Object.entries(storeUrls)
+      .map(([store, link]) => {
+        if (!link) return '';
+        const img = getCDNUrl(`editor/store-badges/${store}${config.design.darkMode ? '' : '_dark' }.png`);
+        return `<a href="${link}" target="_blank" class="zotlo-checkout__store-button ${store}"><img src="${img}" alt="${store}"></a>`;
+      }).join('')
+    : '';
+
   const htmlText = template(paymentSuccessElement, {
+    THEME: successTheme,
     TITLE: $t('paymentSuccess.title'),
     BUTTON_TEXT: typeof buttonText === 'number'
       ? $t(`paymentSuccess.button.${buttonText}`)
       : buttonText,
+    BUTTON_LINK: redirectUrl || '#',
     TIMER_TEXT: $t('paymentSuccess.timer', { second: delay }),
     AUTO_REDIRECT: canAutoRedirect,
+    STORE_BUTTONS: storeButtons,
+    WEB2APP_DESC: $t('paymentSuccess.desc2')
   });
 
   function startTimer(timeInSeconds: number) {
@@ -351,7 +405,7 @@ export function createPaymentSuccessForm(params: {
       }
       if (seconds <= 0) {
         clearInterval(timer);
-        window.location.href = config.success.redirectUrl; // Redirect to the game or desired URL
+        window.location.href = redirectUrl; // Redirect to the game or desired URL
       }
     }, 1000);
   }

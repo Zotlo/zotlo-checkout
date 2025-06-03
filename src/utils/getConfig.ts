@@ -87,7 +87,10 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     const settings = initData?.settings;
 
     config.design = (settings?.design ? settings.design : (settings as any)) || {};
-    config.success = settings?.success || {};
+    config.success = {
+      ...(settings?.success || {}),
+      theme: settings?.success?.theme || 'web2app'
+    };
 
     config.general = {
       localization: initData?.localization || config.general.localization,

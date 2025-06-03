@@ -367,6 +367,21 @@
   color: #68686A;
 }
 
+.zotlo-checkout__success__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  max-width: 260px;
+  margin-top: 16px;
+}
+
+.zotlo-checkout__success__buttons img {
+  height: 34px;
+  display: block;
+}
+
 .zotlo-checkout__loader {
   position: absolute;
   display: flex;

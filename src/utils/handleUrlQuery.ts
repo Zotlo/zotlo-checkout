@@ -1,11 +1,12 @@
 import { createPaymentSuccessForm } from "../lib/create";
 import { FormConfig, type IZotloCheckoutParams, PaymentCallbackStatus } from "../lib/types";
+import { handlePaymentSuccess } from "./sendPayment";
 
 export enum UrlQuery {
   STATUS = "zc_status",
 }
 
-export function handleUrlQuery(payload: {
+export async function handleUrlQuery(payload: {
   params: IZotloCheckoutParams;
   config: FormConfig;
   containerId: string;
@@ -17,8 +18,8 @@ export function handleUrlQuery(payload: {
   const status = queryParams?.[UrlQuery.STATUS] || "";
 
   if (status === PaymentCallbackStatus.SUCCESS) {
-    createPaymentSuccessForm({ containerId, config });
-    params.events?.onSuccess?.();
+    const paymentDetail = await handlePaymentSuccess({ params });
+    if (paymentDetail) createPaymentSuccessForm({ containerId, config, paymentDetail });
   }
 
   if (status === PaymentCallbackStatus.FAIL) {
