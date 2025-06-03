@@ -119,7 +119,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
       hideSubscriberIdIfAlreadySet: !!+initData?.hideSubscriberIdIfAlreadySet,
     }
-    config.paymentData = paymentInitData as FormConfig["paymentData"];
+    config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);
   } catch {
     return config;

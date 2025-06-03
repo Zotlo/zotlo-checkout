@@ -40,16 +40,19 @@ function preparePayload(providerKey: PaymentProvider, formData: Record<string, a
   }
 }
 
-async function registerPaymentUser(subscriberId: string, registerType: FormConfig['settings']['registerType']) {
+async function registerPaymentUser(subscriberId: string, config: FormConfig, params: IZotloCheckoutParams) {
   try {
-    if (!subscriberId) return null;
+    const existingSubscriberId = config?.general?.subscriberId;
+    const registerType = config?.settings?.registerType;
+    if (!subscriberId || existingSubscriberId) return null;
     if (registerType === 'phoneNumber') {
       subscriberId = subscriberId.replace(/[^0-9]/g, '');
     }
     const response = await API.post("/payment/register", { subscriberId });
+    if (response?.meta?.errorCode) params.events?.onFail?.({ message: response?.meta?.message, data: response?.meta });
     return response;
   } catch {
-    return null;
+    params.events?.onFail?.({ message: "Failed to register user", data: {} });
   }
 }
 
@@ -152,16 +155,7 @@ async function handleApplePayPayment(payload: {
     };
 
     // Register user
-    if (subscriberId) {
-      const res = await registerPaymentUser(
-        subscriberId,
-        config?.settings?.registerType
-      );
-      if (!res) {
-        params.events?.onFail?.({ message: "Failed to register user", data: {}});
-        return;
-      }
-    }
+    await registerPaymentUser(subscriberId, config, params);
 
     // Show apple pay modal
     session.begin();
@@ -198,11 +192,7 @@ export async function sendPayment(paymentParams: {
     if (providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment();
 
     // Register user
-    const response = await registerPaymentUser(subscriberId, config.settings.registerType);
-    if (!response) {
-      params.events?.onFail?.({ message: "Failed to register user", data: {} });
-      return;
-    }
+    await registerPaymentUser(subscriberId, config, params);
     
     // Send payment
     const checkoutResponse = await API.post("/payment/checkout", payload);
