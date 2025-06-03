@@ -190,6 +190,10 @@ export type FormSuccess = {
   redirectUrl: string;
   autoRedirect: boolean;
   theme: 'app2web' | 'web2app';
+  genericButton: {
+    show: boolean;
+    text: number | string;
+  };
   color: string;
   button: {
     color: string;

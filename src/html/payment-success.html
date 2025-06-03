@@ -9,7 +9,7 @@
   <% IF(THEME==='web2app') %>
   <div class="zotlo-checkout__success__desc">{{WEB2APP_DESC}}</div>
   <% ENDIF %>
-  <% IF(THEME==='app2web') %>
+  <% IF(SHOW_BUTTON) %>
   <a href="{{BUTTON_LINK}}" class="zotlo-checkout__button zotlo-checkout__cardSubmit">{{BUTTON_TEXT}}</a>
   <% ENDIF %>
   <% IF(THEME==='web2app') %>

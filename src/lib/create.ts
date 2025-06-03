@@ -338,6 +338,10 @@ export function prepareButtonSuccessLink(params: {
         return paymentDetail?.application.links.deeplinkWeb || '';
     }
   } else {
+    if (config.success.genericButton.show) {
+      return paymentDetail.application.links.genericDownloadUrl || '';
+    }
+
     switch (os) {
       case 'android':
         return paymentDetail?.application.links.googlePlayStoreUrl || '';
@@ -362,7 +366,9 @@ export function createPaymentSuccessForm(params: {
   const container = document.getElementById(containerId);
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
-  const buttonText = config?.success?.button?.text || 0;
+  const buttonText = successTheme === 'app2web'
+    ? (config?.success?.button?.text || 0)
+    : (config.success.genericButton.text || 0);
   const redirectUrl = prepareButtonSuccessLink({ config, paymentDetail }) || config?.success?.redirectUrl || '';
   const canAutoRedirect = successTheme === 'app2web' && !!redirectUrl && config.success.autoRedirect;
   const storeUrls = {
@@ -386,13 +392,14 @@ export function createPaymentSuccessForm(params: {
     THEME: successTheme,
     TITLE: $t('paymentSuccess.title'),
     BUTTON_TEXT: typeof buttonText === 'number'
-      ? $t(`paymentSuccess.button.${buttonText}`)
+      ? $t(`paymentSuccess.button.${successTheme}.${buttonText}`)
       : buttonText,
     BUTTON_LINK: redirectUrl || '#',
     TIMER_TEXT: $t('paymentSuccess.timer', { second: delay }),
     AUTO_REDIRECT: canAutoRedirect,
     STORE_BUTTONS: storeButtons,
-    WEB2APP_DESC: $t('paymentSuccess.desc2')
+    WEB2APP_DESC: $t('paymentSuccess.desc2'),
+    SHOW_BUTTON: successTheme === 'app2web' || (successTheme === 'web2app' && config.success.genericButton.show),
   });
 
   function startTimer(timeInSeconds: number) {
