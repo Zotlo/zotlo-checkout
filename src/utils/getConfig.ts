@@ -114,7 +114,8 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
         privacyPolicy: initData?.zotloUrls?.privacyPolicy || '',
         termsOfService: initData?.zotloUrls?.termsOfService || '',
         cookiePolicy: initData?.zotloUrls?.cookiePolicy || '',
-      }
+      },
+      documents: paymentInitData?.documents || {}
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],

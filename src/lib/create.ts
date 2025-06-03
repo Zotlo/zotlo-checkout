@@ -6,6 +6,7 @@ import tooltipElement from '../html/tooltip.html?raw'
 import selectElement from '../html/select.html?raw'
 import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
+import modalElement from '../html/modal.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
 import { getPackageTemplateParams } from '../utils/getPackageInfo'
@@ -256,8 +257,8 @@ export function createCreditCardForm(params: {
               createCheckbox({
               ...options,
               label: $t(`form.${key}.label`, {
-                distance: `<a href="#" target="_blank">${$t(`form.${key}.keyword.distance`)}</a>`,
-                info: `<a href="#" target="_blank">${$t(`form.${key}.keyword.info`)}</a>`
+                distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
+                info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
               })
             })
           : ''
@@ -430,4 +431,18 @@ export function createPaymentSuccessForm(params: {
     form?.appendChild(doc.body.firstChild as HTMLElement);
     if (canAutoRedirect) startTimer(delay);
   }
+}
+
+export function createAgreementModal(params: {
+  key: 'distanceSalesAgreement' | 'informationForm';
+  config: FormConfig;
+}) {
+  const { key, config } = params;
+  const { $t } = useI18n(config.general.localization);
+
+  return template(modalElement, {
+    MODAL_NAME: 'agreement',
+    TITLE: $t(`agreement.title.${key}`),
+    FRAME_URL: config.general.documents[key]
+  })
 }

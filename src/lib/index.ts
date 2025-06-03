@@ -12,6 +12,7 @@ import { getConfig, getProvidersConfig } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { loadProviderSDKs } from "../utils/loadProviderSdks";
+import { createAgreementModal } from "./create";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {}, success: {} } as FormConfig;
@@ -35,6 +36,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
+  let destroyAgreementLinks = null as (() => void) | null;
 
   function getFormValues(form: HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
@@ -140,6 +142,62 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function hasAnyConfig() {
     return Object.keys(config.settings).length > 0;
+  }
+
+  function handleAgreementLinks() {
+    const container = getContainerElement()?.querySelector('form');
+    const buttons = container?.querySelectorAll('[data-agreement]') as NodeListOf<HTMLButtonElement>;    
+
+    function closeAgreement() {
+      container?.querySelector('[data-modal="agreement"]')?.remove();
+    }
+
+    function handleClick(this: HTMLElement) {
+      const target = this as HTMLElement;
+      const agreement = target.getAttribute('data-agreement') as any;
+      const modalHTML = createAgreementModal({ key: agreement, config })
+      const parser = new DOMParser();
+      let modalDOM = parser.parseFromString(modalHTML, 'text/html')?.body.firstChild as HTMLElement;
+
+      // Add modal close action
+      modalDOM?.querySelector('[data-modal-close]')?.addEventListener('click', handleClose);
+
+      container?.insertBefore(modalDOM, container.firstChild as HTMLElement);
+      modalDOM = container?.querySelector(`[data-modal="agreement"]`) as HTMLElement;
+
+      setTimeout(() => {
+        modalDOM?.classList.remove('zotlo-checkout__modal-enter-from');
+        modalDOM?.classList.remove('zotlo-checkout__modal-enter-active');
+      }, 0)
+
+      function handleClose(this: HTMLElement) {
+        const closeBtn = this as HTMLElement;
+        modalDOM?.classList.add('zotlo-checkout__modal-enter-from');
+        modalDOM?.classList.add('zotlo-checkout__modal-enter-active');
+        closeBtn.removeEventListener('click', handleClose);
+        
+        setTimeout(() => closeAgreement(), 150);
+      }
+    }
+
+    if (buttons?.length > 0) {
+      for (const button of buttons) {
+        button.addEventListener('click', handleClick);
+      }
+    }
+
+    function destroy() {
+      closeAgreement();
+      if (!buttons || buttons?.length === 0) return;
+
+      for (const button of buttons) {
+        button.removeEventListener('click', handleClick);
+      }
+    }
+
+    return {
+      destroy
+    }
   }
 
   function handleTabView() {
@@ -423,6 +481,11 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     applyMaskAndValidation();
 
+    if (import.meta.env.VITE_SDK_API_URL) {
+      const { destroy } = handleAgreementLinks();
+      destroyAgreementLinks = destroy;
+    }
+
     formElement?.addEventListener('submit', handleForm);
   }
 
@@ -446,6 +509,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     validatorInstance?.clearRules();
+    destroyAgreementLinks?.();
   }
 
   function init() {

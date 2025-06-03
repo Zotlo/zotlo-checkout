@@ -141,6 +141,10 @@ export type FormPaymentData = {
   sandboxPayment: boolean;
   selectedPrice: SelectedPriceData;
   subscriberCountry: string;
+  documents: {
+    distanceSalesAgreement: string;
+    informationForm: string;
+  };
 }
 
 export type PackageInfoType = {
@@ -181,6 +185,10 @@ export type FormGeneral = {
     privacyPolicy?: string;
     termsOfService?: string;
     cookiePolicy?: string;
+  };
+  documents: {
+    distanceSalesAgreement: string;
+    informationForm: string;
   };
 }
 

@@ -15,6 +15,7 @@ npm install zotlo-checkout
 Add initial script on your project
 
 ```javascript
+import 'zotlo-checkout/dist/zotlo-checkout.css'; // Import where you want
 import { ZotloCheckout } from 'zotlo-checkout';
 
 // Initialize checkout
@@ -41,12 +42,14 @@ Add the Zotlo Checkout SDK inside the head tag:
 
 **unpkg**
 ```html
+<link rel="stylesheet" href="https://unpkg.com/zotlo-checkout/dist/zotlo-checkout.css" />
 <script src="https://unpkg.com/zotlo-checkout/dist/zotlo-checkout.min.js"></script>
 ```
 or
 
 **jsdelivr**
 ```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zotlo-checkout/dist/zotlo-checkout.css" />
 <script src="https://cdn.jsdelivr.net/npm/zotlo-checkout/dist/zotlo-checkout.min.js"></script>
 ```
 
