@@ -16,7 +16,7 @@ Add initial script on your project
 
 ```javascript
 import 'zotlo-checkout/dist/zotlo-checkout.css'; // Import where you want
-import { ZotloCheckout } from 'zotlo-checkout';
+import ZotloCheckout from 'zotlo-checkout';
 
 // Initialize checkout
 const checkout = await ZotloCheckout({
