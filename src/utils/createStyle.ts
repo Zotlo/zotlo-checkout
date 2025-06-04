@@ -1,11 +1,13 @@
 import type { FormConfig } from "../lib/types";
 
 export function createStyle(config: FormConfig) {
-  const { design } = config;
+  const { design, success } = config;
   const {
     fontFamily, backgroundColor, borderColor,
     borderRadius, borderWidth, label
   } = design || {}
+
+  const opacity = config.design.darkMode ? '4A' : '1A';
 
   return design ? `
 .zotlo-checkout {
@@ -43,9 +45,23 @@ export function createStyle(config: FormConfig) {
   --zc-form-submit-hover-borderColor: ${design?.button?.hover?.borderColor || '#301BA3'};
   --zc-form-submit-hover-backgroundColor: ${design?.button?.hover?.backgroundColor || '#301BA3'};
 
+  --zc-form-spinner-color: #BBBFFF;
+  
+  --zc-tab-button-backgroundColor: ${(design?.button?.backgroundColor + opacity) || '#301BA3'};
+
   --zc-form-provider-backgroundColor: ${design?.darkMode ? '#FFFFFF' : '#000000'};
 
   --zc-footer-color: ${design?.footer?.color || '#737380'};
   --zc-footer-fontSize: ${design?.footer?.fontSize || '10'}px;
+
+  --zc-success-color: ${success?.color || '#FFFFFF'};
+  --zc-success-button-color: ${success?.button?.color || '#FFFFFF'};
+  --zc-success-button-borderColor: ${success?.button?.borderColor || '#4329CC'};
+  --zc-success-button-backgroundColor: ${success?.button?.backgroundColor || '#4329CC'};
+  --zc-success-button-borderWidth: ${success?.button?.borderWidth || '0'}px;
+  --zc-success-button-borderRadius: ${success?.button?.borderRadius || '8'}px;
+  --zc-success-button-hover-color: ${success?.button?.hover?.color || '#FFFFFF'};
+  --zc-success-button-hover-borderColor: ${success?.button?.hover?.borderColor || '#301BA3'};
+  --zc-success-button-hover-backgroundColor: ${success?.button?.hover?.backgroundColor || '#301BA3'};
 }` : '';
 }

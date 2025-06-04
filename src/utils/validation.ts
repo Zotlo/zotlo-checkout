@@ -10,7 +10,7 @@ export interface ValidationResult {
 
 interface ValidateInput {
   name: string;
-  validate: () => ValidationResult;
+  validate: (bypass?: boolean) => ValidationResult;
   updateRule: (ruleString: string) => void;
   destroy: () => void;
 }
@@ -54,6 +54,18 @@ export class Validator {
     if (!this.rules.has(field)) {
       this.rules.set(field, rule);
     }
+    return this;
+  }
+
+  removeRule(field: string) {
+    if (this.rules.has(field)) {
+      this.rules.delete(field);
+    }
+    return this;
+  }
+
+  clearRules() {
+    this.rules.clear();
     return this;
   }
 
@@ -134,7 +146,7 @@ export const ValidationRules = {
   }
 };
 
-let validatorInstance = null as Validator | null;
+export let validatorInstance = null as Validator | null;
 
 export function validateInput(input: HTMLInputElement, options?: {
   validateOnBlur?: boolean;
@@ -157,9 +169,9 @@ export function validateInput(input: HTMLInputElement, options?: {
     rules = ruleString?.split('|') || [];
   }
 
-  function validate(): ValidationResult {
+  function validate(bypass?: boolean): ValidationResult {
     const value = input.type === 'checkbox' ? input.checked : input.value;
-    if (!validatorInstance) return { isValid: false, errors: [] };    
+    if (!validatorInstance || bypass) return { isValid: !!bypass, errors: [] };
     const result = validatorInstance.validate(value, ruleString);
     options?.onValidate?.(result);
     return result;

@@ -10,37 +10,43 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zotlo Checkout</title>
+    <link href="./dist/checkout.css" rel="stylesheet">
     <link href="./dist/zotlo-checkout.css" rel="stylesheet">
-    <style>
-      body {
-        margin: 0;
-        font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        background-color: #e7e7e7;
-      }
-    </style>
   </head>
   <body>
-    <div id="zotlo-checkout" style="max-width: 460px; margin: 16px auto 0;">
-    </div>
+    <div id="zotlo-checkout" style="max-width: 460px; margin: 0 auto;"></div>
     <div id="app"></div>
 
     <!-- GLOBAL OBJECT USAGE-->
     <script src="./dist/zotlo-checkout.min.js"></script>
+    <script src="https://unpkg.com/vue@3.5.15/dist/vue.global.prod.js"></script>
+    <script src="./dist/toaster.js"></script>
     <script>
-      (async () => {
-        const checkout = await window.ZotloCheckout({
-          token: '123ASDASsqasdas=',
-          packageId: 'zotlo-123',
-          events: {
-            onLoad() {
-              console.log('OK!')
-            },
-            onSubmit() {}
-          }
-        });
-        
+      let checkout;
+
+      ZotloCheckout({
+        token: '123ASDASsqasdas=',
+        packageId: 'zotlo-123',
+        language: 'en',
+        subscriberId: '',
+        returnUrl: '',
+        events: {
+          onLoad(config) {
+            const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;
+            if (defaultBG) {
+              document.body.style.backgroundColor = config?.backgroundColor || defaultBG;
+            }
+          },
+          onSubmit() {},
+          onSuccess() {},
+          onFail(e) {
+            if (window.VueApp) window.VueApp.addToaster('Error', e?.message)
+          },
+        }
+      }).then((zcInstance) => {
+        checkout = zcInstance;
         checkout.mount('zotlo-checkout')
-      })()
+      });
     </script>
   </body>
 </html>

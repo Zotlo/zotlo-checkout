@@ -1,4 +1,4 @@
-<div class="zotlo-checkout__card">
+<div class="zotlo-checkout__card {{CLASS_NAME}}" {{ATTRIBUTES}}>
   {{CARD_TOP}}
 
   <div class="zotlo-checkout__form">
@@ -16,7 +16,9 @@
     {{SUBSCRIBER_ID_EMAIL}}
     {{SUBSCRIBER_ID_PHONE}}
     {{AGREEMENT_CHECKBOX}}
+    <% ENDIF %>
 
+    <% IF(SHOW_PRICE===true) %>
     <div class="zotlo-checkout__total">
       <span>{{TOTAL_LABEL}}:</span>
       <span>{{TOTAL_PRICE}}</span>

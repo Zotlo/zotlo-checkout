@@ -1,4 +1,9 @@
 import Countries from '../countries.json';
+import { type FormConfig, PaymentProvider } from '../lib/types';
+
+export { getCDNUrl } from './getCDNUrl';
+
+export { useI18n } from './i18n';
 
 type Country = typeof Countries[0];
 
@@ -38,7 +43,7 @@ export function getMaskByCode(country: any) {
   return mask;
 }
 
-function isJSON(val: string) {
+export function isJSON(val: string) {
   try { JSON.parse(val); } catch { return false }
   return true;
 } 
@@ -52,13 +57,13 @@ function toPrimitive(val: string) {
     const obj = JSON.parse(val);
     if (Array.isArray(obj)) return obj;
   }
-  return val.replace(/^('|")/g, '').replace(/('|")$/g, '');
+  return val?.replace(/^('|")/g, '')?.replace(/('|")$/g, '');
 }
 
 export function template(templateString: string, data: Record<string, any>) {
   let newString = templateString;
   const parameters = [...new Set(templateString.match(/\{\{(\w+)\}\}/gm) || [])];
-  const conditionsRegex = /<% IF\((?<condition>(.*?))\) %>(?<content>(.*?))<% ENDIF %>/gms;
+  const conditionsRegex = /<% IF\((?<condition>(.*?))\) %>(?<content>(.*?))<% ENDIF %>/gms;  
 
   let matched;
   while ((matched = conditionsRegex.exec(templateString)) !== null) {
@@ -71,7 +76,9 @@ export function template(templateString: string, data: Record<string, any>) {
     const hasCondition = (
       Array.isArray(parsedValue)
         ? parsedValue.includes(dataValue)
-        : dataValue === parsedValue
+        : value === undefined
+          ? !!dataValue
+          : dataValue === parsedValue
     );
 
     // If the condition is true, we get the content
@@ -103,4 +110,56 @@ export function template(templateString: string, data: Record<string, any>) {
 export function generateAttributes(attrs: Record<string, string | number | boolean>) {
   if (!attrs) return '';
   return Object.entries(attrs).map(([key, value]) => value !== undefined && value !== null ? `${key}="${value}"` : '').join(' ')
+}
+
+export function canMakeApplePayPayments() {
+  try {
+    return (globalThis as any)?.ApplePaySession?.canMakePayments();
+  } catch {
+    return false;
+  }
+}
+
+export function preparePaymentMethods(config: FormConfig) {
+  return config?.settings?.paymentMethodSetting?.filter((item) => {
+    const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
+    const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : canMakeApplePayPayments();
+    if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
+    if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
+    return isAvailable;
+  }) || [];
+}
+
+function disableTabKeyNavigation(formEl: HTMLFormElement, disable:boolean = true) {
+  const formElements = formEl.querySelectorAll('input, select, textarea, button, a');
+  formElements.forEach(element => {
+    if (disable) {
+      element.setAttribute('tabindex', '-1');
+    } else {
+      element.removeAttribute('tabindex');
+    }
+  });
+}
+
+export function setFormLoading(loading: boolean = true) {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  if (!formElement) return;
+  let loaderEl = formElement.querySelector('.zotlo-checkout__loader') as HTMLDivElement;
+  if (loading) {
+    if (!loaderEl) {
+      loaderEl = document.createElement('div');
+      loaderEl.className = 'zotlo-checkout__loader';
+      formElement.insertBefore(loaderEl, formElement.firstChild);
+    }
+    disableTabKeyNavigation(formElement);
+    formElement.style.pointerEvents = 'none';
+    formElement.style.userSelect = 'none';
+    formElement.setAttribute('data-loading', 'true');
+  } else {
+    disableTabKeyNavigation(formElement, false);
+    loaderEl?.remove();
+    formElement.removeAttribute('data-loading');
+    formElement.style.pointerEvents = '';
+    formElement.style.userSelect = '';
+  }
 }

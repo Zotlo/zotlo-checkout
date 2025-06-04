@@ -7,11 +7,19 @@ import { ZotloCheckout } from './lib'
     packageId: 'zotlo-123',
     language: 'en',
     subscriberId: '',
+    returnUrl: '',
     events: {
-      onLoad() {
-        console.log('DONE DEV!')
+      onLoad(config) {
+        const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;
+        if (defaultBG) {
+          document.body.style.backgroundColor = config?.backgroundColor || defaultBG;
+        }
       },
-      onSubmit() {}
+      onSubmit() {},
+      onSuccess() {},
+      onFail(e) {
+        (window as any)?.VueApp?.addToaster('Error', e?.message)
+      },
     }
   });
   

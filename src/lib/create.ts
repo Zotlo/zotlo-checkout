@@ -1,18 +1,17 @@
-import paymentElement from '../html/payment.html'
-import formElement from '../html/form.html'
-import inputElement from '../html/input.html'
-import checkboxElement from '../html/checkbox.html'
-import buttonElement from '../html/button.html'
-import tooltipElement from '../html/tooltip.html'
-import selectElement from '../html/select.html'
-import selectItemElement from '../html/select-item.html'
-import noMethodElement from '../html/nomethod.html'
-import { FORM_ITEMS } from './fields';
-import { getCDNUrl } from '../utils/getCDNUrl'
-import type { FormConfig } from './types'
+import formElement from '../html/form.html?raw'
+import inputElement from '../html/input.html?raw'
+import checkboxElement from '../html/checkbox.html?raw'
+import buttonElement from '../html/button.html?raw'
+import tooltipElement from '../html/tooltip.html?raw'
+import selectElement from '../html/select.html?raw'
+import selectItemElement from '../html/select-item.html?raw'
+import paymentSuccessElement from '../html/payment-success.html?raw'
+import modalElement from '../html/modal.html?raw'
 import Countries from '../countries.json'
-import { getMaskByCode, template, generateAttributes } from '../utils'
-import { useI18n } from '../utils/i18n'
+import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
+import { getPackageTemplateParams } from '../utils/getPackageInfo'
+import { type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider } from './types'
+import { FORM_ITEMS } from './fields'
 
 export function createSelect(payload: {
   name: string;
@@ -96,6 +95,7 @@ export function createInput(payload: {
     type?: string;
     value?: string;
     placeholder?: string;
+    disabled?: boolean;
   } & Record<string, any>;
 }) {
 
@@ -187,9 +187,11 @@ export function createButton(payload: {
   description?: string;
   className?: string;
   attrs?: Record<string, string | number | boolean>;
+  wrapperAttrs?: Record<string, string | number | boolean>;
 }) {
   return template(buttonElement, {
     CLASS_NAME: payload.className || '',
+    WRAPPER_ATTRIBUTES: generateAttributes(payload.wrapperAttrs || {}),
     ATTRIBUTES: generateAttributes(payload.attrs || {}),
     CONTENT: payload.content || '',
     DESC: payload.description || ''
@@ -197,20 +199,35 @@ export function createButton(payload: {
 }
 
 export function createCreditCardForm(params: {
-  subscriberId: string
   config: FormConfig;
   formType?: 'creditCard' | 'subscriberId' | 'both';
   seperator?: 'top' | 'bottom' | 'both';
+  className?: string;
+  attrs?: Record<string, string | number | boolean>;
+  showPrice: boolean;
 }) {
-  const { config, subscriberId, seperator, formType = 'both' } = params;
+  const { config, seperator, formType = 'both', className, showPrice } = params;
+  const subscriberId = config.general.subscriberId || '';
+  const attrs = generateAttributes({
+    ...(params.attrs || {})
+  });
   const { $t } = useI18n(config.general.localization);
-  let newForm = template(formElement, { FORM_TYPE: formType });
+  let newForm = template(formElement, { FORM_TYPE: formType, ATTRIBUTES: attrs, CLASS_NAME: className || '', SHOW_PRICE: showPrice });
   let cardTop = '';
   let cardBottom = '';
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
-  const isPhoneRegister = config.settings.registerType === 'phoneNumber';
+  const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
+  const isPhoneRegister = registerType === 'phoneNumber';
+  const isVerticalTheme = config.design.theme === 'vertical';
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
+    if (config.settings.hideSubscriberIdIfAlreadySet) {
+      if (key.startsWith('SUBSCRIBER_ID') && subscriberId) {
+        newForm = template(newForm, { [key]: '' });
+        continue; // Skip if subscriber ID is already set and the field is hidden
+      }
+    }
+
     if (
       isPhoneRegister && key === 'SUBSCRIBER_ID_EMAIL' ||
       !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE'
@@ -221,6 +238,7 @@ export function createCreditCardForm(params: {
 
     const options = {
       ...inputOptions,
+      defaultCountryCode: config.general.countryCode,
       label: $t(`form.${key}.label`),
       input: {
         ...inputOptions.input,
@@ -234,31 +252,41 @@ export function createCreditCardForm(params: {
 
     newForm = template(newForm, {
       [key]: key === 'AGREEMENT_CHECKBOX'
-        ? createCheckbox({
-          ...options,
-          label: $t(`form.${key}.label`, {
-            distance: `<a href="#" target="_blank">${$t(`form.${key}.keyword.distance`)}</a>`,
-            info: `<a href="#" target="_blank">${$t(`form.${key}.keyword.info`)}</a>`
-          })
-        })
+        ? (
+          config.general.isPolicyRequired ?
+              createCheckbox({
+              ...options,
+              label: $t(`form.${key}.label`, {
+                distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
+                info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
+              })
+            })
+          : ''
+        )
         : createInput(options)
     });
   }
 
-  const cardSubmit = createButton({
-    // TODO: This text will be changed to a dynamic text by package
-    content: $t(`form.button.text.subscriptionActivationState.`+config.design.button.text.subscriptionActivationState),
-    className: 'zotlo-checkout__cardSubmit',
-    attrs: { type: 'submit' }
+  const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
+  const buttonContent = template($t(`form.button.text.${packageState}.${config?.design.button.text?.[packageState]}`), {
+    ...getPackageTemplateParams(config)
   });
 
-  if (seperator === 'top' || seperator === 'both') {
+  const cardSubmit = createButton({
+    content: buttonContent,
+    className: 'zotlo-checkout__cardSubmit',
+    attrs: { type: 'submit', 'data-provider': PaymentProvider.CREDIT_CARD },
+  });
+
+  if (isVerticalTheme && (seperator === 'top' || seperator === 'both')) {
     cardTop = seperatorText + `<div class="zotlo-checkout__card-title">${$t('form.payWithCreditCard')}</div>`;
   }
   
-  if (seperator === 'bottom' || seperator === 'both') {
+  if (isVerticalTheme && (seperator === 'bottom' || seperator === 'both')) {
     cardBottom = seperatorText;
   }
+
+  const totalPrice = config.packageInfo?.totalPayableAmount || '0.00 USD';
 
   return template(newForm, {
     CARD_TOP: cardTop,
@@ -266,105 +294,155 @@ export function createCreditCardForm(params: {
     CARD_SUBMIT: cardSubmit,
     CDN_URL: getCDNUrl(''),
     TOTAL_LABEL: $t('form.total.label'),
-    TOTAL_PRICE: `0.00 ${config.general.currency}`
+    TOTAL_PRICE: `${totalPrice}`
   })
 }
 
-export function createProivderButton(params: {
-  provider: string;
+export function createProviderButton(params: {
+  provider: PaymentProvider;
   config: FormConfig;
+  tabAvailable?: boolean;
 }) {
-  const { provider, config } = params;
+  const { provider, config, tabAvailable } = params;
   const { $t } = useI18n(config.general.localization);
-  const canDarkMode = config.design.darkMode && ['googlePay', 'applePay'].includes(provider);
+  const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
 
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
-    description: provider === 'paypal' ? $t('paypalMotto') : undefined,
+    description: provider === PaymentProvider.PAYPAL ? $t('paypalMotto') : undefined,
+    attrs: { 'data-provider': provider },
+    wrapperAttrs: {
+      class: 'zotlo-checkout__payment-provider',
+      ...(tabAvailable ? { 'data-tab-content': provider, 'data-tab-active': 'true'} : {})
+    }
   })
 }
 
-export function createForm(params: {
-  subscriberId: string;
+export function prepareButtonSuccessLink(params: {
   config: FormConfig;
+  paymentDetail: PaymentDetail;
 }) {
-  const { config } = params;
+  const { config, paymentDetail } = params;
+  const theme = config.success.theme;
+  const os = paymentDetail.client.selectedOs || 'desktop';
+
+  if (theme === 'app2web') {
+    switch (os) {
+      case 'android':
+        return paymentDetail?.application.links.deeplinkAndroid || '';
+      case 'ios':
+        return paymentDetail?.application.links.deeplinkIos || '';
+      case 'desktop':
+      default:
+        return paymentDetail?.application.links.deeplinkWeb || '';
+    }
+  } else {
+    if (config.success?.genericButton?.show) {
+      return paymentDetail.application.links.genericDownloadUrl || '';
+    }
+
+    switch (os) {
+      case 'android':
+        return paymentDetail?.application.links.googlePlayStoreUrl || '';
+      case 'ios':
+        return paymentDetail?.application.links.appStoreUrl || '';
+      default:
+        return paymentDetail?.application.links.genericDownloadUrl || '';
+    }
+  }
+}
+
+export function createPaymentSuccessForm(params: {
+  containerId: string;
+  config: FormConfig;
+  paymentDetail: PaymentDetail;
+}) {
+  if (!params.config?.success?.show) return false;
+  
+  const { containerId, config, paymentDetail } = params;
+  const successTheme = config.success.theme;
+  const delay = config.success.waitTime; // seconds
+  const container = document.getElementById(containerId);
+  const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
-  const paymentMethodSetting = config.settings.paymentMethodSetting;
-  const hasPaypal = paymentMethodSetting.some((item) => item.providerKey === 'paypal');
-  const hasOnlyPaypalButNotShown = hasPaypal && !config.general.showPaypal && paymentMethodSetting.length === 1;
-
-  const paymentMethods = paymentMethodSetting.filter((item) => {
-    if (item.providerKey === 'paypal') return config.general.showPaypal;
-    return true;
-  });
-  let providerButtons = paymentMethods.map((method, index) => {
-    if (method.providerKey !== 'creditCard') {
-      return createProivderButton({
-        provider: method.providerKey,
-        config
-      });
-    }
-
-    if (method.providerKey === 'creditCard') {
-      const isFirstItem = index === 0;
-      const isLastItem = index === paymentMethods.length - 1;
-      const isOnlyItem = paymentMethods.length === 1;
-      const isMiddleItem = !isFirstItem && !isLastItem;
-      let seperator = undefined as undefined | 'top' | 'bottom' | 'both';
-
-      if (!isOnlyItem && !isFirstItem && isMiddleItem) {
-        seperator = 'both';
-      } else if (!isOnlyItem && isFirstItem) {
-        seperator = 'bottom';
-      } else if (!isOnlyItem && isLastItem) {
-        seperator = 'top';
-      }
-
-      return createCreditCardForm({
-        ...params,
-        formType: isFirstItem ? 'both' : 'creditCard',
-        seperator,
-      });
-    }
-  }).join('');
-
-  if (paymentMethods?.[0]?.providerKey !== 'creditCard') {
-    providerButtons = createCreditCardForm({
-      ...params,
-      formType: 'subscriberId'
-    }) + providerButtons;
+  const buttonText = successTheme === 'app2web'
+    ? (config?.success?.button?.text || 0)
+    : (config.success?.genericButton?.text || 0);
+  const redirectUrl = prepareButtonSuccessLink({ config, paymentDetail }) || config?.success?.redirectUrl || '';
+  const canAutoRedirect = successTheme === 'app2web' && !!redirectUrl && config.success.autoRedirect;
+  const storeUrls = {
+    apple: paymentDetail?.application?.links?.appStoreUrl,
+    google: paymentDetail?.application?.links?.googlePlayStoreUrl,
+    amazon: paymentDetail?.application?.links?.amazonStoreUrl,
+    microsoft: paymentDetail?.application?.links?.microsoftStoreUrl,
+    huawei: paymentDetail?.application?.links?.huaweiAppGalleryUrl,
   }
 
-  const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
-    ? $t('footer.disclaimer', {
-      termsOfUse: `<a href="#">${$t('common.termsOfUse')}</a>`,
-      privacyPolicy: `<a href="#">${$t('common.privacyPolicy')}</a>`,
-    })
+  const storeButtons = successTheme === 'web2app'
+    ? Object.entries(storeUrls)
+      .map(([store, link]) => {
+        const canVisible = !!config?.success?.storeButtons?.[store as keyof FormSuccess['storeButtons']] && !!link;
+        if (!canVisible) return '';
+        const img = getCDNUrl(`editor/store-badges/${store}${config.design.darkMode ? '' : '_dark' }.png`);
+        return `<a href="${link}" target="_blank" class="zotlo-checkout__store-button ${store}"><img src="${img}" alt="${store}"></a>`;
+      }).join('')
     : '';
 
-  const dir = ['he', 'ar'].includes(config.general.language) ? 'rtl' : 'ltr';
+  const htmlText = template(paymentSuccessElement, {
+    THEME: successTheme,
+    TITLE: $t('paymentSuccess.title'),
+    BUTTON_TEXT: typeof buttonText === 'number'
+      ? $t(`paymentSuccess.button.${successTheme}.${buttonText}`)
+      : buttonText,
+    BUTTON_LINK: redirectUrl || '#',
+    TIMER_TEXT: $t('paymentSuccess.timer', { second: delay }),
+    AUTO_REDIRECT: canAutoRedirect,
+    STORE_BUTTONS: storeButtons,
+    WEB2APP_DESC: $t('paymentSuccess.desc2'),
+    SHOW_BUTTON: successTheme === 'app2web' || (successTheme === 'web2app' && config.success?.genericButton?.show),
+  });
 
-  if (hasOnlyPaypalButNotShown) {
-    providerButtons = '';
-
-    return template(noMethodElement, {
-      DIR: dir,
-      TITLE: $t('empty.noMethod.title'),
-      DESC: $t('empty.noMethod.desc'),
-    });
+  function startTimer(timeInSeconds: number) {
+    let seconds = timeInSeconds;
+    const timer = setInterval(() => {
+      seconds--;
+      const successMessage = form.querySelector('[data-timer]') as HTMLDivElement;
+      if (successMessage) {
+        successMessage.innerHTML = $t('paymentSuccess.timer', { second: seconds })
+      }
+      if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.href = redirectUrl; // Redirect to the game or desired URL
+      }
+    }, 1000);
   }
 
-  return template(paymentElement, {
-    DIR: dir,
-    PROVIDERS: providerButtons,
-    // TODO: PRICE_INFO will be changed to a dynamic text by package
-    PRICE_INFO: $t('footer.priceInfo.package_with_trial'),
-    FOOTER_DESC: $t('footer.desc'),
-    DISCLAIMER: disclaimer && `<div>${disclaimer}</div>`,
-    ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a href="#">${$t('common.termsOfService')}</a><a href="#">${$t('common.privacyPolicy')}</a>`
-  });
+  if (container) {
+    const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, 'text/html');
+
+    for (const item of itemsExceptHeader) {
+      (item as HTMLDivElement).style.display = 'none';
+    }
+    
+    form?.appendChild(doc.body.firstChild as HTMLElement);
+    if (canAutoRedirect) startTimer(delay);
+  }
+}
+
+export function createAgreementModal(params: {
+  key: 'distanceSalesAgreement' | 'informationForm';
+  config: FormConfig;
+}) {
+  const { key, config } = params;
+  const { $t } = useI18n(config.general.localization);
+
+  return template(modalElement, {
+    MODAL_NAME: 'agreement',
+    TITLE: $t(`agreement.title.${key}`),
+    FRAME_URL: config.general.documents[key]
+  })
 }

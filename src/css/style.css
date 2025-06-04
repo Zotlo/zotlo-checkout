@@ -3,6 +3,10 @@
 @import "./checkbox.css";
 @import "./tooltip.css";
 @import "./select.css";
+@import "./button.css";
+@import "./modal.css";
+@import "./theme/default.css";
+@import "./theme/mobileapp.css";
 
 .zotlo-checkout {
   --zc-color: #000000;
@@ -34,9 +38,19 @@
   --zc-form-submit-hover-color: #FFFFFF;
   --zc-form-submit-hover-borderColor: #301BA3;
   --zc-form-submit-hover-backgroundColor: #301BA3;
+  --zc-form-spinner-color: '#BBBFFF';
   --zc-footer-color: #737380;
   --zc-footer-fontSize: 10px;
   --zc-form-provider-backgroundColor: #000000;
+  --zc-success-button-color: #FFFFFF;
+  --zc-success-button-backgroundColor: #4329CC;
+  --zc-success-button-borderColor: #4329CC;
+  --zc-success-button-backgroundColor: #4329CC;
+  --zc-success-button-borderWidth: 0px;
+  --zc-success-button-borderRadius: 8px;
+  --zc-success-button-hover-color: #FFFFFF;
+  --zc-success-button-hover-borderColor: #301BA3;
+  --zc-success-button-hover-backgroundColor: #301BA3;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -55,7 +69,9 @@
   gap: 24px;
   min-width: 320px;
   max-width: 460px;
-  color: var(--zc-color)
+  color: var(--zc-color);
+  position: relative;
+  overflow: hidden;
 }
 
 .zotlo-checkout,
@@ -72,9 +88,68 @@
   max-width: 100%;
 }
 
+.zotlo-checkout table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.zotlo-checkout table td {
+  border-bottom: 1px solid #EBEBEB;
+  padding: 8px 0;
+}
+
+.zotlo-checkout[data-theme="dark"] table td {
+  border-bottom-color: #333333;
+}
+
+.zotlo-checkout table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.zotlo-checkout table tbody tr:not(:first-child) td {
+  color: #68686A;
+}
+
+.zotlo-checkout tfoot tr:first-child td {
+  padding-top: 24px;
+}
+
+.zotlo-checkout tfoot tr:last-child td {
+  border-bottom: none;
+}
+
 .zotlo-checkout a { color: #007AFF; }
 .zotlo-checkout a:hover {
   text-decoration: underline;
+}
+
+.zotlo-checkout__header {
+  border-bottom: 1px solid #EBEBEB;
+  position: relative;
+  z-index: 10;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__header {
+  border-bottom-color: #333333;
+}
+
+.zotlo-checkout__header__info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.zotlo-checkout__header__info img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
+  object-position: center;
 }
 
 .zotlo-checkout__form__col2 {
@@ -120,22 +195,6 @@
   max-height: 33px;
 }
 
-.zotlo-checkout__button {
-  font-weight: 700;
-  padding: 8px 16px;
-  display: inline-flex;
-  background-color: #4329CC;
-  width: 100%;
-  color: white;
-  border-radius: 8px;
-  font-size: 14px;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  min-height: 48px;
-  border: 0;
-}
-
 .zotlo-checkout__cardSubmit {
   margin-top: 32px;
 }
@@ -150,18 +209,6 @@
 
 .zotlo-checkout__button.provider.paypal {
   background-color: #f6c444;
-}
-
-.zotlo-checkout__button-desc {
-  display: block;
-  margin-top: 4px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.zotlo-checkout__button-desc:empty {
-  display: none;
 }
 
 .zotlo-checkout__cardSubmit {
@@ -184,11 +231,21 @@
   margin-top: 24px;
   margin-bottom: 16px;
   text-align: center;
+  font-weight: 600;
+  font-size: 18px;
+  font-family: var(--zc-fontFamily, inherit);
+  color: #0D0626;
+  letter-spacing: 0;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__card-title {
+  color: #6B7283;
 }
 
 .zotlo-checkout__seperator {
   display: flex;
   align-items: center;
+  color: #818A9C;
 }
 
 .zotlo-checkout__seperator::before, 
@@ -203,7 +260,14 @@
   flex-shrink: 0;
   padding: 0 16px;
   font-size: 12px;
-  color: #818A9C;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__seperator {
+  color: #6B7283;
+}
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__seperator::before,
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__seperator::after {
+  background-color: #6B7283;
 }
 
 .zotlo-checkout__footer {
@@ -234,7 +298,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: 16px;
   max-width: 242px;
   text-align: center;
   background-color: #F6F7F9;
@@ -245,6 +309,112 @@
 
 .zotlo-checkout__noMethod__title {
   font-weight: 600;
+}
+
+.zotlo-checkout .zotlo-checkout__payment-provider[data-tab-active="false"] {
+  display: none;
+  visibility: hidden;
+}
+
+.zotlo-checkout .zotlo-checkout__payment-provider[data-tab-active="true"] {
+  display: block;
+  visibility: visible;
+}
+
+.zotlo-checkout__success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 5;
+  height: 520px;
+  padding: 0 14px;
+  text-align: center;
+  color: var(--zc-success-color);
+  background-color: var(--zc-form-backgroundColor);
+}
+
+.zotlo-checkout__success .zotlo-checkout__button {
+  margin: 16px 0;
+  color: var(--zc-success-button-color);
+  border: var(--zc-success-button-borderWidth) solid var(--zc-success-button-borderColor);
+  border-radius: var(--zc-success-button-borderRadius);
+  background-color: var(--zc-success-button-backgroundColor);
+}
+
+.zotlo-checkout__success .zotlo-checkout__button:hover {
+  margin: 16px 0;
+  color: var(--zc-success-button-hover-color);
+  border-color: var(--zc-success-button-hover-borderColor);
+  background-color: var(--zc-success-button-hover-backgroundColor);
+}
+
+.zotlo-checkout__success__title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.zotlo-checkout__success__desc {
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.zotlo-checkout__success__timer {
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 4px;
+  color: #68686A;
+}
+
+.zotlo-checkout__success__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  max-width: 260px;
+  margin-top: 16px;
+}
+
+.zotlo-checkout__success__buttons img {
+  height: 34px;
+  display: block;
+}
+
+.zotlo-checkout__loader {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  width: 100%;
+  height: 100%;
+  background-color: #0B0B0BA3;
+}
+
+.zotlo-checkout__loader::before {
+  position: relative;
+  content: "";
+  display: block;
+  width: 44px;
+  height: 44px;
+  border: 3px solid transparent;
+  border-top: 3px solid var(--zc-form-spinner-color);
+  border-right: 3px solid var(--zc-form-spinner-color);
+  border-bottom: 3px solid var(--zc-form-spinner-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
 }
 
 @media (min-width: 640px) {
