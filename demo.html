@@ -14,7 +14,7 @@
     <link href="./dist/zotlo-checkout.css" rel="stylesheet">
   </head>
   <body>
-    <div id="zotlo-checkout" style="max-width: 460px; margin: 16px auto 0;"></div>
+    <div id="zotlo-checkout" style="max-width: 460px; margin: 0 auto;"></div>
     <div id="app"></div>
 
     <!-- GLOBAL OBJECT USAGE-->
@@ -31,7 +31,12 @@
         subscriberId: '',
         returnUrl: '',
         events: {
-          onLoad() {},
+          onLoad(config) {
+            const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;
+            if (defaultBG) {
+              document.body.style.backgroundColor = config?.backgroundColor || defaultBG;
+            }
+          },
           onSubmit() {},
           onSuccess() {},
           onFail(e) {

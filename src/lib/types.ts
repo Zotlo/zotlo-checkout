@@ -5,7 +5,7 @@ export interface IZotloCheckoutParams {
   subscriberId?: string;
   returnUrl?: string;
   events?: {
-    onLoad?: () => void;
+    onLoad?: (params: Record<string, any>) => void;
     onUpdate?: () => void;
     onSubmit?: (e?: Record<string, any>) => void;
     onSuccess?: () => void;

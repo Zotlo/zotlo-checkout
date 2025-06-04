@@ -514,7 +514,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function init() {
     handleTabView();
-    params.events?.onLoad?.();
+    params.events?.onLoad?.({
+      backgroundColor: config.design.backgroundColor,
+    });
     handleUrlQuery({
       params,
       config,

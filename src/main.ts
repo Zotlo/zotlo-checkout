@@ -9,7 +9,12 @@ import { ZotloCheckout } from './lib'
     subscriberId: '',
     returnUrl: '',
     events: {
-      onLoad() {},
+      onLoad(config) {
+        const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;
+        if (defaultBG) {
+          document.body.style.backgroundColor = config?.backgroundColor || defaultBG;
+        }
+      },
       onSubmit() {},
       onSuccess() {},
       onFail(e) {
