@@ -110,6 +110,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       customPrice: initData?.customPrice || '',
       customCurrency: initData?.customCurrency || '',
       subscriberId: initData?.subscriberId || '',
+      registerBypass: !!+initData?.registerBypass,
       zotloUrls: {
         privacyPolicy: initData?.zotloUrls?.privacyPolicy || '',
         termsOfService: initData?.zotloUrls?.termsOfService || '',

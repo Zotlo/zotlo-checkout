@@ -181,6 +181,7 @@ export type FormGeneral = {
   customPrice?: string;
   customCurrency?: string;
   subscriberId?: string;
+  registerBypass?: boolean;
   zotloUrls?: {
     privacyPolicy?: string;
     termsOfService?: string;

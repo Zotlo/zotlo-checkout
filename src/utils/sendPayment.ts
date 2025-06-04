@@ -45,8 +45,14 @@ function preparePayload(providerKey: PaymentProvider, formData: Record<string, a
 async function registerPaymentUser(subscriberId: string, config: FormConfig, params: IZotloCheckoutParams) {
   try {
     const existingSubscriberId = config?.general?.subscriberId;
+    const canEditSubscriberId = config?.settings?.allowSubscriberIdEditing;
+    const hideSubscriberIdIfAlreadySet = config?.settings?.hideSubscriberIdIfAlreadySet;
     const registerType = config?.settings?.registerType;
-    if (!subscriberId || existingSubscriberId) return null;
+
+    if (existingSubscriberId && hideSubscriberIdIfAlreadySet) return null;
+    if (config.general.registerBypass && !canEditSubscriberId) return null;
+    if (subscriberId === existingSubscriberId) return null;
+
     if (registerType === 'phoneNumber') {
       subscriberId = subscriberId.replace(/[^0-9]/g, '');
     }
