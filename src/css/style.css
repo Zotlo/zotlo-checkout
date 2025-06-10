@@ -408,6 +408,15 @@
   animation: spin 1s linear infinite;
 }
 
+.zotlo-checkout__payment-provider .gpay-card-info-container-fill, 
+.zotlo-checkout__payment-provider .gpay-card-info-container-fill > .gpay-card-info-container {
+  height: 48px;
+}
+.zotlo-checkout__payment-provider .gpay-card-info-container, 
+.zotlo-checkout__payment-provider .gpay-card-info-animation-container {
+  outline: none !important;
+}
+
 @keyframes spin {
   from { 
     transform: rotate(0deg); 

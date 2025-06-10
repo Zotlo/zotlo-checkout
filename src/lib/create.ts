@@ -308,6 +308,10 @@ export function createProviderButton(params: {
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
 
+  if (provider === PaymentProvider.GOOGLE_PAY && import.meta.env.VITE_SDK_API_URL) {
+    return `<div id="google-pay-button" class="zotlo-checkout__payment-provider" ${tabAvailable ? 'data-tab-content="googlePay" data-tab-active="true"' : ''}></div>`;
+  }
+
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
