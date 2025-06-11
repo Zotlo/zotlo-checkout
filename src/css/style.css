@@ -108,6 +108,9 @@
   text-align: right;
   white-space: nowrap;
 }
+.zotlo-checkout[dir="rtl"] table td:last-child {
+  text-align: left;
+}
 
 .zotlo-checkout table tbody tr:not(.zotlo-checkout__package__summary__head) td {
   color: #68686A;

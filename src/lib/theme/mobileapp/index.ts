@@ -154,7 +154,7 @@ export function generateThemeMobileApp(params: {
     TOTAL_PRICE: `${totalPrice}`,
     ADDITIONAL_TEXT: additionalText,
     ADDITIONAL_PRICE: `0.00 ${currency}`,
-    SHOW_SUBTOTAL: showSubtotal,
+    SHOW_SUBTOTAL: !!productName && showSubtotal,
     STATIC_SUBTOTAL: $t('common.subtotal'),
     STATIC_TOTAL: $t('common.totalDue'),
     PRICE_INFO: footerInfo.PRICE_INFO,
