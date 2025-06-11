@@ -1,4 +1,4 @@
-import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess } from "../lib/types";
+import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../lib/types";
 import { PaymentProvider } from "../lib/types";
 import { API } from "../utils/api";
 import { setCookie, COOKIE } from "./cookie";
@@ -230,5 +230,5 @@ export async function getProvidersConfig(paymentInitData?: FormPaymentData, coun
       tokenization: googlePayTokenizationSpecification,
       transactionId: googlePayConfig?.transactionId,
     }
-  }
+  } as ProviderConfigs
 }

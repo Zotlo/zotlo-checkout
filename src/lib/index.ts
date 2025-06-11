@@ -1,4 +1,4 @@
-import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn } from "./types"
+import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
 import { generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, type ValidationResult, updateValidationMessages, validatorInstance } from "../utils/validation";
@@ -8,15 +8,14 @@ import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
 import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading } from "../utils";
-import { getConfig, getProvidersConfig } from "../utils/getConfig";
+import { getConfig } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
-import { loadProviderSDKs } from "../utils/loadProviderSdks";
+import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal } from "./create";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
-  let config = { general: {}, settings: {}, design: {}, success: {} } as FormConfig;
-  let providerConfigs = {};
+  let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
   if (import.meta.env.VITE_SDK_API_URL) {
     config = await getConfig({ 
@@ -26,10 +25,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       subscriberId: params.subscriberId,
       returnUrl: params.returnUrl 
     });
-    [providerConfigs] = await Promise.all([
-      getProvidersConfig(config?.paymentData, config?.general?.countryCode),
-      loadProviderSDKs(config?.paymentData)
-    ]);
+    config.providerConfigs = await prepareProviders(config) as ProviderConfigs;
   }
 
   let containerId = '';
@@ -132,7 +128,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
           params,
           config,
           containerId,
-          providerConfigs
         });
       } finally {
         setFormLoading(false);
@@ -484,6 +479,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (import.meta.env.VITE_SDK_API_URL) {
       const { destroy } = handleAgreementLinks();
       destroyAgreementLinks = destroy;
+      renderGooglePayButton(config);
     }
 
     formElement?.addEventListener('submit', handleForm);

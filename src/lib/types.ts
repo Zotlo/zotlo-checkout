@@ -227,6 +227,50 @@ export type FormSuccess = {
   }
 }
 
+type ProviderTransactionInfo = {
+  totalPrice: string;
+  totalPriceStatus: string;
+  currencyCode: string;
+  countryCode: string;
+}
+
+type ProviderAllowedPaymentMethods = {
+  type: string;
+  parameters: Record<string, any>;
+}
+
+export type ProviderConfigs = {
+  applePay?: {
+    canMakePayments?: boolean;
+    transactionId?: string;
+    requestPayload: Record<string, any>;
+  },
+  googlePay?: {
+    isReadyToPay?: boolean;
+    transactionId?: string;
+    transactionInfo: ProviderTransactionInfo;
+    tokenization: {
+      type: string;
+      parameters: Record<string, any>;
+    };
+    isReadyToPayRequest: {
+      apiVersion: number;
+      apiVersionMinor: number;
+      allowedPaymentMethods: ProviderAllowedPaymentMethods[];
+    };
+    paymentDataRequest: {
+      apiVersion: number;
+      apiVersionMinor: number;
+      allowedPaymentMethods: ProviderAllowedPaymentMethods[];
+      transactionInfo: ProviderTransactionInfo;
+      merchantInfo: {
+        merchantName: string;
+        merchantId?: string;
+      };
+    };
+  },
+}
+
 export type FormConfig = {
   general: FormGeneral;
   settings: FormSetting;
@@ -234,6 +278,7 @@ export type FormConfig = {
   success: FormSuccess;
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
+  providerConfigs?: ProviderConfigs;
 }
 
 export type PaymentDetail = {

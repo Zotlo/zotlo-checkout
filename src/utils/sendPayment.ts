@@ -1,6 +1,7 @@
 import { setFormLoading } from "./index";
 import { createPaymentSuccessForm } from "../lib/create";
-import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail } from "../lib/types";
+import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
+import { getGooglePayClient } from "./loadProviderSdks";
 import { API } from "./api";
 import { deleteUuidCookie } from "./cookie";
 
@@ -119,7 +120,7 @@ async function handleCheckoutResponse(payload: {
 
 async function handleApplePayPayment(payload: {
   formPayload: Record<string, any>;
-  providerConfig: Record<string, any>;
+  providerConfig: ProviderConfigs["applePay"];
   subscriberId: string;
   params: IZotloCheckoutParams;
   containerId: string;
@@ -193,8 +194,45 @@ async function handleApplePayPayment(payload: {
   }
 }
 
-function handleGooglePayPayment() {
-  // TODO: Google Pay payment handling
+async function handleGooglePayPayment(payload: {
+  formPayload: Record<string, any>;
+  providerConfig: ProviderConfigs["googlePay"];
+  subscriberId: string;
+  params: IZotloCheckoutParams;
+  containerId: string;
+  config: FormConfig;
+}) {
+  const {
+    formPayload,
+    providerConfig,
+    subscriberId,
+    params,
+    config,
+    containerId,
+  } = payload;
+  try {
+    const paymentDataRequest = JSON.parse(JSON.stringify(providerConfig?.paymentDataRequest));
+    const googleClientResponse = await getGooglePayClient()?.loadPaymentData(paymentDataRequest);
+    const googlePayToken = googleClientResponse?.paymentMethodData?.tokenizationData?.token;
+    const transactionId = providerConfig?.transactionId;
+    const checkoutPayload = {
+      ...formPayload,
+      transactionId,
+      googlePayToken,
+    }
+    await registerPaymentUser(subscriberId, config, params);
+    const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
+    await handleCheckoutResponse({
+      checkoutResponse,
+      params,
+      config,
+      containerId,
+    });
+  } catch (error: any) {
+    // Prevent user closing form error
+    if (error?.toString()?.includes("AbortError")) return;
+    params.events?.onFail?.({ message: error || "Google Pay payment process failed", data: {}});
+  }
 }
 
 export async function sendPayment(paymentParams: {
@@ -203,22 +241,28 @@ export async function sendPayment(paymentParams: {
   params: IZotloCheckoutParams;
   config: FormConfig;
   containerId: string;
-  providerConfigs: Record<string, any>;
 }) {
-  const { providerKey, formData, params, config, containerId, providerConfigs } = paymentParams;
+  const { providerKey, formData, params, config, containerId } = paymentParams;
   try {
     const { subscriberId = "" } = formData || {};
 
     const payload = preparePayload(providerKey, formData, params);
     if (providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({ 
       formPayload: payload, 
-      providerConfig: providerConfigs?.applePay, 
+      providerConfig: config?.providerConfigs?.applePay, 
       subscriberId, 
       params,
       config,
       containerId 
     });
-    if (providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment();
+    if (providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment({ 
+      formPayload: payload, 
+      providerConfig: config?.providerConfigs?.googlePay, 
+      subscriberId, 
+      params,
+      config,
+      containerId 
+    });
 
     // Register user
     await registerPaymentUser(subscriberId, config, params);
