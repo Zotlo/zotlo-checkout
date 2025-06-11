@@ -79,7 +79,7 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
     deleteUuidCookie();
     params.events?.onSuccess?.();
     return result as PaymentDetail;
-  } catch (e) {
+  } catch {
     return null;
   } finally {
     setFormLoading(false);

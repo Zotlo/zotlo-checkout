@@ -33,11 +33,11 @@
   background-color: #303032;
 }
 
-.zotlo-checkout__package__summary tr:first-child td {
+tr.zotlo-checkout__package__summary__head td {
   font-size: 13px;
 }
 
-.zotlo-checkout__package__summary tr:first-child td:last-child {
+tr.zotlo-checkout__package__summary__head td:last-child {
   font-weight: 600;
 }
 

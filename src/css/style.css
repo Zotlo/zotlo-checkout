@@ -109,15 +109,15 @@
   white-space: nowrap;
 }
 
-.zotlo-checkout table tbody tr:not(:first-child) td {
+.zotlo-checkout table tbody tr:not(.zotlo-checkout__package__summary__head) td {
   color: #68686A;
 }
 
-.zotlo-checkout tfoot tr:first-child td {
+.zotlo-checkout tfoot tr.zotlo-checkout__package__summary__head td {
   padding-top: 24px;
 }
 
-.zotlo-checkout tfoot tr:last-child td {
+.zotlo-checkout tfoot tr.zotlo-checkout__package__summary__head td {
   border-bottom: none;
 }
 

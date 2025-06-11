@@ -36,8 +36,8 @@ export async function loadProviderSDKs(paymentInitData?: FormPaymentData): Promi
   const { providers = {} } = paymentInitData || {};
   const promises: Promise<void>[] = [];
 
-  if (!!providers?.[PaymentProvider.APPLE_PAY]) promises.push(loadScript(applePaySdkUrl, 'apple-pay-sdk'));
-  if (!!providers?.[PaymentProvider.GOOGLE_PAY]) promises.push(loadScript(googlePaySdkUrl, 'google-pay-sdk'));
+  if (providers?.[PaymentProvider.APPLE_PAY]) promises.push(loadScript(applePaySdkUrl, 'apple-pay-sdk'));
+  if (providers?.[PaymentProvider.GOOGLE_PAY]) promises.push(loadScript(googlePaySdkUrl, 'google-pay-sdk'));
 
   return Promise.all(promises);
 }

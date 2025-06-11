@@ -433,7 +433,11 @@ export function createPaymentSuccessForm(params: {
     }
     
     form?.appendChild(doc.body.firstChild as HTMLElement);
-    if (canAutoRedirect) startTimer(delay);
+    if (canAutoRedirect) {
+      if (import.meta.env.VITE_SDK_API_URL) {
+        startTimer(delay);
+      }
+    }
   }
 }
 

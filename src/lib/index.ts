@@ -12,7 +12,7 @@ import { getConfig } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
-import { createAgreementModal } from "./create";
+import { createAgreementModal, createPaymentSuccessForm } from "./create";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
@@ -273,6 +273,16 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (container) container.innerHTML = `<style>${style}</style>` + form;
 
     init();
+
+    if (import.meta.env.VITE_CONSOLE) {
+      if ((config as any).render === 'after-payment')  {
+        createPaymentSuccessForm({
+          containerId,
+          config,
+          paymentDetail: (config as any).paymentDetail as any
+        })
+      }
+    }
   }
 
   function loadSelectbox(item: HTMLElement, options: {

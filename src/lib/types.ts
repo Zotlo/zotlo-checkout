@@ -30,6 +30,20 @@ type TextStyle = {
   underline: boolean;
 }
 
+export type ProductConfigMobileApp = {
+  showProductTitle: boolean;
+  showSubtotalText: boolean;
+  discountRate: number;
+  productImage: {
+    show: boolean;
+    url: string;
+  };
+  additionalText: {
+    show: boolean;
+    text: Record<string, string>;
+  };
+}
+
 export type FormDesign = {
   theme: 'horizontal' | 'vertical' | 'mobileapp';
   darkMode: boolean;
@@ -38,6 +52,8 @@ export type FormDesign = {
   backgroundColor: string;
   borderRadius: string;
   borderWidth: string;
+  header: { show: boolean; };
+  product: ProductConfigMobileApp;
   label: {
     show: boolean;
     color: string;

@@ -17,15 +17,19 @@
 
     <table class="zotlo-checkout__package__summary">
       <tbody>
-        <tr>
+        <% IF(PACKAGE_NAME) %>
+        <tr class="zotlo-checkout__package__summary__head">
           <td>{{PACKAGE_NAME}}</td>
           <td class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
         </tr>
+        <% ENDIF %>
 
+        <% IF(SHOW_SUBTOTAL===true) %>
         <tr>
           <td>{{STATIC_SUBTOTAL}}</td>
           <td>{{TOTAL_PRICE}}</td>
         </tr>
+        <% ENDIF %>
 
         <% IF(ADDITIONAL_TEXT) %>
         <tr>
@@ -36,7 +40,7 @@
       </tbody>
 
       <tfoot>
-        <tr>
+        <tr class="zotlo-checkout__package__summary__head">
           <td>{{STATIC_TOTAL}}</td>
           <td class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
         </tr>
