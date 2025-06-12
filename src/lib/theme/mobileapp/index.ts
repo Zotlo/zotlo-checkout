@@ -136,7 +136,10 @@ export function generateThemeMobileApp(params: {
   const additionalText = showAdditonalText
     ? (
       config.general.additionalText ||
-      config.design?.product?.additionalText?.text?.[config.general.language] || ''
+      (
+        config.design?.product?.additionalText?.text?.[config.general.language] ||
+        config.design?.product?.additionalText?.text?.en || ''
+      )
     )
     : '';
 
