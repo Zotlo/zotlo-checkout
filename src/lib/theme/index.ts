@@ -29,8 +29,8 @@ export function generateTheme(params: {
   const tosUrl = config.general.tosUrl;
   const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
     ? $t('footer.disclaimer', {
-      termsOfUse: `<a href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
-      privacyPolicy: `<a href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
+      termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
+      privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
     })
     : '';
 
@@ -49,7 +49,7 @@ export function generateTheme(params: {
     FOOTER_DESC: $t('footer.desc'),
     DISCLAIMER: disclaimer && `<div>${disclaimer}</div>`,
     ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
   }
 
   if (params.config.design.theme === 'mobileapp') {
