@@ -156,10 +156,10 @@ function getPackageState(config?: FormConfig) {
 }
 
 export function getPackageTemplateParams(config: FormConfig) {
-  if (import.meta.env.VITE_CONSOLE || !config) return {};
+  if (!config || !config?.packageInfo) return {};
 
   const { packageInfo } = config;
-  const { period = 0, trialPeriod = 0, periodType, trialPeriodType } = config?.packageInfo || {};
+  const { period = 0, trialPeriod = 0, periodType, trialPeriodType } = packageInfo || {};
   const { $t } = useI18n(config.general.localization);
 
   return {
