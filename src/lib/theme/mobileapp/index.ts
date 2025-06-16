@@ -12,15 +12,15 @@ function prepareProvider(params: {
 }) {
   const { config, paymentMethods, method, index, tabAvailable } = params;
 
-  if (method.providerKey !== PaymentProvider.CREDIT_CARD) {
+  if (method?.providerKey !== PaymentProvider.CREDIT_CARD) {
     return createProviderButton({
-      provider: method.providerKey,
+      provider: method?.providerKey,
       config,
       tabAvailable: !!index
     });
   }
 
-  if (method.providerKey === PaymentProvider.CREDIT_CARD) {
+  if (method?.providerKey === PaymentProvider.CREDIT_CARD) {
     const isFirstItem = index === 0;
     const isLastItem = index === paymentMethods.length - 1;
     const isOnlyItem = paymentMethods.length === 1;
