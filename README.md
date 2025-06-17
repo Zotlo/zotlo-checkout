@@ -103,7 +103,7 @@ checkout.mount(containerId: string);
 ### refresh
 Refresh checkout form
 ```typescript
-checkout.refresh();
+checkout.refresh(): Promise<void>;
 ```
 
 ### unmount

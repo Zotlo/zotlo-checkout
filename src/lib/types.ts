@@ -157,6 +157,11 @@ export type FormPaymentData = {
   sandboxPayment: boolean;
   selectedPrice: SelectedPriceData;
   subscriberCountry: string;
+  discount: {
+    discountPrice: number | string;
+    originalPrice: number | string;
+    totalPrice: number | string;
+  };
   documents: {
     distanceSalesAgreement: string;
     informationForm: string;
@@ -176,6 +181,11 @@ export type PackageInfoType = {
   currency: string;
   condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
   state: keyof FormConfig['design']['button']['text'];
+  discount: {
+    price: number | string;
+    original: number | string
+    total: number | string;
+  }
 }
 
 export type FormGeneral = {

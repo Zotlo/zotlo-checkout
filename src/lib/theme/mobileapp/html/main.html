@@ -20,14 +20,14 @@
         <% IF(PACKAGE_NAME) %>
         <tr class="zotlo-checkout__package__summary__head">
           <td>{{PACKAGE_NAME}}</td>
-          <td class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
+          <td class="zotlo-checkout__package__summary__price">{{PACKAGE_PRICE}}</td>
         </tr>
         <% ENDIF %>
 
         <% IF(SHOW_SUBTOTAL===true) %>
         <tr>
           <td>{{STATIC_SUBTOTAL}}</td>
-          <td>{{TOTAL_PRICE}}</td>
+          <td>{{PACKAGE_PRICE}}</td>
         </tr>
         <% ENDIF %>
 

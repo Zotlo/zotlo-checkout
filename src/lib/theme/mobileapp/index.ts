@@ -119,7 +119,8 @@ export function generateThemeMobileApp(params: {
   })).join('');
 
   const totalPrice = config.packageInfo?.totalPayableAmount || '0.00 USD';
-  const currency = config.packageInfo?.currency || "USD";
+  const packagePrice = config.packageInfo?.discount.original;
+  const additionalPrice = config.packageInfo?.discount.price;
 
   if (providerButtons) {
     primaryProvider += `<div class="zotlo-checkout__seperator"><span>${$t('common.orAnotherWay')}</span></div>`
@@ -154,9 +155,10 @@ export function generateThemeMobileApp(params: {
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
-    TOTAL_PRICE: `${totalPrice}`,
+    TOTAL_PRICE: totalPrice,
+    PACKAGE_PRICE: packagePrice,
     ADDITIONAL_TEXT: additionalText,
-    ADDITIONAL_PRICE: `0.00 ${currency}`,
+    ADDITIONAL_PRICE: additionalPrice,
     SHOW_SUBTOTAL: !!productName && showSubtotal,
     STATIC_SUBTOTAL: $t('common.subtotal'),
     STATIC_TOTAL: $t('common.totalDue'),

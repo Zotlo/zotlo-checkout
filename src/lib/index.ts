@@ -249,12 +249,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     tabItems.item(0)?.dispatchEvent(new Event('click'));
   }
 
-  function refresh() {
+  async function refresh() {
     if (!containerId) return;
 
     if (import.meta.env.VITE_CONSOLE) {
       if ((globalThis as any)?.getZotloConfig) {
-        config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
+        config = await (globalThis as any)?.getZotloConfig?.() as FormConfig;
       }
     }
 
