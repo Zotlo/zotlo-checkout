@@ -9,7 +9,7 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
   const totalPayableAmount = getTotalPayableAmount(config);
   const condition = getPackageCondition(config);
   const state = getPackageState(config);
-  const discount = getDiscountPrices(config);
+  const discount = getDiscountPrices(config, totalPayableAmount);
 
   return {
     ...periodsInfo,
@@ -21,7 +21,7 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
   };
 }
 
-export function getDiscountPrices(config?: FormConfig) {
+export function getDiscountPrices(config?: FormConfig, defaultPrice?: string) {
   const { customPrice, customCurrency } = config?.general || {};
   const { discountPrice, originalPrice, totalPrice } = config?.paymentData?.discount || {};
   let currency = config?.paymentData?.selectedPrice?.currency || '';
@@ -29,10 +29,12 @@ export function getDiscountPrices(config?: FormConfig) {
   const hasCustomPrice = !!customPrice && !!customCurrency;
   if (hasCustomPrice) currency = customCurrency;
 
+  defaultPrice = (defaultPrice || `0.00 ${currency}`);
+
   return {
     price: `${discountPrice || '0.00'} ${currency}`,
-    original: `${originalPrice || '0.00'} ${currency}`,
-    total: `${totalPrice || '0.00'} ${currency}`,
+    original: originalPrice ? `${originalPrice} ${currency}` : defaultPrice,
+    total: totalPrice ? `${totalPrice} ${currency}` : defaultPrice,
   }
 }
 
