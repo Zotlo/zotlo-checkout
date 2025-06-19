@@ -387,8 +387,6 @@ export function createPaymentSuccessForm(params: {
     huawei: paymentDetail?.application?.links?.huaweiAppGalleryUrl,
   }
 
-  console.log('Store URLs:', config);
-
   const storeButtons = successTheme === 'web2app'
     ? Object.entries(storeUrls)
       .map(([store, link]) => {
