@@ -330,17 +330,20 @@ export function prepareButtonSuccessLink(params: {
 }) {
   const { config, paymentDetail } = params;
   const theme = config.success.theme;
-  const os = paymentDetail.client.selectedOs || 'desktop';
+  const os = paymentDetail.client.selectedOs || '';
 
   if (theme === 'app2web') {
+    const iosLink = paymentDetail?.application.links.deeplinkIos || '';
+
     switch (os) {
       case 'android':
         return paymentDetail?.application.links.deeplinkAndroid || '';
-      case 'ios':
-        return paymentDetail?.application.links.deeplinkIos || '';
       case 'desktop':
-      default:
         return paymentDetail?.application.links.deeplinkWeb || '';
+      case 'ios':
+        return iosLink;
+      default:
+        return iosLink;
     }
   } else {
     if (config.success?.genericButton?.show) {
@@ -383,6 +386,8 @@ export function createPaymentSuccessForm(params: {
     microsoft: paymentDetail?.application?.links?.microsoftStoreUrl,
     huawei: paymentDetail?.application?.links?.huaweiAppGalleryUrl,
   }
+
+  console.log('Store URLs:', config);
 
   const storeButtons = successTheme === 'web2app'
     ? Object.entries(storeUrls)
