@@ -39,12 +39,17 @@ type InitResult = {
   }
 };
 
+export const ErrorHandler = {
+  response: null as Record<string, any> | null,
+}
+
 async function getPaymentData() {
   try {
     const paymentRes = await API.get("/payment/init");
     const paymentInitData = paymentRes?.result || {};
     return paymentInitData as FormPaymentData;
-  } catch {
+  } catch (e: any) {
+    ErrorHandler.response = e;
     return {} as FormPaymentData;
   }
 }
@@ -126,7 +131,8 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);
-  } catch {
+  } catch (e: any) {
+    ErrorHandler.response = e;
     return config;
   }
 
@@ -138,7 +144,8 @@ export async function getProviderConfig(providerKey: PaymentProvider) {
     const res = await API.post(`/payment/init`, { providerKey });
     const data = res?.result || {};
     return data;
-  } catch {
+  } catch (e: any) {
+    ErrorHandler.response = e;
     return {};
   }
 }

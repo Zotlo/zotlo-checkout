@@ -1,5 +1,5 @@
 import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
-import { generateTheme } from "./theme";
+import { generateEmptyPage, generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, type ValidationResult, updateValidationMessages, validatorInstance } from "../utils/validation";
 import { FORM_ITEMS } from "./fields";
@@ -8,7 +8,7 @@ import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
 import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading } from "../utils";
-import { getConfig } from "../utils/getConfig";
+import { getConfig, ErrorHandler } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
@@ -266,9 +266,19 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     // Destroy everything before re-rendering
     unmount();
 
-    const form = generateTheme({ config });
+    let form = generateTheme({ config });
     const style = createStyle(config);
     const container = getContainerElement();
+
+    if (import.meta.env.VITE_SDK_API_URL) {
+      if (ErrorHandler.response) {
+        form = generateEmptyPage({
+          config,
+          title: config?.general?.localization?.empty?.error?.title || 'An error occured',
+          message: ErrorHandler.response?.meta?.message
+        });
+      }
+    }
 
     if (container) container.innerHTML = `<style>${style}</style>` + form;
 

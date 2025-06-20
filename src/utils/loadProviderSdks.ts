@@ -46,7 +46,9 @@ export function getGooglePayClient() {
   const googlePayEnvironment = import.meta.env.VITE_GOOGLE_PAY_ENVIRONMENT || 'TEST';
   if (googlePayClient === null) {
     const googlePay = (globalThis as any)?.google;
-    googlePayClient = new googlePay.payments.api.PaymentsClient({ environment: googlePayEnvironment });
+    if (googlePay) {
+      googlePayClient = new googlePay.payments.api.PaymentsClient({ environment: googlePayEnvironment });
+    }
   }
   return googlePayClient;
 }

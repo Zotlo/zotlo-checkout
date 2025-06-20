@@ -5,6 +5,22 @@ import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";
 import noMethodElement from '../../html/nomethod.html?raw'
 
+export function generateEmptyPage(params: {
+  config: FormConfig,
+  title?: string,
+  message?: string,
+}) {
+  const { config } = params;
+  const { $t } = useI18n(config.general?.localization);
+  const dir = ['he', 'ar'].includes(config?.general.language) ? 'rtl' : 'ltr';
+
+  return template(noMethodElement, {
+    DIR: dir,
+    TITLE: params.title || $t('empty.noMethod.title'),
+    DESC: params.message || $t('empty.noMethod.desc'),
+  });
+}
+
 export function generateTheme(params: {
   config: FormConfig;
 }){
@@ -18,11 +34,7 @@ export function generateTheme(params: {
   const hasAnyConfig = Object.keys(config?.settings).length > 0;
 
   if (!hasAnyConfig || hasOnlyPaypalButNotShown) {
-    return template(noMethodElement, {
-      DIR: dir,
-      TITLE: $t('empty.noMethod.title'),
-      DESC: $t('empty.noMethod.desc'),
-    });
+    return generateEmptyPage({ config });
   }
 
   const privacyUrl = config.general.privacyUrl;
