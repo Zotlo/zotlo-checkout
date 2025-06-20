@@ -207,7 +207,7 @@ export function createCreditCardForm(params: {
   showPrice: boolean;
 }) {
   const { config, seperator, formType = 'both', className, showPrice } = params;
-  const subscriberId = config.general.subscriberId || '';
+  const subscriberId = config.settings.registerType === 'other' ? '' : (config.general.subscriberId || '');
   const attrs = generateAttributes({
     ...(params.attrs || {})
   });
