@@ -26,7 +26,7 @@
 }
 
 .zotlo-checkout--mobileapp .zotlo-checkout__tab__button[data-active="true"] {
-  background-color: #DDE8EA;
+  background-color: #F2F2F2;
 }
 
 .zotlo-checkout--mobileapp[data-theme="dark"] .zotlo-checkout__tab__button[data-active="true"] {
