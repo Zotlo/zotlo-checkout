@@ -190,7 +190,11 @@ async function handleApplePayPayment(payload: {
     // Show apple pay modal
     session.begin();
   } catch (error: any) {
-    params.events?.onFail?.({ message: error || "Apple Pay payment process failed", data: {}});
+    const message = (typeof error === 'string' ? error : error?.meta?.message) || "Apple Pay payment process failed";
+    params.events?.onFail?.({
+      message,
+      data: typeof error !== 'string' ? error : {}
+    });
   }
 }
 
@@ -231,7 +235,11 @@ async function handleGooglePayPayment(payload: {
   } catch (error: any) {
     // Prevent user closing form error
     if (error?.toString()?.includes("AbortError")) return;
-    params.events?.onFail?.({ message: error || "Google Pay payment process failed", data: {}});
+    const message = (typeof error === 'string' ? error : error?.meta?.message) || "Google Pay payment process failed";
+    params.events?.onFail?.({
+      message,
+      data: typeof error !== 'string' ? error : {}
+    });
   }
 }
 
