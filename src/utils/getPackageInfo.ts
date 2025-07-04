@@ -54,7 +54,7 @@ export function getPackagePrices(config?: FormConfig) {
   }
 
   return {
-    price: `${priceValue} ${currencyValue}`,
+    price: `${(priceValue ? +priceValue : 0)?.toFixed(2)} ${currencyValue}`,
     trialPrice: `${trialPriceValue} ${currencyValue}`,
     dailyPrice: `${dailyPrice} ${currencyValue}`,
     weeklyPrice: `${weeklyPrice} ${currencyValue}`,
@@ -189,4 +189,28 @@ export function getPackageTemplateParams(config: FormConfig) {
     PERIOD: period === 0 ? '' : $t(`common.periods.${periodType}`, { count: period }),
     TRIAL_PERIOD: period === 0 ? '' : $t(`common.periods.${trialPeriodType}`, { count: trialPeriod }),
   };
+}
+
+export function getPackageName(config: FormConfig) {
+  const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
+  const showProductName = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'showProductTitle')
+    ? !!config.design?.product?.showProductTitle
+    : true;
+  let packageName = showProductName ? config.general.packageName || '' : '';
+
+  if (!packageName) {
+    const { $t } = useI18n(config.general.localization);
+    const { package: packageItem } = config.paymentData || {}
+    const periodInfo = getPackagePeriodsInfo(config);
+
+    packageName = packageItem?.name || '';
+
+    if (packageItem?.packageType === PackageType.SUBSCRIPTION) {
+      packageName = $t(`subscription.${periodInfo.periodType}`);
+    } else if ([PackageType.CONSUMABLE, PackageType.EPIN].includes(packageItem?.packageType as PackageType)) {
+      packageName = $t('onetimePayment');
+    }
+  }
+
+  return packageName;
 }

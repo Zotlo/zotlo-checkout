@@ -137,7 +137,7 @@ export type PackageData = {
   packageId: string;
   packageType: PackageType;
   trialPeriod: number;
-  periodType: string;
+  periodType: 'year' | 'month' | 'week' | 'day';
   trialPeriodType: string;
   trialPackageType: TrialPackageType;
 };

@@ -2,6 +2,7 @@ import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, template, useI18n } from '../../../utils'
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
 import { createProviderButton, createButton, createCreditCardForm } from '../../create'
+import { getPackageName } from '../../../utils/getPackageInfo';
 
 function prepareProvider(params: {
   config: FormConfig;
@@ -129,11 +130,10 @@ export function generateThemeMobileApp(params: {
   const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
   const showHeader = Object.prototype.hasOwnProperty.call(config.design, 'header') ? !!config.design.header?.show : true;
   const showProductImage = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'productImage') ? !!config.design?.product?.productImage?.show : true;
-  const showProductName = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'showProductTitle') ? !!config.design?.product?.showProductTitle : true;
   const showSubtotal = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'showSubtotalText') ? !!config.design?.product?.showSubtotalText : true;
   const showAdditonalText = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'additionalText') ? !!config.design?.product?.additionalText?.show : true;
   const productImage = showProductImage ? (config.general.productImage || config.design?.product?.productImage.url || '') : '';
-  const productName = showProductName ? config.general.packageName || '' : '';
+  const packageName = getPackageName(config);
   const additionalText = showAdditonalText
     ? (
       config.general.additionalText ||
@@ -150,7 +150,7 @@ export function generateThemeMobileApp(params: {
     SHOW_HEADER: showHeader && (!!config.general.appName || !!config.general.appLogo),
     APP_NAME: config.general.appName || '',
     LOGO: config.general.appLogo || '',
-    PACKAGE_NAME: productName,
+    PACKAGE_NAME: packageName,
     PACKAGE_IMAGE: productImage,
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
@@ -159,7 +159,7 @@ export function generateThemeMobileApp(params: {
     PACKAGE_PRICE: packagePrice,
     ADDITIONAL_TEXT: additionalText,
     ADDITIONAL_PRICE: additionalPrice,
-    SHOW_SUBTOTAL: !!productName && showSubtotal,
+    SHOW_SUBTOTAL: !!packageName && showSubtotal,
     STATIC_SUBTOTAL: $t('common.subtotal'),
     STATIC_TOTAL: $t('common.totalDue'),
     PRICE_INFO: footerInfo.PRICE_INFO,
