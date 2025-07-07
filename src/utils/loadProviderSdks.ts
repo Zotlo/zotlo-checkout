@@ -106,10 +106,10 @@ export function canMakeApplePayPayments() {
   }
 }
 
-export async function prepareProviders(config: FormConfig) {
+export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
   [providerConfigs] = await Promise.all([
-    getProvidersConfig(config?.paymentData, config?.general?.countryCode),
+    getProvidersConfig(config?.paymentData || {} as FormPaymentData, returnUrl, config?.general?.countryCode),
     loadProviderSDKs(config?.paymentData)
   ]);
 

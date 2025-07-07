@@ -25,7 +25,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       subscriberId: params.subscriberId,
       returnUrl: params.returnUrl 
     });
-    config.providerConfigs = await prepareProviders(config) as ProviderConfigs;
+    config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
   }
 
   let containerId = '';

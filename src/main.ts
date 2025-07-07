@@ -5,9 +5,9 @@ import { ZotloCheckout } from './lib'
   const checkout = await ZotloCheckout({
     token: '123ASDASsqasdas=',
     packageId: 'zotlo-123',
+    returnUrl: 'https://example.com/return-url',
     language: 'en',
     subscriberId: '',
-    returnUrl: '',
     events: {
       onLoad(config) {
         const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;

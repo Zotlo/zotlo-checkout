@@ -139,9 +139,9 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
   return config;
 }
 
-export async function getProviderConfig(providerKey: PaymentProvider) {
+export async function getProviderConfig(providerKey: PaymentProvider, returnUrl: string) {
   try {
-    const res = await API.post(`/payment/init`, { providerKey });
+    const res = await API.post(`/payment/init`, { providerKey, returnUrl });
     const data = res?.result || {};
     return data;
   } catch (e: any) {
@@ -150,12 +150,12 @@ export async function getProviderConfig(providerKey: PaymentProvider) {
   }
 }
 
-export async function getProvidersConfigData(paymentInitData?:FormPaymentData) {
+export async function getProvidersConfigData(paymentInitData:FormPaymentData, returnUrl: string) {
   const { providers = {} } = paymentInitData || {};
   const providersHasConfig = [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY];
   const providerKeys = providersHasConfig.filter(key => !!providers[key]);
   if (!providerKeys?.length) return {};
-  const promises = providerKeys.map((providerKey) => getProviderConfig(providerKey as PaymentProvider));
+  const promises = providerKeys.map((providerKey) => getProviderConfig(providerKey as PaymentProvider, returnUrl));
   const results = await Promise.all(promises);
   const reducedObj = results.reduce((acc, result, index) => {
     const key = providerKeys?.[index];
@@ -176,9 +176,9 @@ export async function getProvidersConfigData(paymentInitData?:FormPaymentData) {
   return reducedObj;
 }
 
-export async function getProvidersConfig(paymentInitData?: FormPaymentData, countryCode?: string) {
+export async function getProvidersConfig(paymentInitData: FormPaymentData, returnUrl: string, countryCode?: string) {
   if (!paymentInitData) return {};
-  const configData = await getProvidersConfigData(paymentInitData);
+  const configData = await getProvidersConfigData(paymentInitData, returnUrl);
   const isGooglePayProd = import.meta.env.VITE_GOOGLE_PAY_ENVIRONMENT === "PRODUCTION";
 
   const { currency, price, merchantId = '', appName = '' } = configData || {};
