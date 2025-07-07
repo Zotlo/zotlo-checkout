@@ -144,7 +144,7 @@ async function handleApplePayPayment(payload: {
 
     session.onvalidatemerchant = async (event: any) => {
       const sessionUrl = event.validationURL;
-      const { result, meta } = await API.post("/payment/session", { providerKey, sessionUrl, transactionId });
+      const { result, meta } = await API.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
       if (meta?.errorCode) return params.events?.onFail?.({ message: meta?.message, data: meta });
       const sessionData = result?.sessionData;
       session.completeMerchantValidation(sessionData);
