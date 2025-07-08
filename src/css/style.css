@@ -108,16 +108,19 @@
   text-align: right;
   white-space: nowrap;
 }
+.zotlo-checkout[dir="rtl"] table td:last-child {
+  text-align: left;
+}
 
-.zotlo-checkout table tbody tr:not(:first-child) td {
+.zotlo-checkout table tbody tr:not(.zotlo-checkout__package__summary__head) td {
   color: #68686A;
 }
 
-.zotlo-checkout tfoot tr:first-child td {
+.zotlo-checkout tfoot tr.zotlo-checkout__package__summary__head td {
   padding-top: 24px;
 }
 
-.zotlo-checkout tfoot tr:last-child td {
+.zotlo-checkout tfoot tr.zotlo-checkout__package__summary__head td {
   border-bottom: none;
 }
 
@@ -406,6 +409,15 @@
   border-bottom: 3px solid var(--zc-form-spinner-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.zotlo-checkout__payment-provider .gpay-card-info-container-fill, 
+.zotlo-checkout__payment-provider .gpay-card-info-container-fill > .gpay-card-info-container {
+  height: 48px;
+}
+.zotlo-checkout__payment-provider .gpay-card-info-container, 
+.zotlo-checkout__payment-provider .gpay-card-info-animation-container {
+  outline: none !important;
 }
 
 @keyframes spin {

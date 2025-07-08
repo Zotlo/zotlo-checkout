@@ -30,6 +30,20 @@ type TextStyle = {
   underline: boolean;
 }
 
+export type ProductConfigMobileApp = {
+  showProductTitle: boolean;
+  showSubtotalText: boolean;
+  discountRate: number;
+  productImage: {
+    show: boolean;
+    url: string;
+  };
+  additionalText: {
+    show: boolean;
+    text: Record<string, string>;
+  };
+}
+
 export type FormDesign = {
   theme: 'horizontal' | 'vertical' | 'mobileapp';
   darkMode: boolean;
@@ -38,6 +52,8 @@ export type FormDesign = {
   backgroundColor: string;
   borderRadius: string;
   borderWidth: string;
+  header: { show: boolean; };
+  product: ProductConfigMobileApp;
   label: {
     show: boolean;
     color: string;
@@ -121,7 +137,7 @@ export type PackageData = {
   packageId: string;
   packageType: PackageType;
   trialPeriod: number;
-  periodType: string;
+  periodType: 'year' | 'month' | 'week' | 'day';
   trialPeriodType: string;
   trialPackageType: TrialPackageType;
 };
@@ -141,6 +157,11 @@ export type FormPaymentData = {
   sandboxPayment: boolean;
   selectedPrice: SelectedPriceData;
   subscriberCountry: string;
+  discount: {
+    discountPrice: number | string;
+    originalPrice: number | string;
+    totalPrice: number | string;
+  };
   documents: {
     distanceSalesAgreement: string;
     informationForm: string;
@@ -160,6 +181,11 @@ export type PackageInfoType = {
   currency: string;
   condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
   state: keyof FormConfig['design']['button']['text'];
+  discount: {
+    price: number | string;
+    original: number | string
+    total: number | string;
+  }
 }
 
 export type FormGeneral = {
@@ -227,6 +253,50 @@ export type FormSuccess = {
   }
 }
 
+type ProviderTransactionInfo = {
+  totalPrice: string;
+  totalPriceStatus: string;
+  currencyCode: string;
+  countryCode: string;
+}
+
+type ProviderAllowedPaymentMethods = {
+  type: string;
+  parameters: Record<string, any>;
+}
+
+export type ProviderConfigs = {
+  applePay?: {
+    canMakePayments?: boolean;
+    transactionId?: string;
+    requestPayload: Record<string, any>;
+  },
+  googlePay?: {
+    isReadyToPay?: boolean;
+    transactionId?: string;
+    transactionInfo: ProviderTransactionInfo;
+    tokenization: {
+      type: string;
+      parameters: Record<string, any>;
+    };
+    isReadyToPayRequest: {
+      apiVersion: number;
+      apiVersionMinor: number;
+      allowedPaymentMethods: ProviderAllowedPaymentMethods[];
+    };
+    paymentDataRequest: {
+      apiVersion: number;
+      apiVersionMinor: number;
+      allowedPaymentMethods: ProviderAllowedPaymentMethods[];
+      transactionInfo: ProviderTransactionInfo;
+      merchantInfo: {
+        merchantName: string;
+        merchantId?: string;
+      };
+    };
+  },
+}
+
 export type FormConfig = {
   general: FormGeneral;
   settings: FormSetting;
@@ -234,6 +304,7 @@ export type FormConfig = {
   success: FormSuccess;
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
+  providerConfigs?: ProviderConfigs;
 }
 
 export type PaymentDetail = {

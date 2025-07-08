@@ -22,6 +22,7 @@ import ZotloCheckout from 'zotlo-checkout';
 const checkout = await ZotloCheckout({
   token: 'YOUR_CHECKOUT_TOKEN',
   packageId: 'YOUR_PACKAGE_ID',
+  returnUrl: 'YOUR_RETURN_URL',
   language: 'en',
   events: {
     onSuccess() {
@@ -62,6 +63,7 @@ And start Zotlo Checkout:
   ZotloCheckout({
     token: 'YOUR_CHECKOUT_TOKEN',
     packageId: 'YOUR_PACKAGE_ID',
+    returnUrl: 'YOUR_RETURN_URL',
     language: 'en',
     events: {
       onSuccess() {
@@ -82,9 +84,9 @@ And start Zotlo Checkout:
 | Name                  | Required | Description                                  |
 |-----------------------|----------|----------------------------------------------|
 | `token`               | **true** | Checkout token you receive via Zotlo Console |
-| `packageId`           | **true** | Package id that you want to use              |
+| `packageId`           | **true** | Package id that you want to use              |
+| `returnUrl`           | **true** | Return address for success/fail scenarios    |
 | `subscriberId`        | false    | Default subscriber id for registration       |
-| `returnUrl`           | false    | Return address for success/fail scenarios    |
 | `events`              | false    | Checkout handlers                            |
 | `events.onLoad`       | false    | Triggers after form loaded                   |
 | `events.onSubmit`     | false    | Triggers after form submitted                |
@@ -103,7 +105,7 @@ checkout.mount(containerId: string);
 ### refresh
 Refresh checkout form
 ```typescript
-checkout.refresh();
+checkout.refresh(): Promise<void>;
 ```
 
 ### unmount

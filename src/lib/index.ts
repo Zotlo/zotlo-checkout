@@ -1,5 +1,5 @@
-import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn } from "./types"
-import { generateTheme } from "./theme";
+import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
+import { generateEmptyPage, generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, type ValidationResult, updateValidationMessages, validatorInstance } from "../utils/validation";
 import { FORM_ITEMS } from "./fields";
@@ -8,15 +8,14 @@ import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
 import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading } from "../utils";
-import { getConfig, getProvidersConfig } from "../utils/getConfig";
+import { getConfig, ErrorHandler } from "../utils/getConfig";
 import { sendPayment } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
-import { loadProviderSDKs } from "../utils/loadProviderSdks";
-import { createAgreementModal } from "./create";
+import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
+import { createAgreementModal, createPaymentSuccessForm } from "./create";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
-  let config = { general: {}, settings: {}, design: {}, success: {} } as FormConfig;
-  let providerConfigs = {};
+  let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
   if (import.meta.env.VITE_SDK_API_URL) {
     config = await getConfig({ 
@@ -26,10 +25,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       subscriberId: params.subscriberId,
       returnUrl: params.returnUrl 
     });
-    [providerConfigs] = await Promise.all([
-      getProvidersConfig(config?.paymentData, config?.general?.countryCode),
-      loadProviderSDKs(config?.paymentData)
-    ]);
+    config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
   }
 
   let containerId = '';
@@ -132,7 +128,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
           params,
           config,
           containerId,
-          providerConfigs
         });
       } finally {
         setFormLoading(false);
@@ -254,12 +249,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     tabItems.item(0)?.dispatchEvent(new Event('click'));
   }
 
-  function refresh() {
+  async function refresh() {
     if (!containerId) return;
 
     if (import.meta.env.VITE_CONSOLE) {
       if ((globalThis as any)?.getZotloConfig) {
-        config = (globalThis as any)?.getZotloConfig?.() as FormConfig;
+        config = await (globalThis as any)?.getZotloConfig?.() as FormConfig;
       }
     }
 
@@ -271,13 +266,33 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     // Destroy everything before re-rendering
     unmount();
 
-    const form = generateTheme({ config });
+    let form = generateTheme({ config });
     const style = createStyle(config);
     const container = getContainerElement();
+
+    if (import.meta.env.VITE_SDK_API_URL) {
+      if (ErrorHandler.response) {
+        form = generateEmptyPage({
+          config,
+          title: config?.general?.localization?.empty?.error?.title || 'An error occured',
+          message: ErrorHandler.response?.meta?.message
+        });
+      }
+    }
 
     if (container) container.innerHTML = `<style>${style}</style>` + form;
 
     init();
+
+    if (import.meta.env.VITE_CONSOLE) {
+      if ((config as any).render === 'after-payment')  {
+        createPaymentSuccessForm({
+          containerId,
+          config,
+          paymentDetail: (config as any).paymentDetail as any
+        })
+      }
+    }
   }
 
   function loadSelectbox(item: HTMLElement, options: {
@@ -484,6 +499,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (import.meta.env.VITE_SDK_API_URL) {
       const { destroy } = handleAgreementLinks();
       destroyAgreementLinks = destroy;
+      renderGooglePayButton(config);
     }
 
     formElement?.addEventListener('submit', handleForm);

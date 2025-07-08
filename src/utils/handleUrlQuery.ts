@@ -4,6 +4,7 @@ import { handlePaymentSuccess } from "./sendPayment";
 
 export enum UrlQuery {
   STATUS = "zc_status",
+  ERROR_MESSAGE = "zc_error_message",
 }
 
 export async function handleUrlQuery(payload: {
@@ -16,6 +17,7 @@ export async function handleUrlQuery(payload: {
   const urlParams = new URLSearchParams(queryString);
   const queryParams = Object.fromEntries(urlParams?.entries());
   const status = queryParams?.[UrlQuery.STATUS] || "";
+  const errorMessage = queryParams?.[UrlQuery.ERROR_MESSAGE] || "";
 
   if (status === PaymentCallbackStatus.SUCCESS) {
     const paymentDetail = await handlePaymentSuccess({ params });
@@ -23,6 +25,6 @@ export async function handleUrlQuery(payload: {
   }
 
   if (status === PaymentCallbackStatus.FAIL) {
-    params.events?.onFail?.();
+    params.events?.onFail?.({ message: errorMessage, data: {} });
   }
 }

@@ -2,6 +2,7 @@ import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, template, useI18n } from '../../../utils'
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
 import { createProviderButton, createButton, createCreditCardForm } from '../../create'
+import { getPackageName } from '../../../utils/getPackageInfo';
 
 function prepareProvider(params: {
   config: FormConfig;
@@ -12,15 +13,15 @@ function prepareProvider(params: {
 }) {
   const { config, paymentMethods, method, index, tabAvailable } = params;
 
-  if (method.providerKey !== PaymentProvider.CREDIT_CARD) {
+  if (method?.providerKey !== PaymentProvider.CREDIT_CARD) {
     return createProviderButton({
-      provider: method.providerKey,
+      provider: method?.providerKey,
       config,
       tabAvailable: !!index
     });
   }
 
-  if (method.providerKey === PaymentProvider.CREDIT_CARD) {
+  if (method?.providerKey === PaymentProvider.CREDIT_CARD) {
     const isFirstItem = index === 0;
     const isLastItem = index === paymentMethods.length - 1;
     const isOnlyItem = paymentMethods.length === 1;
@@ -119,26 +120,46 @@ export function generateThemeMobileApp(params: {
   })).join('');
 
   const totalPrice = config.packageInfo?.totalPayableAmount || '0.00 USD';
-  const currency = config.packageInfo?.currency || "USD";
+  const packagePrice = config.packageInfo?.discount.original;
+  const additionalPrice = config.packageInfo?.discount.price;
 
   if (providerButtons) {
     primaryProvider += `<div class="zotlo-checkout__seperator"><span>${$t('common.orAnotherWay')}</span></div>`
   }
 
+  const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
+  const showHeader = Object.prototype.hasOwnProperty.call(config.design, 'header') ? !!config.design.header?.show : true;
+  const showProductImage = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'productImage') ? !!config.design?.product?.productImage?.show : true;
+  const showSubtotal = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'showSubtotalText') ? !!config.design?.product?.showSubtotalText : true;
+  const showAdditonalText = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'additionalText') ? !!config.design?.product?.additionalText?.show : true;
+  const productImage = showProductImage ? (config.general.productImage || config.design?.product?.productImage.url || '') : '';
+  const packageName = getPackageName(config);
+  const additionalText = showAdditonalText
+    ? (
+      config.general.additionalText ||
+      (
+        config.design?.product?.additionalText?.text?.[config.general.language] ||
+        config.design?.product?.additionalText?.text?.en || ''
+      )
+    )
+    : '';
+
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
-    SHOW_HEADER: !!config.general.appName || !!config.general.appLogo,
+    SHOW_HEADER: showHeader && (!!config.general.appName || !!config.general.appLogo),
     APP_NAME: config.general.appName || '',
     LOGO: config.general.appLogo || '',
-    PACKAGE_NAME: config.general.packageName || '',
-    PACKAGE_IMAGE: config.general.productImage || '',
+    PACKAGE_NAME: packageName,
+    PACKAGE_IMAGE: productImage,
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
-    TOTAL_PRICE: `${totalPrice}`,
-    ADDITIONAL_TEXT: config.general.additionalText || '',
-    ADDITIONAL_PRICE: `0.00 ${currency}`,
+    TOTAL_PRICE: totalPrice,
+    PACKAGE_PRICE: packagePrice,
+    ADDITIONAL_TEXT: additionalText,
+    ADDITIONAL_PRICE: additionalPrice,
+    SHOW_SUBTOTAL: !!packageName && showSubtotal,
     STATIC_SUBTOTAL: $t('common.subtotal'),
     STATIC_TOTAL: $t('common.totalDue'),
     PRICE_INFO: footerInfo.PRICE_INFO,

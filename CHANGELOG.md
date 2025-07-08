@@ -1,6 +1,45 @@
 # Changelog
 
 
+## v1.1.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.0.1...v1.1.0)
+
+### 🚀 Enhancements
+
+- Integrate google pay payment process ([165dd40](https://github.com/Zotlo/zotlo-checkout/commit/165dd40))
+- Apply success configs ([a424860](https://github.com/Zotlo/zotlo-checkout/commit/a424860))
+- Hide subtotal row if product name has not available ([1c68b92](https://github.com/Zotlo/zotlo-checkout/commit/1c68b92))
+- Add callback for additonal text ([2f3bf25](https://github.com/Zotlo/zotlo-checkout/commit/2f3bf25))
+- Open legal links on new tab ([b8d86cb](https://github.com/Zotlo/zotlo-checkout/commit/b8d86cb))
+- Refactor getPackageTemplateParams parameter control ([620e4af](https://github.com/Zotlo/zotlo-checkout/commit/620e4af))
+- Calculate discount price and show on form ([832b967](https://github.com/Zotlo/zotlo-checkout/commit/832b967))
+- Hide subscriberId on input if registerType is other ([f373bc2](https://github.com/Zotlo/zotlo-checkout/commit/f373bc2))
+- Show error on form ([bf6aaa1](https://github.com/Zotlo/zotlo-checkout/commit/bf6aaa1))
+- Update payment success icon ([2c08cb1](https://github.com/Zotlo/zotlo-checkout/commit/2c08cb1))
+- Handle error message on query if payment has failed ([3b1615b](https://github.com/Zotlo/zotlo-checkout/commit/3b1615b))
+- Handle Apple and Google pay errors properly ([2ed65cb](https://github.com/Zotlo/zotlo-checkout/commit/2ed65cb))
+- Format package name by period type ([927ecd1](https://github.com/Zotlo/zotlo-checkout/commit/927ecd1))
+- Add returnUrl for payment init reqs ([b31ea70](https://github.com/Zotlo/zotlo-checkout/commit/b31ea70))
+- Add returnUrl for payment session req ([a92cb21](https://github.com/Zotlo/zotlo-checkout/commit/a92cb21))
+
+### 🩹 Fixes
+
+- Handle optional chaining for providerKey in prepareProvider function ([985b1ed](https://github.com/Zotlo/zotlo-checkout/commit/985b1ed))
+- Show default price if there is no discount ([d57c4bb](https://github.com/Zotlo/zotlo-checkout/commit/d57c4bb))
+- Update OS handling in prepareButtonSuccessLink function ([e2fae89](https://github.com/Zotlo/zotlo-checkout/commit/e2fae89))
+- Remove console log ([d574c81](https://github.com/Zotlo/zotlo-checkout/commit/d574c81))
+- Always allow subscriberId editing if register type is other ([c8350bb](https://github.com/Zotlo/zotlo-checkout/commit/c8350bb))
+
+### 🏡 Chore
+
+- Update README ([954c491](https://github.com/Zotlo/zotlo-checkout/commit/954c491))
+
+### ❤️ Contributors
+
+- Yiğit Şahin
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.0.0
 
 

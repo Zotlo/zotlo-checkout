@@ -207,7 +207,7 @@ export function createCreditCardForm(params: {
   showPrice: boolean;
 }) {
   const { config, seperator, formType = 'both', className, showPrice } = params;
-  const subscriberId = config.general.subscriberId || '';
+  const subscriberId = config.settings.registerType === 'other' ? '' : (config.general.subscriberId || '');
   const attrs = generateAttributes({
     ...(params.attrs || {})
   });
@@ -308,6 +308,10 @@ export function createProviderButton(params: {
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
 
+  if (provider === PaymentProvider.GOOGLE_PAY && import.meta.env.VITE_SDK_API_URL) {
+    return `<div id="google-pay-button" class="zotlo-checkout__payment-provider" ${tabAvailable ? 'data-tab-content="googlePay" data-tab-active="true"' : ''}></div>`;
+  }
+
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
@@ -326,17 +330,20 @@ export function prepareButtonSuccessLink(params: {
 }) {
   const { config, paymentDetail } = params;
   const theme = config.success.theme;
-  const os = paymentDetail.client.selectedOs || 'desktop';
+  const os = paymentDetail.client.selectedOs || '';
 
   if (theme === 'app2web') {
+    const iosLink = paymentDetail?.application.links.deeplinkIos || '';
+
     switch (os) {
       case 'android':
         return paymentDetail?.application.links.deeplinkAndroid || '';
-      case 'ios':
-        return paymentDetail?.application.links.deeplinkIos || '';
       case 'desktop':
-      default:
         return paymentDetail?.application.links.deeplinkWeb || '';
+      case 'ios':
+        return iosLink;
+      default:
+        return iosLink;
     }
   } else {
     if (config.success?.genericButton?.show) {
@@ -429,7 +436,11 @@ export function createPaymentSuccessForm(params: {
     }
     
     form?.appendChild(doc.body.firstChild as HTMLElement);
-    if (canAutoRedirect) startTimer(delay);
+    if (canAutoRedirect) {
+      if (import.meta.env.VITE_SDK_API_URL) {
+        startTimer(delay);
+      }
+    }
   }
 }
 

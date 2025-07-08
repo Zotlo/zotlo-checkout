@@ -5,6 +5,22 @@ import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";
 import noMethodElement from '../../html/nomethod.html?raw'
 
+export function generateEmptyPage(params: {
+  config: FormConfig,
+  title?: string,
+  message?: string,
+}) {
+  const { config } = params;
+  const { $t } = useI18n(config.general?.localization);
+  const dir = ['he', 'ar'].includes(config?.general.language) ? 'rtl' : 'ltr';
+
+  return template(noMethodElement, {
+    DIR: dir,
+    TITLE: params.title || $t('empty.noMethod.title'),
+    DESC: params.message || $t('empty.noMethod.desc'),
+  });
+}
+
 export function generateTheme(params: {
   config: FormConfig;
 }){
@@ -18,19 +34,15 @@ export function generateTheme(params: {
   const hasAnyConfig = Object.keys(config?.settings).length > 0;
 
   if (!hasAnyConfig || hasOnlyPaypalButNotShown) {
-    return template(noMethodElement, {
-      DIR: dir,
-      TITLE: $t('empty.noMethod.title'),
-      DESC: $t('empty.noMethod.desc'),
-    });
+    return generateEmptyPage({ config });
   }
 
   const privacyUrl = config.general.privacyUrl;
   const tosUrl = config.general.tosUrl;
   const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
     ? $t('footer.disclaimer', {
-      termsOfUse: `<a href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
-      privacyPolicy: `<a href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
+      termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
+      privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
     })
     : '';
 
@@ -49,7 +61,7 @@ export function generateTheme(params: {
     FOOTER_DESC: $t('footer.desc'),
     DISCLAIMER: disclaimer && `<div>${disclaimer}</div>`,
     ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
   }
 
   if (params.config.design.theme === 'mobileapp') {
