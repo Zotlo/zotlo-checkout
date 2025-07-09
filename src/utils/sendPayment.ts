@@ -5,15 +5,21 @@ import { getGooglePayClient } from "./loadProviderSdks";
 import { API } from "./api";
 import { deleteUuidCookie } from "./cookie";
 
-function preparePayload(providerKey: PaymentProvider, formData: Record<string, any>, params: IZotloCheckoutParams) {
+function preparePayload(payload: {
+  providerKey: PaymentProvider;
+  formData: Record<string, any>;
+  params: IZotloCheckoutParams;
+  config: FormConfig
+}) {
+  const { providerKey, formData, params, config } = payload;
   const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV } = formData || {};
   const { returnUrl } = params || {};
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
-  let payload = {};
+  let data = {};
 
   switch (providerKey) {
     case PaymentProvider.CREDIT_CARD:
-      payload = {
+      data = {
         providerKey,
         acceptPolicy,
         creditCardDetails: {
@@ -27,18 +33,27 @@ function preparePayload(providerKey: PaymentProvider, formData: Record<string, a
       break;
     case PaymentProvider.PAYPAL:
     case PaymentProvider.APPLE_PAY:
-    case PaymentProvider.GOOGLE_PAY:
-      payload = {
+    case PaymentProvider.GOOGLE_PAY: {
+      data = {
         providerKey,
         acceptPolicy,
       }
+
+      if (
+        !!config?.paymentData?.sandboxPayment &&
+        [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY].includes(providerKey)
+      ) {
+        (data as any).transactionId = (config?.providerConfigs as any)?.[providerKey]?.transactionId || "";
+        (data as any)[`${providerKey}Token`] = 'aaaaaa';
+      }
+    }
       break;
     default:
       break;
   }
   
   return {
-    ...payload,
+    ...data,
     ...(returnUrl && { returnUrl }),
   }
 }
@@ -254,8 +269,8 @@ export async function sendPayment(paymentParams: {
   try {
     const { subscriberId = "" } = formData || {};
     const isSandboxPayment = !!config?.paymentData?.sandboxPayment;
+    const payload = preparePayload({ providerKey, formData, params, config });
 
-    const payload = preparePayload(providerKey, formData, params);
     if (!isSandboxPayment && providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({
       formPayload: payload, 
       providerConfig: config?.providerConfigs?.applePay, 
