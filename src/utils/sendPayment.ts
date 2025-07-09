@@ -253,9 +253,10 @@ export async function sendPayment(paymentParams: {
   const { providerKey, formData, params, config, containerId } = paymentParams;
   try {
     const { subscriberId = "" } = formData || {};
+    const isSandboxPayment = !!config?.paymentData?.sandboxPayment;
 
     const payload = preparePayload(providerKey, formData, params);
-    if (providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({ 
+    if (!isSandboxPayment && providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({
       formPayload: payload, 
       providerConfig: config?.providerConfigs?.applePay, 
       subscriberId, 
@@ -263,7 +264,7 @@ export async function sendPayment(paymentParams: {
       config,
       containerId 
     });
-    if (providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment({ 
+    if (!isSandboxPayment && providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment({ 
       formPayload: payload, 
       providerConfig: config?.providerConfigs?.googlePay, 
       subscriberId, 
