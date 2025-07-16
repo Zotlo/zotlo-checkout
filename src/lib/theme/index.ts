@@ -1,6 +1,6 @@
 import { preparePaymentMethods, template, useI18n } from "../../utils";
 import { getPackageTemplateParams } from "../../utils/getPackageInfo";
-import { FormConfig, PaymentProvider } from "../types";
+import { DesignTheme, FormConfig, PaymentProvider } from "../types";
 import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";
 import noMethodElement from '../../html/nomethod.html?raw'
@@ -64,7 +64,7 @@ export function generateTheme(params: {
     ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
   }
 
-  if (params.config.design.theme === 'mobileapp') {
+  if (params.config.design.theme === DesignTheme.MOBILEAPP) {
     return generateThemeMobileApp({
       ...params,
       dir,

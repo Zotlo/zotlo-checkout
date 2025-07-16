@@ -1,5 +1,6 @@
+import { mergeDeep } from "./index";
 import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../lib/types";
-import { PaymentProvider } from "../lib/types";
+import { DesignTheme, PaymentProvider, SuccessTheme } from "../lib/types";
 import { API } from "../utils/api";
 import { setCookie, COOKIE } from "./cookie";
 import { getPackageInfo } from "./getPackageInfo";
@@ -91,11 +92,27 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
 
-    config.design = (settings?.design ? settings.design : (settings as any)) || {};
-    config.success = {
-      ...(settings?.success || {}),
-      theme: settings?.success?.theme || 'app2web'
-    };
+    config.design = mergeDeep(
+      {
+        ...((settings?.design ? settings.design : (settings as any)) || {}),
+        theme: settings?.design?.theme || DesignTheme.VERTICAL
+      },
+      {
+        ...(params.style?.design || {}),
+        footer: {
+          ...(params.style?.design?.footer || {}),
+          showMerchantDisclaimer: !!settings?.design?.footer?.showMerchantDisclaimer
+        }
+      }
+    ) as FormDesign;
+
+    config.success = mergeDeep(
+      {
+        ...(settings?.success || {}),
+        theme: settings?.success?.theme || SuccessTheme.APP2WEB
+      },
+      params.style?.success || {}
+    ) as FormSuccess;
 
     config.general = {
       localization: initData?.localization || config.general.localization,

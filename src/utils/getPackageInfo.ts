@@ -198,7 +198,7 @@ export function getPackageName(config: FormConfig) {
     : true;
   let packageName = showProductName ? config.general.packageName || '' : '';
 
-  if (!packageName) {
+  if (showProductName && !packageName) {
     const { $t } = useI18n(config.general.localization);
     const { package: packageItem } = config.paymentData || {}
     const periodInfo = getPackagePeriodsInfo(config);
