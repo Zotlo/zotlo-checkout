@@ -159,7 +159,7 @@ export function setFormLoading(loading: boolean = true) {
   }
 }
 
-export function isObject(item: any) {
+export function isObject(item: unknown) {
   return (!!item && typeof item === 'object' && !Array.isArray(item));
 }
 

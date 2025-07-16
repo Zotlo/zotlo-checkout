@@ -372,7 +372,8 @@ export function createPaymentSuccessForm(params: {
   
   const { containerId, config, paymentDetail } = params;
   const successTheme = config.success.theme;
-  let delay = config.success.waitTime; // seconds
+  const waitTime = config.success.waitTime; // in seconds
+  const delay = waitTime > 50 ? 50 : (waitTime < 5 ? 5 : waitTime);
   const container = document.getElementById(containerId);
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
@@ -389,10 +390,7 @@ export function createPaymentSuccessForm(params: {
     huawei: paymentDetail?.application?.links?.huaweiAppGalleryUrl,
   }
 
-  if (delay > 50) delay = 50;
-  if (delay < 5) delay = 5;
-
-  const storeButtons = successTheme === SuccessTheme.APP2WEB
+  const storeButtons = successTheme === SuccessTheme.WEB2APP
     ? Object.entries(storeUrls)
       .map(([store, link]) => {
         const canVisible = !!config?.success?.storeButtons?.[store as keyof FormSuccess['storeButtons']] && !!link;
