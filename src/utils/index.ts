@@ -158,3 +158,25 @@ export function setFormLoading(loading: boolean = true) {
     formElement.style.userSelect = '';
   }
 }
+
+export function isPlainObject(item: unknown) {
+  return (!!item && typeof item === 'object' && !Array.isArray(item));
+}
+
+export function mergeDeep(target: Record<string, any>, ...sources: Record<string, any>[]) {
+  if (!sources.length) return { ...target };
+  const source = sources.shift();
+  const result = { ...target };
+
+  if (isPlainObject(result) && isPlainObject(source)) {
+    for (const key in source) {
+      if (isPlainObject(source[key])) {
+        result[key] = mergeDeep(result[key] || {}, source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+  }
+
+  return mergeDeep(result, ...sources);
+}

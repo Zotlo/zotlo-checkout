@@ -1,4 +1,4 @@
-import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
+import { DesignTheme, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
 import { generateEmptyPage, generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, type ValidationResult, updateValidationMessages, validatorInstance } from "../utils/validation";
@@ -23,7 +23,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       packageId: params.packageId,
       language: params.language,
       subscriberId: params.subscriberId,
-      returnUrl: params.returnUrl 
+      returnUrl: params.returnUrl,
+      style: params.style
     });
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
   }
@@ -36,7 +37,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function getFormValues(form: HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
-    const activeForm = config.design.theme === 'horizontal'
+    const activeForm = config.design.theme === DesignTheme.HORIZONTAL
       ? form.querySelector('[data-tab-active="true"]')?.querySelectorAll('input, select') as NodeListOf<HTMLInputElement>
       : form.elements;
 
@@ -201,9 +202,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const paymentMethods = preparePaymentMethods(config);
 
     if (
-      config.design.theme === 'vertical' ||
-      paymentMethods.length < 2 && config.design.theme === 'horizontal' ||
-      paymentMethods.length <= 2 && config.design.theme === 'mobileapp'
+      config.design.theme === DesignTheme.VERTICAL ||
+      paymentMethods.length < 2 && config.design.theme === DesignTheme.HORIZONTAL ||
+      paymentMethods.length <= 2 && config.design.theme === DesignTheme.MOBILEAPP
     ) {
       initFormInputs();
       return;
@@ -390,7 +391,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function initFormInputs() {
-    const wrapper = config.design.theme !== 'mobileapp' ? '[data-tab-active="true"] ' : '';
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');

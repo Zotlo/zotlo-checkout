@@ -10,7 +10,7 @@ import modalElement from '../html/modal.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
 import { getPackageTemplateParams } from '../utils/getPackageInfo'
-import { type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider } from './types'
+import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme } from './types'
 import { FORM_ITEMS } from './fields'
 
 export function createSelect(payload: {
@@ -218,7 +218,7 @@ export function createCreditCardForm(params: {
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
   const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
   const isPhoneRegister = registerType === 'phoneNumber';
-  const isVerticalTheme = config.design.theme === 'vertical';
+  const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
     if (config.settings.hideSubscriberIdIfAlreadySet) {
@@ -268,7 +268,11 @@ export function createCreditCardForm(params: {
   }
 
   const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
-  const buttonContent = template($t(`form.button.text.${packageState}.${config?.design.button.text?.[packageState]}`), {
+  const buttonKey = config?.design.button.text?.[packageState];
+  const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
+    ? buttonKey
+    : $t(`form.button.text.${packageState}.${buttonKey}`);
+  const buttonContent = template(buttonText, {
     ...getPackageTemplateParams(config)
   });
 
@@ -332,7 +336,7 @@ export function prepareButtonSuccessLink(params: {
   const theme = config.success.theme;
   const os = paymentDetail.client.selectedOs || '';
 
-  if (theme === 'app2web') {
+  if (theme === SuccessTheme.APP2WEB) {
     const iosLink = paymentDetail?.application.links.deeplinkIos || '';
 
     switch (os) {
@@ -369,16 +373,19 @@ export function createPaymentSuccessForm(params: {
   if (!params.config?.success?.show) return false;
   
   const { containerId, config, paymentDetail } = params;
+  const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
+  const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
+  const WAIT_TIME = config.success.waitTime; // in seconds
+  const delay = WAIT_TIME > MAX_WAIT_TIME ? MAX_WAIT_TIME : (WAIT_TIME < MIN_WAIT_TIME ? MIN_WAIT_TIME : WAIT_TIME);
   const successTheme = config.success.theme;
-  const delay = config.success.waitTime; // seconds
   const container = document.getElementById(containerId);
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
-  const buttonText = successTheme === 'app2web'
+  const buttonText = successTheme === SuccessTheme.APP2WEB
     ? (config?.success?.button?.text || 0)
     : (config.success?.genericButton?.text || 0);
-  const redirectUrl = prepareButtonSuccessLink({ config, paymentDetail }) || config?.success?.redirectUrl || '';
-  const canAutoRedirect = successTheme === 'app2web' && !!redirectUrl && config.success.autoRedirect;
+  const redirectUrl = prepareButtonSuccessLink({ config, paymentDetail }) || '';
+  const canAutoRedirect = successTheme === SuccessTheme.APP2WEB && !!redirectUrl && config.success.autoRedirect;
   const storeUrls = {
     apple: paymentDetail?.application?.links?.appStoreUrl,
     google: paymentDetail?.application?.links?.googlePlayStoreUrl,
@@ -387,7 +394,7 @@ export function createPaymentSuccessForm(params: {
     huawei: paymentDetail?.application?.links?.huaweiAppGalleryUrl,
   }
 
-  const storeButtons = successTheme === 'web2app'
+  const storeButtons = successTheme === SuccessTheme.WEB2APP
     ? Object.entries(storeUrls)
       .map(([store, link]) => {
         const canVisible = !!config?.success?.storeButtons?.[store as keyof FormSuccess['storeButtons']] && !!link;
@@ -408,7 +415,7 @@ export function createPaymentSuccessForm(params: {
     AUTO_REDIRECT: canAutoRedirect,
     STORE_BUTTONS: storeButtons,
     WEB2APP_DESC: $t('paymentSuccess.desc2'),
-    SHOW_BUTTON: successTheme === 'app2web' || (successTheme === 'web2app' && config.success?.genericButton?.show),
+    SHOW_BUTTON: successTheme === SuccessTheme.APP2WEB || (successTheme === SuccessTheme.WEB2APP && config.success?.genericButton?.show),
   });
 
   function startTimer(timeInSeconds: number) {

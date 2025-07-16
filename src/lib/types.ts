@@ -1,9 +1,63 @@
+export enum PaymentProvider {
+  PAYPAL = 'paypal',
+  GOOGLE_PAY = 'googlePay',
+  APPLE_PAY = 'applePay',
+  CREDIT_CARD = 'creditCard'
+};
+
+export enum PaymentResultStatus {
+  REDIRECT = 'REDIRECT',
+  COMPLETE = 'COMPLETE'
+}
+
+export enum PaymentCallbackStatus {
+  SUCCESS = 'success',
+  FAIL = 'fail'
+}
+
+export enum PackageType {
+  SUBSCRIPTION = 'subscription',
+  CONSUMABLE = 'consumable',
+  EPIN = 'epin'
+}
+
+export enum TrialPackageType {
+  FREE_TRIAL = 'freeTrial',
+  STARTING_PRICE = 'startingPrice',
+  NO = 'no'
+}
+
+export enum SuccessTheme {
+  APP2WEB = 'app2web',
+  WEB2APP = 'web2app'
+}
+
+export enum DesignTheme {
+  HORIZONTAL = 'horizontal',
+  VERTICAL = 'vertical',
+  MOBILEAPP = 'mobileapp'
+}
+
+type DeepPartial<T> = T extends object ? {
+    [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
+export interface IZotloCheckoutStyle {
+  design?: DeepPartial<Omit<FormDesign, 'footer' | 'product'> & {
+    /** This available for theme mobileapp */
+    product: Omit<ProductConfigMobileApp, 'discountRate'>;
+    footer: Omit<FormDesign['footer'], 'showMerchantDisclaimer'>;
+  }>;
+  success?: DeepPartial<FormSuccess>;
+}
+
 export interface IZotloCheckoutParams {
   token: string;
   packageId: string;
   language?: string;
   subscriberId?: string;
   returnUrl?: string;
+  style?: IZotloCheckoutStyle;
   events?: {
     onLoad?: (params: Record<string, any>) => void;
     onUpdate?: () => void;
@@ -32,6 +86,7 @@ type TextStyle = {
 
 export type ProductConfigMobileApp = {
   showProductTitle: boolean;
+  /** If `showProductTitle` sets `false`, this will be ignored */
   showSubtotalText: boolean;
   discountRate: number;
   productImage: {
@@ -40,73 +95,85 @@ export type ProductConfigMobileApp = {
   };
   additionalText: {
     show: boolean;
+    /** Language ISO code and its translation. (eg. `{ en: "Bonus +5%", pt_bz: "Bônus de 5%" }`) */
     text: Record<string, string>;
   };
 }
 
 export type FormDesign = {
+  /** Default: `vertical` */
   theme: 'horizontal' | 'vertical' | 'mobileapp';
   darkMode: boolean;
+  /** You can set any Google fonts (eg. "Montserrat", sans-serif)  */
   fontFamily: string;
   borderColor: string;
   backgroundColor: string;
-  borderRadius: string;
-  borderWidth: string;
+  borderRadius: number | string;
+  borderWidth: number | string;
+  /** Available for theme mobileapp */
   header: { show: boolean; };
   product: ProductConfigMobileApp;
   label: {
     show: boolean;
     color: string;
-    fontSize: string
+    fontSize: number | string;
     textStyle: TextStyle;
-  },
+  };
   consent: {
     color: string;
-    fontSize: string;
+    fontSize: number | string;
     textStyle: TextStyle;
-  },
+  };
   totalPriceColor: string;
   button: {
     color: string;
     borderColor: string;
     backgroundColor: string;
-    borderRadius: string;
-    borderWidth: string;
+    borderRadius: number | string;
+    borderWidth: number | string;
     textStyle: TextStyle;
     hover: {
       color: string;
       borderColor: string;
       backgroundColor: string;
-    },
+    };
     text: {
-      trialActivationState: number | string;
-      subscriptionActivationState: number | string;
-      onetimePayment: number | string;
-    }
-  },
+      /**
+       * ```
+       * 0: "Start Trial"
+       * 1: "Start {{TRIAL_PERIOD}} Trial"
+       * ```
+      */
+      trialActivationState: 0 | 1 | string;
+      /**
+       * ```
+       * 0: "Start Now"
+       * 1: "Subscribe Now"
+       * 2: "Get Started"
+       * 3: "Activate Now"
+       * 4: "Subscribe for {{PRICE}}"
+       * 5: "Get Started for {{PRICE}}"
+       * 6: "Subscribe Now for {{DAILY_PRICE}} per day"
+       * 7: "Start Now for {{DAILY_PRICE}} per day"
+       * ```
+       */
+      subscriptionActivationState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | string;
+      /**
+       * ```
+       * 0: "Buy Now"
+       * 1: "Pay Now"
+       * 2: "Complete Payment"
+       * ```
+       */
+      onetimePayment: 0 | 1 | 2 | string;
+    };
+  };
   footer: {
     showMerchantDisclaimer: boolean;
     color: string;
-    fontSize: string;
-  }
+    fontSize: number | string;
+  };
 };
-
-export enum PaymentProvider {
-  PAYPAL = 'paypal',
-  GOOGLE_PAY = 'googlePay',
-  APPLE_PAY = 'applePay',
-  CREDIT_CARD = 'creditCard'
-};
-
-export enum PaymentResultStatus {
-  REDIRECT = 'REDIRECT',
-  COMPLETE = 'COMPLETE'
-}
-
-export enum PaymentCallbackStatus {
-  SUCCESS = 'success',
-  FAIL = 'fail'
-}
 
 export type FormSetting = {
   sendMailOnSuccess?: boolean;
@@ -118,18 +185,6 @@ export type FormSetting = {
   hideSubscriberIdIfAlreadySet: boolean;
   allowSubscriberIdEditing: boolean;
 };
-
-export enum PackageType {
-  SUBSCRIPTION = 'subscription',
-  CONSUMABLE = 'consumable',
-  EPIN = 'epin'
-}
-
-export enum TrialPackageType {
-  FREE_TRIAL = 'freeTrial',
-  STARTING_PRICE = 'startingPrice',
-  NO = 'no'
-}
 
 export type PackageData = {
   period: number;
@@ -221,14 +276,22 @@ export type FormGeneral = {
 
 export type FormSuccess = {
   show: boolean;
+  /** In seconds. Min: 5, Max: 50, Default: 10  */
   waitTime: number;
-  redirectUrl: string;
   autoRedirect: boolean;
   theme: 'app2web' | 'web2app';
+  /** This is available if theme is web2app */
   genericButton: {
     show: boolean;
-    text: number | string;
+    /**
+     * ```
+     * 0: "Go to App"
+     * 1: "Go to Web"
+     * ```
+    */
+    text: 0 | 1 | string;
   };
+  /** If there is no url for store button (ex. google), this button cannot visible */
   storeButtons: {
     google: boolean;
     apple: boolean;
@@ -238,18 +301,24 @@ export type FormSuccess = {
   };
   color: string;
   button: {
+    /**
+     * ```
+     * 0: "Back to App"
+     * 1: "Back to Game"
+     * ```
+    */
+    text: 0 | 1 | string;
     color: string;
     borderColor: string;
     backgroundColor: string;
-    borderRadius: string;
-    borderWidth: string;
+    borderRadius: number | string;
+    borderWidth: number | string;
     textStyle: TextStyle;
     hover: {
       color: string;
       borderColor: string;
       backgroundColor: string;
-    },
-    text: number | string;
+    };
   }
 }
 

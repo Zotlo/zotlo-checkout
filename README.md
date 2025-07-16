@@ -87,6 +87,7 @@ And start Zotlo Checkout:
 | `packageId`           | **true** | Package id that you want to use              |
 | `returnUrl`           | **true** | Return address for success/fail scenarios    |
 | `subscriberId`        | false    | Default subscriber id for registration       |
+| `style`               | false    | Custom styling on config                     |
 | `events`              | false    | Checkout handlers                            |
 | `events.onLoad`       | false    | Triggers after form loaded                   |
 | `events.onSubmit`     | false    | Triggers after form submitted                |
@@ -112,4 +113,186 @@ checkout.refresh(): Promise<void>;
 Destroy checkout form
 ```typescript
 checkout.unmount();
+```
+
+## Styling
+You can customize your form on config with `style` parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default.
+
+```javascript
+{
+  ...,
+  style: {
+    design: {
+      theme: 'mobileapp',
+      borderWidth: 2,
+      backgroundColor: '#CCCCCC',
+      ...
+    },
+    success: {
+      show: true,
+      waitTime: 20
+      ...
+    }
+  }
+}
+```
+
+You can see all configs below:
+
+### General Form Design (`style.design`)
+```typescript
+type FormDesign = {
+  /** Default: `vertical` */
+  theme: 'horizontal' | 'vertical' | 'mobileapp';
+  darkMode: boolean;
+  /** You can set any Google fonts (eg. "Montserrat", sans-serif)  */
+  fontFamily: string;
+  borderColor: string;
+  backgroundColor: string;
+  borderRadius: number | string;
+  borderWidth: number | string;
+  /** Available for theme mobileapp */
+  header: { show: boolean; };
+  product: {
+    showProductTitle: boolean;
+    /** If `showProductTitle` sets `false`, this will be ignored */
+    showSubtotalText: boolean;
+    productImage: {
+      show: boolean;
+      url: string;
+    };
+    additionalText: {
+      show: boolean;
+      /** Language ISO code and its translation. (eg. `{ en: "Bonus +5%", pt_bz: "Bônus de 5%" }`) */
+      text: Record<string, string>;
+    };
+  };
+  label: {
+    show: boolean;
+    color: string;
+    fontSize: number | string;
+    textStyle: {
+      bold: boolean;
+      italic: boolean;
+      underline: boolean;
+    };
+  };
+  consent: {
+    color: string;
+    fontSize: number | string;
+    textStyle: {
+      bold: boolean;
+      italic: boolean;
+      underline: boolean;
+    };
+  };
+  totalPriceColor: string;
+  button: {
+    color: string;
+    borderColor: string;
+    backgroundColor: string;
+    borderRadius: number | string;
+    borderWidth: number | string;
+    textStyle: {
+      bold: boolean;
+      italic: boolean;
+      underline: boolean;
+    };
+    hover: {
+      color: string;
+      borderColor: string;
+      backgroundColor: string;
+    };
+    text: {
+      /**
+       * ```
+       * 0: "Start Trial"
+       * 1: "Start {{TRIAL_PERIOD}} Trial"
+       * ```
+      */
+      trialActivationState: 0 | 1 | string;
+      /**
+       * ```
+       * 0: "Start Now"
+       * 1: "Subscribe Now"
+       * 2: "Get Started"
+       * 3: "Activate Now"
+       * 4: "Subscribe for {{PRICE}}"
+       * 5: "Get Started for {{PRICE}}"
+       * 6: "Subscribe Now for {{DAILY_PRICE}} per day"
+       * 7: "Start Now for {{DAILY_PRICE}} per day"
+       * ```
+       */
+      subscriptionActivationState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | string;
+      /**
+       * ```
+       * 0: "Buy Now"
+       * 1: "Pay Now"
+       * 2: "Complete Payment"
+       * ```
+       */
+      onetimePayment: 0 | 1 | 2 | string;
+    }
+  };
+  footer: {
+    color: string;
+    fontSize: number | string;
+  };
+}
+```
+
+### Payment Success Configs (`style.success`)
+
+```typescript
+export type FormSuccess = {
+  show: boolean;
+  /** In seconds. Min: 5, Max: 50, Default: 10  */
+  waitTime: number;
+  autoRedirect: boolean;
+  theme: 'app2web' | 'web2app';
+  /** This is available if theme is web2app */
+  genericButton: {
+    show: boolean;
+    /**
+     * ```
+     * 0: "Go to App"
+     * 1: "Go to Web"
+     * ```
+    */
+    text: 0 | 1 | string;
+  };
+  /** If there is no url for store button (ex. google), this button cannot visible */
+  storeButtons: {
+    google: boolean;
+    apple: boolean;
+    amazon: boolean;
+    microsoft: boolean;
+    huawei: boolean;
+  };
+  color: string;
+  button: {
+    /**
+     * ```
+     * 0: "Back to App"
+     * 1: "Back to Game"
+     * ```
+    */
+    text: 0 | 1 | string;
+    color: string;
+    borderColor: string;
+    backgroundColor: string;
+    borderRadius: number | string;
+    borderWidth: number | string;
+    textStyle: {
+      bold: boolean;
+      italic: boolean;
+      underline: boolean;
+    };
+    hover: {
+      color: string;
+      borderColor: string;
+      backgroundColor: string;
+    };
+  };
+}
 ```
