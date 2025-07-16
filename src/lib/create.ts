@@ -269,7 +269,9 @@ export function createCreditCardForm(params: {
 
   const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
   const buttonKey = config?.design.button.text?.[packageState];
-  const buttonText = typeof buttonKey === 'number' ? $t(`form.button.text.${packageState}.${buttonKey}`) : buttonKey;
+  const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
+    ? buttonKey
+    : $t(`form.button.text.${packageState}.${buttonKey}`);
   const buttonContent = template(buttonText, {
     ...getPackageTemplateParams(config)
   });
@@ -371,9 +373,11 @@ export function createPaymentSuccessForm(params: {
   if (!params.config?.success?.show) return false;
   
   const { containerId, config, paymentDetail } = params;
+  const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
+  const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
+  const WAIT_TIME = config.success.waitTime; // in seconds
+  const delay = WAIT_TIME > MAX_WAIT_TIME ? MAX_WAIT_TIME : (WAIT_TIME < MIN_WAIT_TIME ? MIN_WAIT_TIME : WAIT_TIME);
   const successTheme = config.success.theme;
-  const waitTime = config.success.waitTime; // in seconds
-  const delay = waitTime > 50 ? 50 : (waitTime < 5 ? 5 : waitTime);
   const container = document.getElementById(containerId);
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);

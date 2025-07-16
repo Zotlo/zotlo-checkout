@@ -159,24 +159,24 @@ export function setFormLoading(loading: boolean = true) {
   }
 }
 
-export function isObject(item: unknown) {
+export function isPlainObject(item: unknown) {
   return (!!item && typeof item === 'object' && !Array.isArray(item));
 }
 
 export function mergeDeep(target: Record<string, any>, ...sources: Record<string, any>[]) {
-  if (!sources.length) return target;
+  if (!sources.length) return { ...target };
   const source = sources.shift();
+  const result = { ...target };
 
-  if (isObject(target) && isObject(source)) {
+  if (isPlainObject(result) && isPlainObject(source)) {
     for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
+      if (isPlainObject(source[key])) {
+        result[key] = mergeDeep(result[key] || {}, source[key]);
       } else {
-        Object.assign(target, { [key]: source[key] });
+        result[key] = source[key];
       }
     }
   }
 
-  return mergeDeep(target, ...sources);
+  return mergeDeep(result, ...sources);
 }
