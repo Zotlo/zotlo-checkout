@@ -190,6 +190,11 @@
   text-decoration: underline;
 }
 
+.zotlo-checkout__checkbox.disabled .tw-checkmark {
+  background-color: #F6F7F9;
+  pointer-events: none;
+}
+
 .zotlo-checkout__checkbox.error .tw-checkbox-label,
 .zotlo-checkout__checkbox.error .tw-checkbox-label a,
 .zotlo-checkout__checkbox.error .tw-checkbox-hint,

@@ -89,13 +89,8 @@ export class API {
       // Setup event handlers
       xhr.onload = () => {
         try {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const responseData = this.getResponseData(xhr, mergedHeaders);
-            resolve(responseData)
-          } else {
-            const responseData = this.getResponseData(xhr, mergedHeaders);
-            reject(responseData);
-          }
+          const responseData = this.getResponseData(xhr, mergedHeaders);
+          resolve(responseData);
         } catch {
           const responseData = this.getResponseData(xhr, mergedHeaders);
           reject(responseData);

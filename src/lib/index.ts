@@ -7,12 +7,13 @@ import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
-import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading } from "../utils";
+import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading, setFormDisabled, debounce, handleSubscriberIdInputEventListeners, activateDisabledSubscriberIdInputs } from "../utils";
 import { getConfig, ErrorHandler } from "../utils/getConfig";
-import { sendPayment } from "../utils/sendPayment";
+import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
+import { ErrorCode } from "./errors";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
@@ -26,7 +27,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       returnUrl: params.returnUrl,
       style: params.style
     });
-    config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
+    await refreshProviderConfigs();
   }
 
   let containerId = '';
@@ -34,6 +35,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
   let destroyAgreementLinks = null as (() => void) | null;
+
+  async function refreshProviderConfigs() {
+    config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
+  }
 
   function getFormValues(form: HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
@@ -129,6 +134,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
           params,
           config,
           containerId,
+          refreshProviderConfigsFunction: refreshProviderConfigs
         });
       } finally {
         setFormLoading(false);
@@ -390,6 +396,29 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
+  const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
+    if (!import.meta.env.VITE_SDK_API_URL) return;
+    const subscriberInput = event?.target as HTMLInputElement;
+    const subscriberId = subscriberInput?.value || '';
+    const validationRules = subscriberInput?.dataset?.rules || '';
+    const isValidSubscriberId = validatorInstance?.validate(subscriberId, validationRules)?.isValid;
+    if (!isValidSubscriberId) return;
+    try {
+      setFormDisabled();
+      const response = await registerPaymentUser(subscriberId, config, params);
+      if (response?.meta?.errorCode === ErrorCode.USER_ALREADY_SUBSCRIBED_ERROR) {
+        activateDisabledSubscriberIdInputs();
+        subscriberInput.focus();
+        return;
+      }
+      await refreshProviderConfigs();
+      setFormDisabled(false);
+      subscriberInput.focus();
+    } catch {
+      setFormDisabled(false);
+    }
+  }, 300)
+
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
@@ -504,11 +533,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     formElement?.addEventListener('submit', handleForm);
+    handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     formElement?.removeEventListener('submit', handleForm);
+    handleSubscriberIdInputEventListeners('remove', onSubscriberIdEntered);
 
     for (const [key, mask] of Object.entries(maskItems)) {
       mask.destroy();

@@ -180,3 +180,54 @@ export function mergeDeep(target: Record<string, any>, ...sources: Record<string
 
   return mergeDeep(result, ...sources);
 }
+
+export const debounce: any = (func: any, waitFor = 300) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return function (this: any, ...args: any[]) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), waitFor);
+  };
+}
+
+export function setFormDisabled(disabled = true) {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
+  const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox') as NodeListOf<HTMLElement>;
+  for (const wrapper of wrappers) {
+    if (disabled) {
+    wrapper.classList.add('disabled');
+    } else {
+    wrapper.classList.remove('disabled');
+    }
+  }
+  for (const input of inputs) {
+    if (disabled) {
+      input.setAttribute('disabled', 'true');
+    } else {
+      input.removeAttribute('disabled');
+    }
+  }
+}
+
+export function activateDisabledSubscriberIdInputs() {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
+  subscriberIdInputs?.forEach(input => {
+    input?.removeAttribute('disabled');
+    const wrapper = input?.closest('.zotlo-checkout__input');
+    if (wrapper) wrapper.classList.remove('disabled');
+  });
+}
+
+export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' = 'add', triggerFunction: () => void, ) {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
+  subscriberIdInputs?.forEach(input => {
+    if (action === 'add') {
+      input.addEventListener('input', triggerFunction);
+    } else {
+      input.removeEventListener('input', triggerFunction);
+    }
+  });
+}
+
