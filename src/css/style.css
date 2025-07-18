@@ -39,6 +39,8 @@
   --zc-form-submit-hover-borderColor: #301BA3;
   --zc-form-submit-hover-backgroundColor: #301BA3;
   --zc-form-spinner-color: '#BBBFFF';
+  --zc-form-disabled-opacity: 0.5;
+  --zc-form-disabled-cursor: not-allowed;
   --zc-footer-color: #737380;
   --zc-footer-fontSize: 10px;
   --zc-form-provider-backgroundColor: #000000;
@@ -224,7 +226,12 @@
   text-decoration: var(--zc-form-submit-textDecoration);
 }
 
-.zotlo-checkout__cardSubmit:hover {
+.zotlo-checkout__button[disabled], .zotlo-checkout__cardSubmit[disabled] {
+  opacity: var(--zc-form-disabled-opacity);
+  cursor: var(--zc-form-disabled-cursor);
+}
+
+.zotlo-checkout__cardSubmit:not([disabled]):hover {
   color: var(--zc-form-submit-hover-color);
   background-color: var(--zc-form-submit-hover-backgroundColor);
   border-color: var(--zc-form-submit-hover-borderColor);
@@ -418,6 +425,19 @@
 .zotlo-checkout__payment-provider .gpay-card-info-container, 
 .zotlo-checkout__payment-provider .gpay-card-info-animation-container {
   outline: none !important;
+}
+
+.gpay-card-info-container[disabled] {
+  opacity: var(--zc-form-disabled-opacity);
+  cursor: var(--zc-form-disabled-cursor);
+}
+
+.gpay-card-info-container[disabled].black.hover {
+  background-color: #000;
+}
+
+.gpay-card-info-container[disabled].white.hover {
+  background-color: #FFF;
 }
 
 @keyframes spin {
