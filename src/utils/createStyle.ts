@@ -60,6 +60,9 @@ export function createStyle(config: FormConfig) {
   --zc-success-button-backgroundColor: ${success?.button?.backgroundColor || '#4329CC'};
   --zc-success-button-borderWidth: ${success?.button?.borderWidth || '0'}px;
   --zc-success-button-borderRadius: ${success?.button?.borderRadius || '8'}px;
+  --zc-success-button-fontWeight: ${!success?.button?.textStyle || success?.button?.textStyle?.bold ? 'bold' : 'normal'};
+  --zc-success-button-fontStyle: ${success?.button?.textStyle?.italic ? 'italic' : 'normal'};
+  --zc-success-button-textDecoration: ${success?.button?.textStyle?.underline ? 'underline' : 'none'};
   --zc-success-button-hover-color: ${success?.button?.hover?.color || '#FFFFFF'};
   --zc-success-button-hover-borderColor: ${success?.button?.hover?.borderColor || '#301BA3'};
   --zc-success-button-hover-backgroundColor: ${success?.button?.hover?.backgroundColor || '#301BA3'};

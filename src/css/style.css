@@ -350,6 +350,9 @@
   border: var(--zc-success-button-borderWidth) solid var(--zc-success-button-borderColor);
   border-radius: var(--zc-success-button-borderRadius);
   background-color: var(--zc-success-button-backgroundColor);
+  font-weight: var(--zc-success-button-fontWeight);
+  font-style: var(--zc-success-button-fontStyle);
+  text-decoration: var(--zc-success-button-textDecoration);
 }
 
 .zotlo-checkout__success .zotlo-checkout__button:hover {
