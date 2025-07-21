@@ -1,21 +1,26 @@
 # Zotlo Checkout
 [![Publish Package to npm](https://github.com/Zotlo/zotlo-checkout/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/Zotlo/zotlo-checkout/actions/workflows/main.yml)
 
-Zotlo Checkout SDK lets you create fast and secure payment pages for mobile apps, games, SaaS platforms, and websites. Launch hosted checkout links in seconds—no code needed—or embed a fully branded checkout flow with just a few lines of code.
+Zotlo Checkout SDK allows you to embed a secure payment form directly into your website, providing your customers with a seamless checkout experience without leaving your site.
 
 ## Quick Start
 
-### Install your project
-Install `zotlo-checkout` to your project
+### Installation
+Add the `zotlo-checkout` package to your project:
 
+#### npm
 ```bash
 npm install zotlo-checkout
 ```
 
-Add initial script on your project
+#### yarn
+```bash
+yarn add -D zotlo-checkout
+```
 
+### Initialize Checkout
 ```javascript
-import 'zotlo-checkout/dist/zotlo-checkout.css'; // Import where you want
+import 'zotlo-checkout/dist/zotlo-checkout.css';
 import ZotloCheckout from 'zotlo-checkout';
 
 // Initialize checkout
@@ -37,16 +42,20 @@ const checkout = await ZotloCheckout({
 // Render form whenever you want
 checkout.mount('zotlo-checkout')
 ```
+**Note:** The string `'zotlo-checkout'` passed to mount is the id of the DOM element where the form will be embedded, for example:
 
-### Use on CDN
-Add the Zotlo Checkout SDK inside the head tag:
+```html
+<div id="zotlo-checkout"></div>
+```
+
+### Using via CDN
+You can also include Zotlo Checkout SDK directly in the browser using CDN links:
 
 **unpkg**
 ```html
 <link rel="stylesheet" href="https://unpkg.com/zotlo-checkout/dist/zotlo-checkout.css" />
 <script src="https://unpkg.com/zotlo-checkout/dist/zotlo-checkout.min.js"></script>
 ```
-or
 
 **jsdelivr**
 ```html
@@ -54,7 +63,7 @@ or
 <script src="https://cdn.jsdelivr.net/npm/zotlo-checkout/dist/zotlo-checkout.min.js"></script>
 ```
 
-And start Zotlo Checkout:
+#### Usage example
 
 ```html
 <div id="zotlo-checkout"></div>
@@ -80,47 +89,53 @@ And start Zotlo Checkout:
 ```
 
 ## Parameters
+These parameters specify the parameters and descriptions used in the Zotlo Checkout SDK.
 
-| Name                  | Required | Description                                  |
-|-----------------------|----------|----------------------------------------------|
-| `token`               | **true** | Checkout token you receive via Zotlo Console |
-| `packageId`           | **true** | Package id that you want to use              |
-| `returnUrl`           | **true** | Return address for success/fail scenarios    |
-| `subscriberId`        | false    | Default subscriber id for registration       |
-| `style`               | false    | Custom styling on config                     |
-| `events`              | false    | Checkout handlers                            |
-| `events.onLoad`       | false    | Triggers after form loaded                   |
-| `events.onSubmit`     | false    | Triggers after form submitted                |
-| `events.onSuccess`    | false    | Handle actions after sucessfull payment      |
-| `events.onFail`       | false    | Handle actions after payment failed          |
+| Name                    | Required | Description                                                                                                                  |
+|-------------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
+| `token`                 | **true** | The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. |
+| `packageId`             | **true** | The ID of the package you want to use.                                                                                       |
+| `returnUrl`             | **true** | The URL to redirect the user after payment completion.                                                                       |
+| `subscriberId`          | false    | (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4.                                |
+| `style`                 | false    | Custom styling on config                                                                                                     |
+| `events`                | false    | Event listeners that can be used during the checkout process.                                                                |
+| `events.onLoad`         | false    | Triggers after form loaded.                                                                                                  |
+| `events.onSubmit`       | false    | Triggered after the form is submitted.                                                                                       |
+| `events.onSuccess`      | false    | Triggered after a successful payment.                                                                                        |
+| `events.onFail`         | false    | Triggered when a payment fails.                                                                                              |
+| `events.onInvalidForm`  | false    | Triggers when form has an invalid field.                                                                                     |
+
+**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts) file.
 
 ## Methods
-After initialized checkout form, you can use these methods:
+User methods available after Checkout is started:
 
 ### mount
-Render checkout form
+Renders the Checkout form to the specified DOM element.
 ```typescript
 checkout.mount(containerId: string);
 ```
 
 ### refresh
-Refresh checkout form
+Refreshes the form.
 ```typescript
 checkout.refresh(): Promise<void>;
 ```
 
 ### unmount
-Destroy checkout form
+Removes the form and deletes it from the DOM.
 ```typescript
 checkout.unmount();
 ```
 
 ## Styling
-You can customize your form on config with `style` parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default.
+You can customize your form on config with `style` parameter. If you do not define any parameters, the settings made in the [Zotlo Console](https://console.zotlo.com) will apply by default.
+
+**Note:** For more details, please check `IZotloCheckoutStyle` on [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts) file.
 
 ```javascript
 {
-  ...,
+  ...
   style: {
     design: {
       theme: 'mobileapp',
@@ -134,165 +149,5 @@ You can customize your form on config with `style` parameter. If you do not defi
       ...
     }
   }
-}
-```
-
-You can see all configs below:
-
-### General Form Design (`style.design`)
-```typescript
-type FormDesign = {
-  /** Default: `vertical` */
-  theme: 'horizontal' | 'vertical' | 'mobileapp';
-  darkMode: boolean;
-  /** You can set any Google fonts (eg. "Montserrat", sans-serif)  */
-  fontFamily: string;
-  borderColor: string;
-  backgroundColor: string;
-  borderRadius: number | string;
-  borderWidth: number | string;
-  /** Available for theme mobileapp */
-  header: { show: boolean; };
-  product: {
-    showProductTitle: boolean;
-    /** If `showProductTitle` sets `false`, this will be ignored */
-    showSubtotalText: boolean;
-    productImage: {
-      show: boolean;
-      url: string;
-    };
-    additionalText: {
-      show: boolean;
-      /** Language ISO code and its translation. (eg. `{ en: "Bonus +5%", pt_bz: "Bônus de 5%" }`) */
-      text: Record<string, string>;
-    };
-  };
-  label: {
-    show: boolean;
-    color: string;
-    fontSize: number | string;
-    textStyle: {
-      bold: boolean;
-      italic: boolean;
-      underline: boolean;
-    };
-  };
-  consent: {
-    color: string;
-    fontSize: number | string;
-    textStyle: {
-      bold: boolean;
-      italic: boolean;
-      underline: boolean;
-    };
-  };
-  totalPriceColor: string;
-  button: {
-    color: string;
-    borderColor: string;
-    backgroundColor: string;
-    borderRadius: number | string;
-    borderWidth: number | string;
-    textStyle: {
-      bold: boolean;
-      italic: boolean;
-      underline: boolean;
-    };
-    hover: {
-      color: string;
-      borderColor: string;
-      backgroundColor: string;
-    };
-    text: {
-      /**
-       * ```
-       * 0: "Start Trial"
-       * 1: "Start {{TRIAL_PERIOD}} Trial"
-       * ```
-      */
-      trialActivationState: 0 | 1 | string;
-      /**
-       * ```
-       * 0: "Start Now"
-       * 1: "Subscribe Now"
-       * 2: "Get Started"
-       * 3: "Activate Now"
-       * 4: "Subscribe for {{PRICE}}"
-       * 5: "Get Started for {{PRICE}}"
-       * 6: "Subscribe Now for {{DAILY_PRICE}} per day"
-       * 7: "Start Now for {{DAILY_PRICE}} per day"
-       * ```
-       */
-      subscriptionActivationState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | string;
-      /**
-       * ```
-       * 0: "Buy Now"
-       * 1: "Pay Now"
-       * 2: "Complete Payment"
-       * ```
-       */
-      onetimePayment: 0 | 1 | 2 | string;
-    }
-  };
-  footer: {
-    color: string;
-    fontSize: number | string;
-  };
-}
-```
-
-### Payment Success Configs (`style.success`)
-
-```typescript
-export type FormSuccess = {
-  show: boolean;
-  /** In seconds. Min: 5, Max: 50, Default: 10  */
-  waitTime: number;
-  autoRedirect: boolean;
-  theme: 'app2web' | 'web2app';
-  /** This is available if theme is web2app */
-  genericButton: {
-    show: boolean;
-    /**
-     * ```
-     * 0: "Go to App"
-     * 1: "Go to Web"
-     * ```
-    */
-    text: 0 | 1 | string;
-  };
-  /** If there is no url for store button (ex. google), this button cannot visible */
-  storeButtons: {
-    google: boolean;
-    apple: boolean;
-    amazon: boolean;
-    microsoft: boolean;
-    huawei: boolean;
-  };
-  color: string;
-  button: {
-    /**
-     * ```
-     * 0: "Back to App"
-     * 1: "Back to Game"
-     * ```
-    */
-    text: 0 | 1 | string;
-    color: string;
-    borderColor: string;
-    backgroundColor: string;
-    borderRadius: number | string;
-    borderWidth: number | string;
-    textStyle: {
-      bold: boolean;
-      italic: boolean;
-      underline: boolean;
-    };
-    hover: {
-      color: string;
-      borderColor: string;
-      backgroundColor: string;
-    };
-  };
 }
 ```

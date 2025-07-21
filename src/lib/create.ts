@@ -400,7 +400,7 @@ export function createPaymentSuccessForm(params: {
         const canVisible = !!config?.success?.storeButtons?.[store as keyof FormSuccess['storeButtons']] && !!link;
         if (!canVisible) return '';
         const img = getCDNUrl(`editor/store-badges/${store}${config.design.darkMode ? '' : '_dark' }.png`);
-        return `<a href="${link}" target="_blank" class="zotlo-checkout__store-button ${store}"><img src="${img}" alt="${store}"></a>`;
+        return `<a href="${link}" target="_blank" class="zotlo-checkout__store-button ${store}"><img src="${img}" alt="Store - ${store}"></a>`;
       }).join('')
     : '';
 

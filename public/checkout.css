@@ -78,3 +78,76 @@ body {
   transform: translateX(20px);
   opacity: 0;
 }
+
+.zotlo-checkout__cookie {
+  display: flex;
+  position: fixed;
+  bottom: 12px;
+  z-index: 50;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  align-items: center;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 16px;
+  font-size: 14px;
+  color: white;
+  left: 12px;
+  right: 12px;
+  line-height: 20px;
+  gap: 12px;
+  flex-flow: column;
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.zotlo-checkout__cookie a {
+  color: white;
+}
+
+.zotlo-checkout__cookie__text {
+  flex: 1;
+}
+
+.zotlo-checkout__cookie__actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.zotlo-checkout__cookie__actions button {
+  display: inline-flex;
+  border-radius: 8px;
+  background-color: white;
+  color: #151b26;
+  border: none;
+  font-weight: 500;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 12px 24px;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+@media screen and (min-width: 768px) {
+  .zotlo-checkout__cookie {
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    flex-flow: row;
+    gap: 16px;
+  }
+
+  .zotlo-checkout__cookie__actions {
+    width: auto;
+  }
+
+  .zotlo-checkout__cookie__actions button {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}

@@ -10,18 +10,14 @@ import { ZotloCheckout } from './lib'
     subscriberId: '',
     events: {
       onLoad(config) {
-        const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;
-        if (defaultBG) {
-          document.body.style.backgroundColor = config?.backgroundColor || defaultBG;
-        }
-      },
-      onSubmit() {},
-      onSuccess() {},
-      onFail(e) {
-        (window as any)?.VueApp?.addToaster('Error', e?.message)
-      },
+        // Set background color
+        document.body.style.backgroundColor = (
+          config.backgroundColor ||
+          window.getComputedStyle(document.body).backgroundColor
+        );
+      }
     }
   });
-  
-  checkout.mount('zotlo-checkout')
-})()
+
+  checkout.mount('zotlo-checkout');
+})();
