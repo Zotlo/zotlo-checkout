@@ -45,7 +45,7 @@ export const ErrorHandler = {
   response: null as Record<string, any> | null,
 }
 
-async function getPaymentData() {
+export async function getPaymentData() {
   try {
     const paymentRes = await API.get("/payment/init");
     const paymentInitData = paymentRes?.result || {};
@@ -171,7 +171,7 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
 }
 
 export async function getProvidersConfigData(paymentInitData:FormPaymentData, returnUrl: string) {
-  const { providers = {} } = paymentInitData || {};
+  const { providers = {} as Record<PaymentProvider, boolean> } = paymentInitData || {};
   const providersHasConfig = [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY];
   const providerKeys = providersHasConfig.filter(key => !!providers[key]);
   if (!providerKeys?.length) return {};

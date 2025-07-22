@@ -20,21 +20,21 @@
         <% IF(PACKAGE_NAME) %>
         <tr class="zotlo-checkout__package__summary__head">
           <td>{{PACKAGE_NAME}}</td>
-          <td class="zotlo-checkout__package__summary__price">{{PACKAGE_PRICE}}</td>
+          <td class="zotlo-checkout__package__summary__price" data-original-price>{{PACKAGE_PRICE}}</td>
         </tr>
         <% ENDIF %>
 
         <% IF(SHOW_SUBTOTAL===true) %>
         <tr>
           <td>{{STATIC_SUBTOTAL}}</td>
-          <td>{{PACKAGE_PRICE}}</td>
+          <td data-original-price>{{PACKAGE_PRICE}}</td>
         </tr>
         <% ENDIF %>
 
         <% IF(ADDITIONAL_TEXT) %>
         <tr>
           <td>{{ADDITIONAL_TEXT}}</td>
-          <td>{{ADDITIONAL_PRICE}}</td>
+          <td data-discount-price>{{ADDITIONAL_PRICE}}</td>
         </tr>
         <% ENDIF %>
       </tbody>
@@ -42,7 +42,7 @@
       <tfoot>
         <tr class="zotlo-checkout__package__summary__head">
           <td>{{STATIC_TOTAL}}</td>
-          <td class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
+          <td data-total-price class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
         </tr>
       </tfoot>
     </table>
@@ -57,7 +57,7 @@
   {{PROVIDERS}}
 
   <div class="zotlo-checkout__footer">
-    <div>{{PRICE_INFO}} {{FOOTER_DESC}}</div>
+    <div data-footer-description>{{PRICE_INFO}} {{FOOTER_DESC}}</div>
     {{DISCLAIMER}}
     <div>
       {{ZOTLO_LEGALS_DESC}}<br/>

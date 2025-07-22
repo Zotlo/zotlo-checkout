@@ -8,8 +8,7 @@ import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
 import modalElement from '../html/modal.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n } from "../utils";
-import { getPackageTemplateParams } from '../utils/getPackageInfo'
+import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme } from './types'
 import { FORM_ITEMS } from './fields'
 
@@ -267,19 +266,12 @@ export function createCreditCardForm(params: {
     });
   }
 
-  const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
-  const buttonKey = config?.design.button.text?.[packageState];
-  const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
-    ? buttonKey
-    : $t(`form.button.text.${packageState}.${buttonKey}`);
-  const buttonContent = template(buttonText, {
-    ...getPackageTemplateParams(config)
-  });
+  const buttonContent = getSubmitButtonContent(config);
 
   const cardSubmit = createButton({
     content: buttonContent,
     className: 'zotlo-checkout__cardSubmit',
-    attrs: { type: 'submit', 'data-provider': PaymentProvider.CREDIT_CARD },
+    attrs: { type: 'submit', 'data-provider': PaymentProvider.CREDIT_CARD, 'data-card-submit-button': '' },
   });
 
   if (isVerticalTheme && (seperator === 'top' || seperator === 'both')) {
