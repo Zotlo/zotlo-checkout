@@ -2,6 +2,8 @@ import './css/style.css'
 import { ZotloCheckout } from './lib'
 
 (async () => {
+  const win = window as any;
+
   const checkout = await ZotloCheckout({
     token: '123ASDASsqasdas=',
     packageId: 'zotlo-123',
@@ -13,8 +15,11 @@ import { ZotloCheckout } from './lib'
         // Set background color
         document.body.style.backgroundColor = (
           config.backgroundColor ||
-          window.getComputedStyle(document.body).backgroundColor
+          win.getComputedStyle(document.body).backgroundColor
         );
+      },
+      onFail(e) {
+        win?.VueApp?.addToaster('Error', e?.message)
       }
     }
   });
