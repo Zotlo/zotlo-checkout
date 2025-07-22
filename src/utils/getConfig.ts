@@ -37,7 +37,8 @@ type InitResult = {
     privacyPolicy?: string;
     termsOfService?: string;
     cookiePolicy?: string;
-  }
+  };
+  integrations?: FormConfig['integrations'];
 };
 
 export const ErrorHandler = {
@@ -91,6 +92,8 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
 
     const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
+
+    config.integrations = initData?.integrations || {} as InitResult['integrations'];
 
     config.design = mergeDeep(
       {

@@ -7,7 +7,7 @@ import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
-import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading, setFormDisabled, debounce, handleSubscriberIdInputEventListeners, activateDisabledSubscriberIdInputs } from "../utils";
+import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading, setFormDisabled, debounce, handleSubscriberIdInputEventListeners, activateDisabledSubscriberIdInputs, useI18n } from "../utils";
 import { getConfig, ErrorHandler } from "../utils/getConfig";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
@@ -518,6 +518,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
               } else {
                 inputValidation(item, result);
               }
+
+              if (!result.isValid) {
+                params.events?.onInvalidForm?.({
+                  name: item.name,
+                  result
+                });
+              }
             }
           });
         }
@@ -562,8 +569,20 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function init() {
     handleTabView();
+    const { $t } = useI18n(config.general.localization);
+
     params.events?.onLoad?.({
+      sandbox: !!config?.paymentData?.sandboxPayment,
+      countryCode: config.general.countryCode || '',
+      integrations: config.integrations,
       backgroundColor: config.design.backgroundColor,
+      cookieText: $t('cookiePopup.text', {
+        cookiePolicy: `<a
+          href="${config.general.zotloUrls?.cookiePolicy || '#'}"
+          target="_blank"
+          class="!text-white underline"
+        >${$t('cookiePopup.word.cookiePolicy')}</a>`,
+      })
     });
     handleUrlQuery({
       params,

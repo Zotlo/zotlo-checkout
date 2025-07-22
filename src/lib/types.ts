@@ -1,3 +1,5 @@
+import { type ValidationResult } from "../utils/validation";
+
 export enum PaymentProvider {
   PAYPAL = 'paypal',
   GOOGLE_PAY = 'googlePay',
@@ -51,25 +53,63 @@ export interface IZotloCheckoutStyle {
   success?: DeepPartial<FormSuccess>;
 }
 
+export interface IZotloCheckoutEvents {
+  /** Triggers after form loaded. */
+  onLoad?: (params: {
+    sandbox: boolean;
+    countryCode: string;
+    integrations: FormConfig['integrations'];
+    backgroundColor: string;
+    cookieText: string;
+  }) => void;
+
+  /** Triggered after the form is submitted. */
+  onSubmit?: (data?: Record<string, any>) => void;
+
+  /** Triggered after a successful payment. */
+  onSuccess?: (result: PaymentDetail) => void;
+
+  /** Triggered when a payment fails. */
+  onFail?: (error: FailEventData) => void;
+
+  /** Triggers when form has an invalid field. */
+  onInvalidForm?: (error: {
+    name: string;
+    result: ValidationResult;
+  }) => void;
+}
+
 export interface IZotloCheckoutParams {
+  /** The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. */
   token: string;
+
+  /** The ID of the package you want to use. */
   packageId: string;
-  language?: string;
+
+  /** The URL to redirect the user after payment completion.  */
+  returnUrl: string;
+
+  /** (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4. */
   subscriberId?: string;
-  returnUrl?: string;
+
+  /** (Optional) The language code for the checkout form, e.g., `en`, `fr`, `pt_br`. */
+  language?: string;
+
+  /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
   style?: IZotloCheckoutStyle;
-  events?: {
-    onLoad?: (params: Record<string, any>) => void;
-    onUpdate?: () => void;
-    onSubmit?: (e?: Record<string, any>) => void;
-    onSuccess?: () => void;
-    onFail?: (e?: FailEventData) => void;
-  }
+
+  /** Event listeners that can be used during the checkout process. */
+  events?: IZotloCheckoutEvents;
 }
 
 export interface IZotloCheckoutReturn {
+  /** Renders the Checkout form to the specified DOM element. */
   mount: (containerId: string) => void;
+
+  /** Refreshes the form. */
   refresh: () => void;
+
+  /** Removes the form and deletes it from the DOM. */
   unmount: () => void;
 }
 
@@ -374,6 +414,28 @@ export type FormConfig = {
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
   providerConfigs?: ProviderConfigs;
+  integrations?: {
+    gtmData: {
+      isActive: 0 | 1;
+      gtmCode: string;
+      gtmDomain: string;
+    };
+    facebookData: {
+      isActive: 0 | 1;
+      pixelId: string;
+      integrationType: 'both' | 'pixel' | 'capi';
+    };
+    gaData: {
+      isActive: 0 | 1;
+      gaCode: string;
+    };
+    googleAdsData: {
+      isActive: 0 | 1;
+      gTag: string;
+      conversionId: string;
+      conversionLabel: string;
+    };
+  };
 }
 
 export type PaymentDetail = {

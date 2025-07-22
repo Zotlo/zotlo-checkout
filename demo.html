@@ -16,32 +16,63 @@
   <body>
     <div id="zotlo-checkout" style="max-width: 460px; margin: 0 auto;"></div>
     <div id="app"></div>
+    <div id="app2"></div>
 
     <!-- GLOBAL OBJECT USAGE-->
     <script src="./dist/zotlo-checkout.min.js"></script>
     <script src="https://unpkg.com/vue@3.5.15/dist/vue.global.prod.js"></script>
+    <script src="./dist/integrations.js"></script>
+    <script src="./dist/events.js"></script>
+    <script src="./dist/cookiePopup.js"></script>
     <script src="./dist/toaster.js"></script>
     <script>
+      const win = window;
       let checkout;
 
       ZotloCheckout({
         token: '123ASDASsqasdas=',
         packageId: 'zotlo-123',
+        returnUrl: 'https://localhost:5173',
         language: 'en',
         subscriberId: '',
-        returnUrl: '',
         events: {
           onLoad(config) {
-            const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;
-            if (defaultBG) {
-              document.body.style.backgroundColor = config?.backgroundColor || defaultBG;
-            }
+            // Set background color
+            document.body.style.backgroundColor = (
+              config.backgroundColor ||
+              win.getComputedStyle(document.body).backgroundColor
+            );
+
+            if (!win.Integration) return;
+
+            win.checkConsent(config.cookieText);
+
+            // Load itegrations
+            const Integration = win.Integration || {};
+            Integration.debug = config.sandbox;
+
+            const headScripts = Integration.init(config.countryCode, config.integrations);
+            Integration.loadScripts(headScripts.script || []);
+
+            // Load integration events
+            win.EventActions.payment.loadGTMClickEvents();
           },
-          onSubmit() {},
-          onSuccess() {},
-          onFail(e) {
-            if (window.VueApp) window.VueApp.addToaster('Error', e?.message)
+          onSuccess(result) {
+            if (!win.EventActions) return;
+            setTimeout(() => {
+              win.EventActions.success.complete(result);
+            }, 0);
           },
+          onFail(error) {
+            const message = error.message || 'An error occurred during payment processing';
+            win.VueApp.addToaster('Error', message);
+            win.EventActions.payment.paymentGTMError(message);
+          },
+          onInvalidForm(error) {
+            const message = error.result.errors[0] || 'Unknown error';
+            const formattedMessage = error.name ? `${error.name} - ${message}` : message;
+            win.EventActions.payment.paymentGTMError(formattedMessage);
+          }
         }
       }).then((zcInstance) => {
         checkout = zcInstance;
