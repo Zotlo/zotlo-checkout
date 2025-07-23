@@ -33,7 +33,7 @@ function loadScript(src: string, id?: string): Promise<void> {
 }
 
 export async function loadProviderSDKs(paymentInitData?: FormPaymentData): Promise<void[]> {
-  const { providers = {} } = paymentInitData || {};
+  const { providers = {} as Record<PaymentProvider, boolean> } = paymentInitData || {};
   const promises: Promise<void>[] = [];
 
   if (providers?.[PaymentProvider.APPLE_PAY]) promises.push(loadScript(applePaySdkUrl, 'apple-pay-sdk'));
