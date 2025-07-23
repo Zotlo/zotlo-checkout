@@ -7,8 +7,21 @@ import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
-import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading, setFormDisabled, debounce, handleSubscriberIdInputEventListeners, activateDisabledSubscriberIdInputs, useI18n } from "../utils";
-import { getConfig, ErrorHandler } from "../utils/getConfig";
+import {
+  getCountryByCode,
+  getMaskByCode,
+  preparePaymentMethods,
+  setFormLoading,
+  setFormDisabled,
+  debounce,
+  handleSubscriberIdInputEventListeners,
+  activateDisabledSubscriberIdInputs,
+  useI18n,
+  handlePriceChangesBySubscriptionStatus,
+  syncSubscriberIdInputs
+} from "../utils";
+import { getConfig, getPaymentData, ErrorHandler } from "../utils/getConfig";
+import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
@@ -38,6 +51,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
+  }
+
+  async function refreshPaymentInitData() {
+    const paymentInitData = await getPaymentData();
+    config.paymentData = paymentInitData;
+    config.packageInfo = getPackageInfo(config);
   }
 
   function getFormValues(form: HTMLFormElement) {
@@ -244,7 +263,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         } else {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
         }
-
+        syncSubscriberIdInputs(tabName);
         initFormInputs();
       }
     }
@@ -411,13 +430,14 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         subscriberInput.focus();
         return;
       }
-      await refreshProviderConfigs();
+      await Promise.all([refreshPaymentInitData(), refreshProviderConfigs()]);
+      handlePriceChangesBySubscriptionStatus(config);
       setFormDisabled(false);
       subscriberInput.focus();
     } catch {
       setFormDisabled(false);
     }
-  }, 300)
+  }, 200)
 
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';

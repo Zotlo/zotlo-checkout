@@ -1,5 +1,7 @@
 import Countries from '../countries.json';
 import { type FormConfig, PaymentProvider } from '../lib/types';
+import { getPackageTemplateParams } from './getPackageInfo';
+import { useI18n } from './i18n';
 
 export { getCDNUrl } from './getCDNUrl';
 
@@ -231,3 +233,61 @@ export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' =
   });
 }
 
+export function getFooterPriceInfo(config: FormConfig) {
+  const { $t } = useI18n(config?.general?.localization);
+  const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
+  return template($t(`footer.priceInfo.${packageCondition}`), {
+    ...getPackageTemplateParams(config)
+  });
+}
+
+export function getSubmitButtonContent(config: FormConfig) {
+  const { $t } = useI18n(config?.general?.localization);
+  const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
+  const buttonKey = config?.design.button.text?.[packageState];
+  const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
+    ? buttonKey
+    : $t(`form.button.text.${packageState}.${buttonKey}`);
+  const buttonContent = template(buttonText, {
+    ...getPackageTemplateParams(config)
+  });
+  return buttonContent;
+}
+
+export async function handlePriceChangesBySubscriptionStatus(config: FormConfig) {
+  const { $t } = useI18n(config?.general?.localization);
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  if (!formElement) return;
+
+  function updateElementsValue<T extends HTMLElement>(
+    selector: string,
+    value: string | undefined
+  ) {
+    formElement.querySelectorAll(selector).forEach((el) => {
+      (el as T).innerHTML = value || "";
+    });
+  }
+
+  updateElementsValue<HTMLElement>('[data-total-price]', config?.packageInfo?.totalPayableAmount);
+  updateElementsValue<HTMLButtonElement>('[data-card-submit-button]', getSubmitButtonContent(config));
+  updateElementsValue<HTMLElement>('[data-original-price]', config?.packageInfo?.discount?.original as string);
+  updateElementsValue<HTMLElement>('[data-discount-price]', config?.packageInfo?.discount?.price as string);
+  const footerFullDescription = `${getFooterPriceInfo(config)} ${$t('footer.desc')}`;
+  updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
+}
+
+export function syncSubscriberIdInputs(tabName: string | null) {
+  setTimeout(() => {
+    const cardInput = document?.querySelector('[data-tab-content="creditCard"] input[name="subscriberId"]') as HTMLInputElement;
+    const providersInput = document?.querySelector('[data-tab-content="subscriberId"] input[name="subscriberId"]') as HTMLInputElement;
+    const isCreditCardTab = tabName === PaymentProvider.CREDIT_CARD;
+    // Sync subscriberId inputs based on the active tab and trigger blur event to update validation
+    if (isCreditCardTab && cardInput) {
+      cardInput.value = providersInput?.value;
+      if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
+    } else if (providersInput) {
+      providersInput.value = cardInput?.value;
+      if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
+    }
+  }, 0);
+}

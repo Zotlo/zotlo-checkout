@@ -4,11 +4,13 @@ import { useI18n } from "../utils";
 export function getPackageInfo(config?: FormConfig): PackageInfoType {
   if (!config) return {} as PackageInfoType;
 
+  const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
+
   const periodsInfo = getPackagePeriodsInfo(config);
   const pricesInfo = getPackagePrices(config);
-  const totalPayableAmount = getTotalPayableAmount(config);
-  const condition = getPackageCondition(config);
-  const state = getPackageState(config);
+  const totalPayableAmount = getTotalPayableAmount(config, { isTrialUsed });
+  const condition = getPackageCondition(config, { isTrialUsed });
+  const state = getPackageState(config, { isTrialUsed });
   const discount = getDiscountPrices(config, totalPayableAmount);
 
   return {
@@ -161,8 +163,9 @@ function getPackageCondition(config?: FormConfig, options?: { isTrialUsed?: bool
   return condition;
 }
 
-function getPackageState(config?: FormConfig) {
-  const condition = getPackageCondition(config);
+function getPackageState(config?: FormConfig, options?: { isTrialUsed?: boolean }) {
+  const { isTrialUsed = false } = options || {};
+  const condition = getPackageCondition(config, { isTrialUsed });
 
   const states:Record<string, keyof FormConfig['design']['button']['text']> = {
     onetime_payment: 'onetimePayment',

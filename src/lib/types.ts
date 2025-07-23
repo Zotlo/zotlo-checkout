@@ -246,13 +246,21 @@ export type SelectedPriceData = {
   weeklyPrice: string;
 };
 
+export type SubscriberStatusesData = {
+  subscriptionStatus: boolean;
+  isTrialUseBefore: boolean;
+  packageType: PackageType;
+  hasPurchasedAnyPackageBefore: boolean;
+};
+
 export type FormPaymentData = {
   package: PackageData;
-  providers: Record<string, any>;
+  providers: Record<PaymentProvider, boolean>;
   sandboxPayment: boolean;
   selectedPrice: SelectedPriceData;
   subscriberCountry: string;
-  discount: {
+  subscriberStatuses: SubscriberStatusesData;
+  discount?: {
     discountPrice: number | string;
     originalPrice: number | string;
     totalPrice: number | string;

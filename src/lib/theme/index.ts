@@ -1,5 +1,4 @@
-import { preparePaymentMethods, template, useI18n } from "../../utils";
-import { getPackageTemplateParams } from "../../utils/getPackageInfo";
+import { preparePaymentMethods, template, useI18n, getFooterPriceInfo } from "../../utils";
 import { DesignTheme, FormConfig, PaymentProvider } from "../types";
 import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";
@@ -49,10 +48,7 @@ export function generateTheme(params: {
 
   const paymentMethods = preparePaymentMethods(config);
 
-  const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
-  const footerPriceInfo = template($t(`footer.priceInfo.${packageCondition}`), {
-    ...getPackageTemplateParams(config)
-  });
+  const footerPriceInfo = getFooterPriceInfo(config);
 
   const zotloUrls = config?.general?.zotloUrls || {};
 
