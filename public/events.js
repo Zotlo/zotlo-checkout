@@ -1,8 +1,8 @@
 window.EventActions = {
   general: {
-    pageView() {
+    pageView(title) {
       window.GA4.gtag('event', 'page_view', {
-        page_title: document?.title || '',
+        page_title: title || document?.title || '',
         page_location: window.location.pathname || '',
         previous_page_path: new URL(document.referrer || window.location.origin)?.pathname || '',
       });
@@ -56,7 +56,7 @@ window.EventActions = {
       }
 
       window.Facebook.track('AddToCart');
-      EventActions.general.pageView();
+      EventActions.general.pageView('Payment');
     },
 
     paymentGTMError(message) {
@@ -94,7 +94,7 @@ window.EventActions = {
         button.addEventListener('click', EventActions.success.onClickButtons);
       }
 
-      EventActions.general.pageView();
+      EventActions.general.pageView('Success');
     },
 
     complete(result) {
