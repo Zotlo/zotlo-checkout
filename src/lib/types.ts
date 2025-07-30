@@ -151,7 +151,13 @@ export type FormDesign = {
   borderRadius: number | string;
   borderWidth: number | string;
   /** Available for theme mobileapp */
-  header: { show: boolean; };
+  header: {
+    show: boolean;
+    close: {
+      show: boolean;
+      url: string;
+    }
+  };
   product: ProductConfigMobileApp;
   label: {
     show: boolean;

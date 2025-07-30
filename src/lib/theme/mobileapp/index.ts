@@ -1,5 +1,6 @@
 import mainHTML from './html/main.html?raw';
-import { generateAttributes, getCDNUrl, template, useI18n } from '../../../utils'
+import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
+import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
 import { createProviderButton, createButton, createCreditCardForm } from '../../create'
 import { getPackageName } from '../../../utils/getPackageInfo';
@@ -144,6 +145,8 @@ export function generateThemeMobileApp(params: {
     )
     : '';
 
+  const closeButtonUrl = config.design.header?.close?.url;
+
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
@@ -167,6 +170,9 @@ export function generateThemeMobileApp(params: {
     DISCLAIMER: footerInfo.DISCLAIMER,
     ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
     ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
-    ATTRIBUTES: generateAttributes({ autocomplete: 'off' })
+    ATTRIBUTES: generateAttributes({ autocomplete: 'off' }),
+    SHOW_CLOSE_BUTTON: !!config.design.header?.close?.show && !!closeButtonUrl,
+    CLOSE_BUTTON_URL: closeButtonUrl,
+    CLOSE_BUTTON_TEXT: $t('common.close'),
   })
 }

@@ -1,4 +1,5 @@
-import { preparePaymentMethods, template, useI18n, getFooterPriceInfo } from "../../utils";
+import { preparePaymentMethods, useI18n, getFooterPriceInfo } from "../../utils";
+import { template } from "../../utils/template";
 import { DesignTheme, FormConfig, PaymentProvider } from "../types";
 import { generateThemeDefault } from "./default";
 import { generateThemeMobileApp } from "./mobileapp";

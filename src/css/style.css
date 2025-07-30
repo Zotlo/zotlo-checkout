@@ -157,6 +157,23 @@
   object-position: center;
 }
 
+.zotlo-checkout__header__info span {
+  flex: 1;
+}
+
+.zotlo-checkout__header__info a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #78728C;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px;
+  height: 100%;
+  margin-right: -8px;
+  text-decoration: none;
+}
+
 .zotlo-checkout__form__col2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -4,6 +4,22 @@
     <div class="zotlo-checkout__header__info">
       <img src="{{LOGO}}" role="presentation" />
       <span>{{APP_NAME}}</span>
+      <% IF(SHOW_CLOSE_BUTTON===true) %>
+      <a href="{{CLOSE_BUTTON_URL}}" data-close>
+        {{CLOSE_BUTTON_TEXT}}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_7538_88809)">
+            <path d="M5 9L8 6L11 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+          <rect x="0.6" y="0.6" width="14.8" height="14.8" rx="3.4" stroke="currentColor" stroke-width="1.2" />
+          <defs>
+            <clipPath id="clip0_7538_88809">
+              <rect width="16" height="16" rx="4" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+      </a>
+      <% ENDIF %>
     </div>
   </div>
   <% ENDIF %>
