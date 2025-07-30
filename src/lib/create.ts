@@ -8,7 +8,8 @@ import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
 import modalElement from '../html/modal.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, template, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
+import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme } from './types'
 import { FORM_ITEMS } from './fields'
 
@@ -435,6 +436,10 @@ export function createPaymentSuccessForm(params: {
     }
     
     form?.appendChild(doc.body.firstChild as HTMLElement);
+
+    // Remove close button
+    form.querySelector('[data-close]')?.remove();
+
     if (canAutoRedirect) {
       if (import.meta.env.VITE_SDK_API_URL) {
         startTimer(delay);

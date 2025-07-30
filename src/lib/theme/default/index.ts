@@ -1,6 +1,7 @@
 import mainHTML from './html/main.html?raw'
 import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme } from '../../types'
-import { template, useI18n, getCDNUrl, generateAttributes } from '../../../utils'
+import { useI18n, getCDNUrl, generateAttributes } from '../../../utils'
+import { template } from "../../../utils/template";
 import { createButton, createCreditCardForm, createProviderButton } from '../../create'
 
 export function generateThemeDefault(params: {
