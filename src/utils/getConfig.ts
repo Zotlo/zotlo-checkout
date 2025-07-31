@@ -1,5 +1,6 @@
+import { mergeDeep } from "./index";
 import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../lib/types";
-import { PaymentProvider } from "../lib/types";
+import { DesignTheme, PaymentProvider, SuccessTheme } from "../lib/types";
 import { API } from "../utils/api";
 import { setCookie, COOKIE } from "./cookie";
 import { getPackageInfo } from "./getPackageInfo";
@@ -36,14 +37,15 @@ type InitResult = {
     privacyPolicy?: string;
     termsOfService?: string;
     cookiePolicy?: string;
-  }
+  };
+  integrations?: FormConfig['integrations'];
 };
 
 export const ErrorHandler = {
   response: null as Record<string, any> | null,
 }
 
-async function getPaymentData() {
+export async function getPaymentData() {
   try {
     const paymentRes = await API.get("/payment/init");
     const paymentInitData = paymentRes?.result || {};
@@ -91,11 +93,29 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
 
-    config.design = (settings?.design ? settings.design : (settings as any)) || {};
-    config.success = {
-      ...(settings?.success || {}),
-      theme: settings?.success?.theme || 'app2web'
-    };
+    config.integrations = initData?.integrations || {} as InitResult['integrations'];
+
+    config.design = mergeDeep(
+      {
+        ...((settings?.design ? settings.design : (settings as any)) || {}),
+        theme: settings?.design?.theme || DesignTheme.VERTICAL
+      },
+      {
+        ...(params.style?.design || {}),
+        footer: {
+          ...(params.style?.design?.footer || {}),
+          showMerchantDisclaimer: !!settings?.design?.footer?.showMerchantDisclaimer
+        }
+      }
+    ) as FormDesign;
+
+    config.success = mergeDeep(
+      {
+        ...(settings?.success || {}),
+        theme: settings?.success?.theme || SuccessTheme.APP2WEB
+      },
+      params.style?.success || {}
+    ) as FormSuccess;
 
     config.general = {
       localization: initData?.localization || config.general.localization,
@@ -151,7 +171,7 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
 }
 
 export async function getProvidersConfigData(paymentInitData:FormPaymentData, returnUrl: string) {
-  const { providers = {} } = paymentInitData || {};
+  const { providers = {} as Record<PaymentProvider, boolean> } = paymentInitData || {};
   const providersHasConfig = [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY];
   const providerKeys = providersHasConfig.filter(key => !!providers[key]);
   if (!providerKeys?.length) return {};

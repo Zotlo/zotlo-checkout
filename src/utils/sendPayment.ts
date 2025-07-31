@@ -5,15 +5,21 @@ import { getGooglePayClient } from "./loadProviderSdks";
 import { API } from "./api";
 import { deleteUuidCookie } from "./cookie";
 
-function preparePayload(providerKey: PaymentProvider, formData: Record<string, any>, params: IZotloCheckoutParams) {
+function preparePayload(payload: {
+  providerKey: PaymentProvider;
+  formData: Record<string, any>;
+  params: IZotloCheckoutParams;
+  config: FormConfig
+}) {
+  const { providerKey, formData, params, config } = payload;
   const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV } = formData || {};
   const { returnUrl } = params || {};
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
-  let payload = {};
+  let data = {};
 
   switch (providerKey) {
     case PaymentProvider.CREDIT_CARD:
-      payload = {
+      data = {
         providerKey,
         acceptPolicy,
         creditCardDetails: {
@@ -27,23 +33,32 @@ function preparePayload(providerKey: PaymentProvider, formData: Record<string, a
       break;
     case PaymentProvider.PAYPAL:
     case PaymentProvider.APPLE_PAY:
-    case PaymentProvider.GOOGLE_PAY:
-      payload = {
+    case PaymentProvider.GOOGLE_PAY: {
+      data = {
         providerKey,
         acceptPolicy,
       }
+
+      if (
+        !!config?.paymentData?.sandboxPayment &&
+        [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY].includes(providerKey)
+      ) {
+        (data as any).transactionId = (config?.providerConfigs as any)?.[providerKey]?.transactionId || "";
+        (data as any)[`${providerKey}Token`] = 'aaaaaa';
+      }
+    }
       break;
     default:
       break;
   }
   
   return {
-    ...payload,
+    ...data,
     ...(returnUrl && { returnUrl }),
   }
 }
 
-async function registerPaymentUser(subscriberId: string, config: FormConfig, params: IZotloCheckoutParams) {
+export async function registerPaymentUser(subscriberId: string, config: FormConfig, params: IZotloCheckoutParams) {
   try {
     const registerType = config?.settings?.registerType;
     const existingSubscriberId = config?.general?.subscriberId;
@@ -60,8 +75,9 @@ async function registerPaymentUser(subscriberId: string, config: FormConfig, par
     const response = await API.post("/payment/register", { subscriberId });
     if (response?.meta?.errorCode) params.events?.onFail?.({ message: response?.meta?.message, data: response?.meta });
     return response;
-  } catch {
-    params.events?.onFail?.({ message: "Failed to register user", data: {} });
+  } catch (err:any) {
+    params.events?.onFail?.({ message: err?.meta?.message || "Failed to register user", data: err?.meta });
+    return err;
   }
 }
 
@@ -77,7 +93,7 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
     }
 
     deleteUuidCookie();
-    params.events?.onSuccess?.();
+    params.events?.onSuccess?.(result as PaymentDetail);
     return result as PaymentDetail;
   } catch {
     return null;
@@ -91,16 +107,18 @@ async function handleCheckoutResponse(payload: {
   params: IZotloCheckoutParams;
   containerId: string;
   config: FormConfig;
+  refreshProviderConfigsFunction: () => Promise<void>;
   actions?: {
     redirectAction?: () => void;
     completeAction?: () => void;
     errorAction?: () => void;
   };
 }) {
-  const { checkoutResponse, params, containerId, config, actions } = payload;
+  const { checkoutResponse, params, containerId, config, actions, refreshProviderConfigsFunction } = payload;
   const { meta, result } = checkoutResponse || {};
   if (meta?.errorCode) {
     if (actions?.errorAction) actions.errorAction();
+    await refreshProviderConfigsFunction();
     return params.events?.onFail?.({ message: meta?.message, data: meta });
   }
 
@@ -121,18 +139,18 @@ async function handleCheckoutResponse(payload: {
 async function handleApplePayPayment(payload: {
   formPayload: Record<string, any>;
   providerConfig: ProviderConfigs["applePay"];
-  subscriberId: string;
   params: IZotloCheckoutParams;
   containerId: string;
   config: FormConfig;
+  refreshProviderConfigsFunction: () => Promise<void>;
 }) {
   const {
     formPayload,
     providerConfig,
-    subscriberId,
     params,
     config,
     containerId,
+    refreshProviderConfigsFunction
   } = payload;
   try {
     const providerKey = PaymentProvider.APPLE_PAY;
@@ -168,6 +186,7 @@ async function handleApplePayPayment(payload: {
           params,
           config,
           containerId,
+          refreshProviderConfigsFunction,
           actions: {
             completeAction: () => {
               session.completePayment(ApplePaySession.STATUS_SUCCESS);
@@ -184,9 +203,6 @@ async function handleApplePayPayment(payload: {
       }
     };
 
-    // Register user
-    await registerPaymentUser(subscriberId, config, params);
-
     // Show apple pay modal
     session.begin();
   } catch (error: any) {
@@ -201,18 +217,18 @@ async function handleApplePayPayment(payload: {
 async function handleGooglePayPayment(payload: {
   formPayload: Record<string, any>;
   providerConfig: ProviderConfigs["googlePay"];
-  subscriberId: string;
   params: IZotloCheckoutParams;
   containerId: string;
   config: FormConfig;
+  refreshProviderConfigsFunction: () => Promise<void>;
 }) {
   const {
     formPayload,
     providerConfig,
-    subscriberId,
     params,
     config,
     containerId,
+    refreshProviderConfigsFunction
   } = payload;
   try {
     const paymentDataRequest = JSON.parse(JSON.stringify(providerConfig?.paymentDataRequest));
@@ -224,13 +240,13 @@ async function handleGooglePayPayment(payload: {
       transactionId,
       googlePayToken,
     }
-    await registerPaymentUser(subscriberId, config, params);
     const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
     await handleCheckoutResponse({
       checkoutResponse,
       params,
       config,
       containerId,
+      refreshProviderConfigsFunction,
     });
   } catch (error: any) {
     // Prevent user closing form error
@@ -249,35 +265,33 @@ export async function sendPayment(paymentParams: {
   params: IZotloCheckoutParams;
   config: FormConfig;
   containerId: string;
+  refreshProviderConfigsFunction: () => Promise<void>;
 }) {
-  const { providerKey, formData, params, config, containerId } = paymentParams;
+  const { providerKey, formData, params, config, containerId, refreshProviderConfigsFunction } = paymentParams;
   try {
-    const { subscriberId = "" } = formData || {};
+    const isSandboxPayment = !!config?.paymentData?.sandboxPayment;
+    const payload = preparePayload({ providerKey, formData, params, config });
 
-    const payload = preparePayload(providerKey, formData, params);
-    if (providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({ 
+    if (!isSandboxPayment && providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({
       formPayload: payload, 
       providerConfig: config?.providerConfigs?.applePay, 
-      subscriberId, 
       params,
       config,
-      containerId 
+      containerId,
+      refreshProviderConfigsFunction
     });
-    if (providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment({ 
+    if (!isSandboxPayment && providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment({ 
       formPayload: payload, 
       providerConfig: config?.providerConfigs?.googlePay, 
-      subscriberId, 
       params,
       config,
-      containerId 
+      containerId,
+      refreshProviderConfigsFunction
     });
-
-    // Register user
-    await registerPaymentUser(subscriberId, config, params);
     
     // Send payment
     const checkoutResponse = await API.post("/payment/checkout", payload);
-    handleCheckoutResponse({ checkoutResponse, params, containerId, config });
+    handleCheckoutResponse({ checkoutResponse, params, containerId, config, refreshProviderConfigsFunction });
 
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });

@@ -2,6 +2,8 @@ import './css/style.css'
 import { ZotloCheckout } from './lib'
 
 (async () => {
+  const win = window as any;
+
   const checkout = await ZotloCheckout({
     token: '123ASDASsqasdas=',
     packageId: 'zotlo-123',
@@ -10,18 +12,17 @@ import { ZotloCheckout } from './lib'
     subscriberId: '',
     events: {
       onLoad(config) {
-        const defaultBG = config?.backgroundColor || window.getComputedStyle(document.body).backgroundColor;
-        if (defaultBG) {
-          document.body.style.backgroundColor = config?.backgroundColor || defaultBG;
-        }
+        // Set background color
+        document.body.style.backgroundColor = (
+          config.backgroundColor ||
+          win.getComputedStyle(document.body).backgroundColor
+        );
       },
-      onSubmit() {},
-      onSuccess() {},
       onFail(e) {
-        (window as any)?.VueApp?.addToaster('Error', e?.message)
-      },
+        win?.VueApp?.addToaster('Error', e?.message)
+      }
     }
   });
-  
-  checkout.mount('zotlo-checkout')
-})()
+
+  checkout.mount('zotlo-checkout');
+})();

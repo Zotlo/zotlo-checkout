@@ -1,8 +1,10 @@
 import Countries from '../countries.json';
 import { type FormConfig, PaymentProvider } from '../lib/types';
+import { getPackageTemplateParams } from './getPackageInfo';
+import { useI18n } from './i18n';
+import { template } from "./template";
 
 export { getCDNUrl } from './getCDNUrl';
-
 export { useI18n } from './i18n';
 
 type Country = typeof Countries[0];
@@ -41,70 +43,6 @@ export function getMaskByCode(country: any) {
     mask += country.mask;
   }
   return mask;
-}
-
-export function isJSON(val: string) {
-  try { JSON.parse(val); } catch { return false }
-  return true;
-} 
-
-function toPrimitive(val: string) {
-  if (val === 'true' || val === 'false') return !!+new Boolean(val);
-  if (val === 'undefined') return undefined;
-  if (val === 'null') return null;
-  if (!isNaN(Number(val))) return Number(val);
-  if (isJSON(val)) {
-    const obj = JSON.parse(val);
-    if (Array.isArray(obj)) return obj;
-  }
-  return val?.replace(/^('|")/g, '')?.replace(/('|")$/g, '');
-}
-
-export function template(templateString: string, data: Record<string, any>) {
-  let newString = templateString;
-  const parameters = [...new Set(templateString.match(/\{\{(\w+)\}\}/gm) || [])];
-  const conditionsRegex = /<% IF\((?<condition>(.*?))\) %>(?<content>(.*?))<% ENDIF %>/gms;  
-
-  let matched;
-  while ((matched = conditionsRegex.exec(templateString)) !== null) {
-    let cleanContent = '';
-    const [key, value] = matched?.groups?.condition.split('===').map(item => item.trim()) || [];
-    const dataValue = data[key];
-    const templateContent = matched[0];
-    const parsedValue = toPrimitive(value);
-    const hasKey = Object.prototype.hasOwnProperty.call(data, key);
-    const hasCondition = (
-      Array.isArray(parsedValue)
-        ? parsedValue.includes(dataValue)
-        : value === undefined
-          ? !!dataValue
-          : dataValue === parsedValue
-    );
-
-    // If the condition is true, we get the content
-    if (hasKey && hasCondition) {
-      cleanContent = matched?.groups?.content || '';
-    }
-
-    // Clear string
-    newString = newString.replace(templateContent, cleanContent);
-
-    // This is necessary to avoid infinite loops with zero-width matches
-    if (matched.index === conditionsRegex.lastIndex) {
-      conditionsRegex.lastIndex++;
-    }
-  }
-
-  // Apply parameters
-  for (const item of parameters) {
-    const key = item.replace(/\{|\}/gm, '');
-    newString = newString.replace(new RegExp(item, 'gm'), () => {
-      const value = data[key];
-      return value !== undefined ? value : item;
-    });
-  }
-
-  return newString
 }
 
 export function generateAttributes(attrs: Record<string, string | number | boolean>) {
@@ -157,4 +95,135 @@ export function setFormLoading(loading: boolean = true) {
     formElement.style.pointerEvents = '';
     formElement.style.userSelect = '';
   }
+}
+
+export function isPlainObject(item: unknown) {
+  return (!!item && typeof item === 'object' && !Array.isArray(item));
+}
+
+export function mergeDeep(target: Record<string, any>, ...sources: Record<string, any>[]) {
+  if (!sources.length) return { ...target };
+  const source = sources.shift();
+  const result = { ...target };
+
+  if (isPlainObject(result) && isPlainObject(source)) {
+    for (const key in source) {
+      if (isPlainObject(source[key])) {
+        result[key] = mergeDeep(result[key] || {}, source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+  }
+
+  return mergeDeep(result, ...sources);
+}
+
+export const debounce: any = (func: any, waitFor = 300) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return function (this: any, ...args: any[]) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), waitFor);
+  };
+}
+
+export function setFormDisabled(disabled = true) {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
+  const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox') as NodeListOf<HTMLElement>;
+  for (const wrapper of wrappers) {
+    if (disabled) {
+    wrapper.classList.add('disabled');
+    } else {
+    wrapper.classList.remove('disabled');
+    }
+  }
+  for (const input of inputs) {
+    if (disabled) {
+      input.setAttribute('disabled', 'true');
+    } else {
+      input.removeAttribute('disabled');
+    }
+  }
+}
+
+export function activateDisabledSubscriberIdInputs() {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
+  subscriberIdInputs?.forEach(input => {
+    input?.removeAttribute('disabled');
+    const wrapper = input?.closest('.zotlo-checkout__input');
+    if (wrapper) wrapper.classList.remove('disabled');
+  });
+}
+
+export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' = 'add', triggerFunction: () => void, ) {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
+  subscriberIdInputs?.forEach(input => {
+    if (action === 'add') {
+      input.addEventListener('input', triggerFunction);
+    } else {
+      input.removeEventListener('input', triggerFunction);
+    }
+  });
+}
+
+export function getFooterPriceInfo(config: FormConfig) {
+  const { $t } = useI18n(config?.general?.localization);
+  const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
+  return template($t(`footer.priceInfo.${packageCondition}`), {
+    ...getPackageTemplateParams(config)
+  });
+}
+
+export function getSubmitButtonContent(config: FormConfig) {
+  const { $t } = useI18n(config?.general?.localization);
+  const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
+  const buttonKey = config?.design.button.text?.[packageState];
+  const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
+    ? buttonKey
+    : $t(`form.button.text.${packageState}.${buttonKey}`);
+  const buttonContent = template(buttonText, {
+    ...getPackageTemplateParams(config)
+  });
+  return buttonContent;
+}
+
+export async function handlePriceChangesBySubscriptionStatus(config: FormConfig) {
+  const { $t } = useI18n(config?.general?.localization);
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  if (!formElement) return;
+
+  function updateElementsValue<T extends HTMLElement>(
+    selector: string,
+    value: string | undefined
+  ) {
+    formElement.querySelectorAll(selector).forEach((el) => {
+      (el as T).innerHTML = value || "";
+    });
+  }
+
+  updateElementsValue<HTMLElement>('[data-total-price]', config?.packageInfo?.totalPayableAmount);
+  updateElementsValue<HTMLButtonElement>('[data-card-submit-button]', getSubmitButtonContent(config));
+  updateElementsValue<HTMLElement>('[data-original-price]', config?.packageInfo?.discount?.original as string);
+  updateElementsValue<HTMLElement>('[data-discount-price]', config?.packageInfo?.discount?.price as string);
+  const footerFullDescription = `${getFooterPriceInfo(config)} ${$t('footer.desc')}`;
+  updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
+}
+
+export function syncSubscriberIdInputs(tabName: string | null) {
+  setTimeout(() => {
+    const cardInput = document?.querySelector('[data-tab-content="creditCard"] input[name="subscriberId"]') as HTMLInputElement;
+    const providersInput = document?.querySelector('[data-tab-content="subscriberId"] input[name="subscriberId"]') as HTMLInputElement;
+    const isCreditCardTab = tabName === PaymentProvider.CREDIT_CARD;
+    // Sync subscriberId inputs based on the active tab and trigger blur event to update validation
+    if (isCreditCardTab && cardInput) {
+      cardInput.value = providersInput?.value;
+      if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
+    } else if (providersInput) {
+      providersInput.value = cardInput?.value;
+      if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
+    }
+  }, 0);
 }

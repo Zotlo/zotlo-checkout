@@ -1,6 +1,7 @@
 import mainHTML from './html/main.html?raw'
-import { type FormSetting, PaymentProvider, type FormConfig } from '../../types'
-import { template, useI18n, getCDNUrl, generateAttributes } from '../../../utils'
+import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme } from '../../types'
+import { useI18n, getCDNUrl, generateAttributes } from '../../../utils'
+import { template } from "../../../utils/template";
 import { createButton, createCreditCardForm, createProviderButton } from '../../create'
 
 export function generateThemeDefault(params: {
@@ -18,7 +19,7 @@ export function generateThemeDefault(params: {
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
   const { $t } = useI18n(config.general.localization);
-  const isTabTheme = config.design.theme === 'horizontal' && paymentMethods.length > 1;
+  const isTabTheme = config.design.theme === DesignTheme.HORIZONTAL && paymentMethods.length > 1;
   let providerButtons = paymentMethods.map((method, index) => {
     if (method.providerKey !== PaymentProvider.CREDIT_CARD) {
       return createProviderButton({
@@ -99,7 +100,9 @@ export function generateThemeDefault(params: {
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
-    THEME: config.design.theme === 'horizontal' && paymentMethods.length > 1 ? 'horizontal' : 'vertical',
+    THEME: config.design.theme === DesignTheme.HORIZONTAL && paymentMethods.length > 1
+      ? DesignTheme.HORIZONTAL
+      : DesignTheme.VERTICAL,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
     PRICE_INFO: footerInfo.PRICE_INFO,

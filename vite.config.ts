@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import dts from "vite-plugin-dts";
+import { minifyPublicJsPlugin } from './plugins/minifyPublicJs';
 
 export default defineConfig({
   build: {
@@ -21,9 +22,10 @@ export default defineConfig({
         }
       },
       formats: ['es', 'umd', 'iife']
-    }
+    },
   },
   plugins: [
-    dts()
+    dts(),
+    minifyPublicJsPlugin()
   ]
 });

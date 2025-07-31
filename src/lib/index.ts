@@ -1,4 +1,4 @@
-import { PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
+import { DesignTheme, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
 import { generateEmptyPage, generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, type ValidationResult, updateValidationMessages, validatorInstance } from "../utils/validation";
@@ -7,12 +7,26 @@ import { getCardMask } from "../utils/getCardMask";
 import { getCDNUrl } from "../utils/getCDNUrl";
 import { createStyle } from "../utils/createStyle";
 import { loadFontsOnPage } from "../utils/fonts";
-import { getCountryByCode, getMaskByCode, preparePaymentMethods, setFormLoading } from "../utils";
-import { getConfig, ErrorHandler } from "../utils/getConfig";
-import { sendPayment } from "../utils/sendPayment";
+import {
+  getCountryByCode,
+  getMaskByCode,
+  preparePaymentMethods,
+  setFormLoading,
+  setFormDisabled,
+  debounce,
+  handleSubscriberIdInputEventListeners,
+  activateDisabledSubscriberIdInputs,
+  useI18n,
+  handlePriceChangesBySubscriptionStatus,
+  syncSubscriberIdInputs
+} from "../utils";
+import { getConfig, getPaymentData, ErrorHandler } from "../utils/getConfig";
+import { getPackageInfo } from "../utils/getPackageInfo";
+import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
+import { ErrorCode } from "./errors";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
@@ -23,9 +37,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       packageId: params.packageId,
       language: params.language,
       subscriberId: params.subscriberId,
-      returnUrl: params.returnUrl 
+      returnUrl: params.returnUrl,
+      style: params.style
     });
-    config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
+    await refreshProviderConfigs();
   }
 
   let containerId = '';
@@ -34,9 +49,19 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
   let destroyAgreementLinks = null as (() => void) | null;
 
+  async function refreshProviderConfigs() {
+    config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
+  }
+
+  async function refreshPaymentInitData() {
+    const paymentInitData = await getPaymentData();
+    config.paymentData = paymentInitData;
+    config.packageInfo = getPackageInfo(config);
+  }
+
   function getFormValues(form: HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
-    const activeForm = config.design.theme === 'horizontal'
+    const activeForm = config.design.theme === DesignTheme.HORIZONTAL
       ? form.querySelector('[data-tab-active="true"]')?.querySelectorAll('input, select') as NodeListOf<HTMLInputElement>
       : form.elements;
 
@@ -128,6 +153,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
           params,
           config,
           containerId,
+          refreshProviderConfigsFunction: refreshProviderConfigs
         });
       } finally {
         setFormLoading(false);
@@ -201,9 +227,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const paymentMethods = preparePaymentMethods(config);
 
     if (
-      config.design.theme === 'vertical' ||
-      paymentMethods.length < 2 && config.design.theme === 'horizontal' ||
-      paymentMethods.length <= 2 && config.design.theme === 'mobileapp'
+      config.design.theme === DesignTheme.VERTICAL ||
+      paymentMethods.length < 2 && config.design.theme === DesignTheme.HORIZONTAL ||
+      paymentMethods.length <= 2 && config.design.theme === DesignTheme.MOBILEAPP
     ) {
       initFormInputs();
       return;
@@ -237,7 +263,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         } else {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
         }
-
+        syncSubscriberIdInputs(tabName);
         initFormInputs();
       }
     }
@@ -389,8 +415,32 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
+  const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
+    if (!import.meta.env.VITE_SDK_API_URL) return;
+    const subscriberInput = event?.target as HTMLInputElement;
+    const subscriberId = subscriberInput?.value || '';
+    const validationRules = subscriberInput?.dataset?.rules || '';
+    const isValidSubscriberId = validatorInstance?.validate(subscriberId, validationRules)?.isValid;
+    if (!isValidSubscriberId) return;
+    try {
+      setFormDisabled();
+      const response = await registerPaymentUser(subscriberId, config, params);
+      if (response?.meta?.errorCode === ErrorCode.USER_ALREADY_SUBSCRIBED_ERROR) {
+        activateDisabledSubscriberIdInputs();
+        subscriberInput.focus();
+        return;
+      }
+      await Promise.all([refreshPaymentInitData(), refreshProviderConfigs()]);
+      handlePriceChangesBySubscriptionStatus(config);
+      setFormDisabled(false);
+      subscriberInput.focus();
+    } catch {
+      setFormDisabled(false);
+    }
+  }, 200)
+
   function initFormInputs() {
-    const wrapper = config.design.theme !== 'mobileapp' ? '[data-tab-active="true"] ' : '';
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');
@@ -488,6 +538,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
               } else {
                 inputValidation(item, result);
               }
+
+              if (!result.isValid) {
+                params.events?.onInvalidForm?.({
+                  name: item.name,
+                  result
+                });
+              }
             }
           });
         }
@@ -503,11 +560,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     formElement?.addEventListener('submit', handleForm);
+    handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
     formElement?.removeEventListener('submit', handleForm);
+    handleSubscriberIdInputEventListeners('remove', onSubscriberIdEntered);
 
     for (const [key, mask] of Object.entries(maskItems)) {
       mask.destroy();
@@ -530,8 +589,20 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function init() {
     handleTabView();
+    const { $t } = useI18n(config.general.localization);
+
     params.events?.onLoad?.({
+      sandbox: !!config?.paymentData?.sandboxPayment,
+      countryCode: config.general.countryCode || '',
+      integrations: config.integrations,
       backgroundColor: config.design.backgroundColor,
+      cookieText: $t('cookiePopup.text', {
+        cookiePolicy: `<a
+          href="${config.general.zotloUrls?.cookiePolicy || '#'}"
+          target="_blank"
+          class="!text-white underline"
+        >${$t('cookiePopup.word.cookiePolicy')}</a>`,
+      })
     });
     handleUrlQuery({
       params,

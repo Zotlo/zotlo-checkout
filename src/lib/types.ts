@@ -1,95 +1,4 @@
-export interface IZotloCheckoutParams {
-  token: string;
-  packageId: string;
-  language?: string;
-  subscriberId?: string;
-  returnUrl?: string;
-  events?: {
-    onLoad?: (params: Record<string, any>) => void;
-    onUpdate?: () => void;
-    onSubmit?: (e?: Record<string, any>) => void;
-    onSuccess?: () => void;
-    onFail?: (e?: FailEventData) => void;
-  }
-}
-
-export interface IZotloCheckoutReturn {
-  mount: (containerId: string) => void;
-  refresh: () => void;
-  unmount: () => void;
-}
-
-interface FailEventData {
-  message?: string;
-  data: Record<string, any>;
-}
-
-type TextStyle = {
-  bold: boolean;
-  italic: boolean;
-  underline: boolean;
-}
-
-export type ProductConfigMobileApp = {
-  showProductTitle: boolean;
-  showSubtotalText: boolean;
-  discountRate: number;
-  productImage: {
-    show: boolean;
-    url: string;
-  };
-  additionalText: {
-    show: boolean;
-    text: Record<string, string>;
-  };
-}
-
-export type FormDesign = {
-  theme: 'horizontal' | 'vertical' | 'mobileapp';
-  darkMode: boolean;
-  fontFamily: string;
-  borderColor: string;
-  backgroundColor: string;
-  borderRadius: string;
-  borderWidth: string;
-  header: { show: boolean; };
-  product: ProductConfigMobileApp;
-  label: {
-    show: boolean;
-    color: string;
-    fontSize: string
-    textStyle: TextStyle;
-  },
-  consent: {
-    color: string;
-    fontSize: string;
-    textStyle: TextStyle;
-  },
-  totalPriceColor: string;
-  button: {
-    color: string;
-    borderColor: string;
-    backgroundColor: string;
-    borderRadius: string;
-    borderWidth: string;
-    textStyle: TextStyle;
-    hover: {
-      color: string;
-      borderColor: string;
-      backgroundColor: string;
-    },
-    text: {
-      trialActivationState: number | string;
-      subscriptionActivationState: number | string;
-      onetimePayment: number | string;
-    }
-  },
-  footer: {
-    showMerchantDisclaimer: boolean;
-    color: string;
-    fontSize: string;
-  }
-};
+import { type ValidationResult } from "../utils/validation";
 
 export enum PaymentProvider {
   PAYPAL = 'paypal',
@@ -108,17 +17,6 @@ export enum PaymentCallbackStatus {
   FAIL = 'fail'
 }
 
-export type FormSetting = {
-  sendMailOnSuccess?: boolean;
-  paymentMethodSetting: {
-    providerKey: PaymentProvider;
-    countries?: string[];
-  }[];
-  registerType: 'email' | 'phoneNumber' | 'other';
-  hideSubscriberIdIfAlreadySet: boolean;
-  allowSubscriberIdEditing: boolean;
-};
-
 export enum PackageType {
   SUBSCRIPTION = 'subscription',
   CONSUMABLE = 'consumable',
@@ -130,6 +28,209 @@ export enum TrialPackageType {
   STARTING_PRICE = 'startingPrice',
   NO = 'no'
 }
+
+export enum SuccessTheme {
+  APP2WEB = 'app2web',
+  WEB2APP = 'web2app'
+}
+
+export enum DesignTheme {
+  HORIZONTAL = 'horizontal',
+  VERTICAL = 'vertical',
+  MOBILEAPP = 'mobileapp'
+}
+
+type DeepPartial<T> = T extends object ? {
+    [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
+export interface IZotloCheckoutStyle {
+  design?: DeepPartial<Omit<FormDesign, 'footer' | 'product'> & {
+    /** This available for theme mobileapp */
+    product: Omit<ProductConfigMobileApp, 'discountRate'>;
+    footer: Omit<FormDesign['footer'], 'showMerchantDisclaimer'>;
+  }>;
+  success?: DeepPartial<FormSuccess>;
+}
+
+export interface IZotloCheckoutEvents {
+  /** Triggers after form loaded. */
+  onLoad?: (params: {
+    sandbox: boolean;
+    countryCode: string;
+    integrations: FormConfig['integrations'];
+    backgroundColor: string;
+    cookieText: string;
+  }) => void;
+
+  /** Triggered after the form is submitted. */
+  onSubmit?: (data?: Record<string, any>) => void;
+
+  /** Triggered after a successful payment. */
+  onSuccess?: (result: PaymentDetail) => void;
+
+  /** Triggered when a payment fails. */
+  onFail?: (error: FailEventData) => void;
+
+  /** Triggers when form has an invalid field. */
+  onInvalidForm?: (error: {
+    name: string;
+    result: ValidationResult;
+  }) => void;
+}
+
+export interface IZotloCheckoutParams {
+  /** The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. */
+  token: string;
+
+  /** The ID of the package you want to use. */
+  packageId: string;
+
+  /** The URL to redirect the user after payment completion.  */
+  returnUrl: string;
+
+  /** (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4. */
+  subscriberId?: string;
+
+  /** (Optional) The language code for the checkout form, e.g., `en`, `fr`, `pt_br`. */
+  language?: string;
+
+  /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
+  style?: IZotloCheckoutStyle;
+
+  /** Event listeners that can be used during the checkout process. */
+  events?: IZotloCheckoutEvents;
+}
+
+export interface IZotloCheckoutReturn {
+  /** Renders the Checkout form to the specified DOM element. */
+  mount: (containerId: string) => void;
+
+  /** Refreshes the form. */
+  refresh: () => void;
+
+  /** Removes the form and deletes it from the DOM. */
+  unmount: () => void;
+}
+
+interface FailEventData {
+  message?: string;
+  data: Record<string, any>;
+}
+
+type TextStyle = {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+}
+
+export type ProductConfigMobileApp = {
+  showProductTitle: boolean;
+  /** If `showProductTitle` sets `false`, this will be ignored */
+  showSubtotalText: boolean;
+  discountRate: number;
+  productImage: {
+    show: boolean;
+    url: string;
+  };
+  additionalText: {
+    show: boolean;
+    /** Language ISO code and its translation. (eg. `{ en: "Bonus +5%", pt_bz: "Bônus de 5%" }`) */
+    text: Record<string, string>;
+  };
+}
+
+export type FormDesign = {
+  /** Default: `vertical` */
+  theme: 'horizontal' | 'vertical' | 'mobileapp';
+  darkMode: boolean;
+  /** You can set any Google fonts (eg. "Montserrat", sans-serif)  */
+  fontFamily: string;
+  borderColor: string;
+  backgroundColor: string;
+  borderRadius: number | string;
+  borderWidth: number | string;
+  /** Available for theme mobileapp */
+  header: {
+    show: boolean;
+    close: {
+      show: boolean;
+      url: string;
+    }
+  };
+  product: ProductConfigMobileApp;
+  label: {
+    show: boolean;
+    color: string;
+    fontSize: number | string;
+    textStyle: TextStyle;
+  };
+  consent: {
+    color: string;
+    fontSize: number | string;
+    textStyle: TextStyle;
+  };
+  totalPriceColor: string;
+  button: {
+    color: string;
+    borderColor: string;
+    backgroundColor: string;
+    borderRadius: number | string;
+    borderWidth: number | string;
+    textStyle: TextStyle;
+    hover: {
+      color: string;
+      borderColor: string;
+      backgroundColor: string;
+    };
+    text: {
+      /**
+       * ```
+       * 0: "Start Trial"
+       * 1: "Start {{TRIAL_PERIOD}} Trial"
+       * ```
+      */
+      trialActivationState: 0 | 1 | string;
+      /**
+       * ```
+       * 0: "Start Now"
+       * 1: "Subscribe Now"
+       * 2: "Get Started"
+       * 3: "Activate Now"
+       * 4: "Subscribe for {{PRICE}}"
+       * 5: "Get Started for {{PRICE}}"
+       * 6: "Subscribe Now for {{DAILY_PRICE}} per day"
+       * 7: "Start Now for {{DAILY_PRICE}} per day"
+       * ```
+       */
+      subscriptionActivationState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | string;
+      /**
+       * ```
+       * 0: "Buy Now"
+       * 1: "Pay Now"
+       * 2: "Complete Payment"
+       * ```
+       */
+      onetimePayment: 0 | 1 | 2 | string;
+    };
+  };
+  footer: {
+    showMerchantDisclaimer: boolean;
+    color: string;
+    fontSize: number | string;
+  };
+};
+
+export type FormSetting = {
+  sendMailOnSuccess?: boolean;
+  paymentMethodSetting: {
+    providerKey: PaymentProvider;
+    countries?: string[];
+  }[];
+  registerType: 'email' | 'phoneNumber' | 'other';
+  hideSubscriberIdIfAlreadySet: boolean;
+  allowSubscriberIdEditing: boolean;
+};
 
 export type PackageData = {
   period: number;
@@ -151,13 +252,21 @@ export type SelectedPriceData = {
   weeklyPrice: string;
 };
 
+export type SubscriberStatusesData = {
+  subscriptionStatus: boolean;
+  isTrialUseBefore: boolean;
+  packageType: PackageType;
+  hasPurchasedAnyPackageBefore: boolean;
+};
+
 export type FormPaymentData = {
   package: PackageData;
-  providers: Record<string, any>;
+  providers: Record<PaymentProvider, boolean>;
   sandboxPayment: boolean;
   selectedPrice: SelectedPriceData;
   subscriberCountry: string;
-  discount: {
+  subscriberStatuses: SubscriberStatusesData;
+  discount?: {
     discountPrice: number | string;
     originalPrice: number | string;
     totalPrice: number | string;
@@ -221,14 +330,22 @@ export type FormGeneral = {
 
 export type FormSuccess = {
   show: boolean;
+  /** In seconds. Min: 5, Max: 50, Default: 10  */
   waitTime: number;
-  redirectUrl: string;
   autoRedirect: boolean;
   theme: 'app2web' | 'web2app';
+  /** This is available if theme is web2app */
   genericButton: {
     show: boolean;
-    text: number | string;
+    /**
+     * ```
+     * 0: "Go to App"
+     * 1: "Go to Web"
+     * ```
+    */
+    text: 0 | 1 | string;
   };
+  /** If there is no url for store button (ex. google), this button cannot visible */
   storeButtons: {
     google: boolean;
     apple: boolean;
@@ -238,18 +355,24 @@ export type FormSuccess = {
   };
   color: string;
   button: {
+    /**
+     * ```
+     * 0: "Back to App"
+     * 1: "Back to Game"
+     * ```
+    */
+    text: 0 | 1 | string;
     color: string;
     borderColor: string;
     backgroundColor: string;
-    borderRadius: string;
-    borderWidth: string;
+    borderRadius: number | string;
+    borderWidth: number | string;
     textStyle: TextStyle;
     hover: {
       color: string;
       borderColor: string;
       backgroundColor: string;
-    },
-    text: number | string;
+    };
   }
 }
 
@@ -305,6 +428,28 @@ export type FormConfig = {
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
   providerConfigs?: ProviderConfigs;
+  integrations?: {
+    gtmData: {
+      isActive: 0 | 1;
+      gtmCode: string;
+      gtmDomain: string;
+    };
+    facebookData: {
+      isActive: 0 | 1;
+      pixelId: string;
+      integrationType: 'both' | 'pixel' | 'capi';
+    };
+    gaData: {
+      isActive: 0 | 1;
+      gaCode: string;
+    };
+    googleAdsData: {
+      isActive: 0 | 1;
+      gTag: string;
+      conversionId: string;
+      conversionLabel: string;
+    };
+  };
 }
 
 export type PaymentDetail = {
