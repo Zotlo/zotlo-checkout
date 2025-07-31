@@ -1,6 +1,40 @@
 # Changelog
 
 
+## v1.2.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.1.0...v1.2.0)
+
+### 🚀 Enhancements
+
+- Skip google/apple payment actions if sandbox mode is active ([1dac44b](https://github.com/Zotlo/zotlo-checkout/commit/1dac44b))
+- Add mock payment parameters for Apple and Google payments if sandbox mode is active ([83bf8e5](https://github.com/Zotlo/zotlo-checkout/commit/83bf8e5))
+- Add custom style config ([a746635](https://github.com/Zotlo/zotlo-checkout/commit/a746635))
+- Refresh provider configs after any checkout error ([824ee4c](https://github.com/Zotlo/zotlo-checkout/commit/824ee4c))
+- Add disabled form functionality ([8635c8b](https://github.com/Zotlo/zotlo-checkout/commit/8635c8b))
+- Add subscriberId input actions for registration before payment ([1780aa5](https://github.com/Zotlo/zotlo-checkout/commit/1780aa5))
+- Add analytic integrations ([544524c](https://github.com/Zotlo/zotlo-checkout/commit/544524c))
+- Add dynamic price values by subscription status ([ed9ec75](https://github.com/Zotlo/zotlo-checkout/commit/ed9ec75))
+- Add custom title for page_view ([7d21d48](https://github.com/Zotlo/zotlo-checkout/commit/7d21d48))
+- Add close on header ([365f9df](https://github.com/Zotlo/zotlo-checkout/commit/365f9df))
+- Hide text-decoration on header close button ([8739bea](https://github.com/Zotlo/zotlo-checkout/commit/8739bea))
+
+### 🩹 Fixes
+
+- Set store buttons by web2app ([22a7e82](https://github.com/Zotlo/zotlo-checkout/commit/22a7e82))
+- Fix the issue that cannot view button text styles on payment success ([45fd0d1](https://github.com/Zotlo/zotlo-checkout/commit/45fd0d1))
+- Add fail callback in main.ts ([afd9e91](https://github.com/Zotlo/zotlo-checkout/commit/afd9e91))
+- Add type assertion for providers in loadProviderSDKs function ([e7ab719](https://github.com/Zotlo/zotlo-checkout/commit/e7ab719))
+
+### 🏡 Chore
+
+- Reactor mergeDeep utils for unexpected mutations ([f121e06](https://github.com/Zotlo/zotlo-checkout/commit/f121e06))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.1.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.0.1...v1.1.0)
@@ -37,7 +71,7 @@
 
 ### ❤️ Contributors
 
-- Yiğit Şahin
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
 - Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
 
 ## v1.0.0
