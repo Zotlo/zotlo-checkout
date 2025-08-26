@@ -1,4 +1,4 @@
-import { type FormPaymentData, PaymentProvider, type FormConfig, type ProviderConfigs } from "../lib/types";
+import { type FormPaymentData, PaymentProvider, type FormConfig, type ProviderConfigs, DesignTheme } from "../lib/types";
 import { getProvidersConfig } from "../utils/getConfig";
 
 export type GooglePayButtonOptions = {
@@ -77,7 +77,12 @@ export function renderGooglePayButton(config: FormConfig) {
   });
   const innerButton = googlePayButton?.querySelector('button');
   innerButton?.setAttribute('data-provider', PaymentProvider.GOOGLE_PAY);
-  innerButton?.removeAttribute('type');
+  if (config.design.theme === DesignTheme.HORIZONTAL) {
+    innerButton?.setAttribute('type', 'submit');
+  } else {
+    innerButton?.setAttribute('type', 'button');
+  }
+
   if (!hasExistingButton) wrapper?.appendChild(googlePayButton);
 }
 

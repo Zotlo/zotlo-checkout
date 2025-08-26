@@ -171,8 +171,10 @@ export function validateInput(input: HTMLInputElement, options?: {
 
   function validate(bypass?: boolean): ValidationResult {
     const value = input.type === 'checkbox' ? input.checked : input.value;
-    if (!validatorInstance || bypass) return { isValid: !!bypass, errors: [] };
-    const result = validatorInstance.validate(value, ruleString);
+    if (!validatorInstance) return { isValid: !!bypass, errors: [] };
+    const result = bypass
+      ? { isValid: true, errors: [] }
+      : validatorInstance.validate(value, ruleString);
     options?.onValidate?.(result);
     return result;
   }
