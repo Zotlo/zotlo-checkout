@@ -17,6 +17,11 @@ import { ZotloCheckout } from './lib'
           config.backgroundColor ||
           win.getComputedStyle(document.body).backgroundColor
         );
+
+        if (config.sandbox) {
+          const strip = document.getElementById('sandbox-strip');
+          if (strip) strip.style.display = 'flex';
+        }
       },
       onFail(e) {
         win?.VueApp?.addToaster('Error', e?.message)
