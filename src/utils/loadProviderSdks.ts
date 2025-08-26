@@ -77,7 +77,7 @@ export function renderGooglePayButton(config: FormConfig) {
   });
   const innerButton = googlePayButton?.querySelector('button');
   innerButton?.setAttribute('data-provider', PaymentProvider.GOOGLE_PAY);
-  innerButton?.removeAttribute('type');
+  innerButton?.setAttribute('type', 'button');
   if (!hasExistingButton) wrapper?.appendChild(googlePayButton);
 }
 
