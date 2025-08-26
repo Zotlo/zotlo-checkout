@@ -294,7 +294,8 @@ export type PackageInfoType = {
     price: number | string;
     original: number | string
     total: number | string;
-  }
+  };
+  isProviderRefreshNecessary: boolean;
 }
 
 export type FormGeneral = {

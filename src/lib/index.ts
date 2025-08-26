@@ -416,7 +416,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
-    if (!import.meta.env.VITE_SDK_API_URL) return;
+    if (!import.meta.env.VITE_SDK_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
     const subscriberInput = event?.target as HTMLInputElement;
     const subscriberId = subscriberInput?.value || '';
     const validationRules = subscriberInput?.dataset?.rules || '';
@@ -437,7 +437,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     } catch {
       setFormDisabled(false);
     }
-  }, 200)
+  }, 500)
 
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';

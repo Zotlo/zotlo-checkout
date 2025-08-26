@@ -12,6 +12,7 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
   const condition = getPackageCondition(config, { isTrialUsed });
   const state = getPackageState(config, { isTrialUsed });
   const discount = getDiscountPrices(config, totalPayableAmount);
+  const isProviderRefreshNecessary = getIsProviderRefreshNecessary(config, { isTrialUsed });
 
   return {
     ...periodsInfo,
@@ -19,7 +20,8 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
     totalPayableAmount,
     condition,
     state,
-    discount
+    discount,
+    isProviderRefreshNecessary
   };
 }
 
@@ -175,6 +177,12 @@ function getPackageState(config?: FormConfig, options?: { isTrialUsed?: boolean 
   }
 
   return states[condition] || states.plan_with_no_trial;
+}
+
+export function getIsProviderRefreshNecessary(config?: FormConfig, options?: { isTrialUsed?: boolean }): boolean {
+  const { isTrialUsed = false } = options || {};
+  const condition = getPackageCondition(config, { isTrialUsed });
+  return !['onetime_payment', 'plan_with_no_trial'].includes(condition);
 }
 
 export function getPackageTemplateParams(config: FormConfig) {
