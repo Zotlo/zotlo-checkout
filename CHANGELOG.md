@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.3.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.2.0...v1.3.0)
+
+### 🚀 Enhancements
+
+- Add sandbox strip to html files ([ae975cd](https://github.com/Zotlo/zotlo-checkout/commit/ae975cd))
+- Seperate form submit by provider ([c82db4b](https://github.com/Zotlo/zotlo-checkout/commit/c82db4b))
+
+### 🩹 Fixes
+
+- Prevent button submit action for google pay button ([d7204b9](https://github.com/Zotlo/zotlo-checkout/commit/d7204b9))
+- Refactor sandbox strip html ([aba70bf](https://github.com/Zotlo/zotlo-checkout/commit/aba70bf))
+- Update onClickSubmitButton event type to fix build issue ([7e69e37](https://github.com/Zotlo/zotlo-checkout/commit/7e69e37))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
 
 ## v1.2.0
 
