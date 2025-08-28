@@ -134,15 +134,19 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     return document.getElementById(containerId);
   }
 
-  async function handleForm(e: SubmitEvent) {
-    e.preventDefault();
-    const providerKey = (e.submitter as HTMLButtonElement).getAttribute('data-provider') as PaymentProvider || PaymentProvider.CREDIT_CARD;
+  async function handleFormSubmit(providerKey: PaymentProvider = PaymentProvider.CREDIT_CARD) {
+    // Reset form validations
+    for (const validation of Object.values(validations)) {
+      validation.validate(true);
+    }
+
     const validation = validateForm(providerKey);
-
+    
     if (!validation.isValid) return;
-
+    
     if (import.meta.env.VITE_SDK_API_URL) {
-      const result = getFormValues(e.target as HTMLFormElement);
+      const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+      const result = getFormValues(formElement);
       params.events?.onSubmit?.(result);
 
       try {
@@ -159,6 +163,69 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         setFormLoading(false);
       }
     }
+  }
+
+  function detectAndValidateForm() {
+    const el = document.activeElement as HTMLInputElement;
+    const container = getContainerElement();
+
+    // Detect which form if active element is an input
+    if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
+      if (!container?.contains(el)) return PaymentProvider.CREDIT_CARD;
+
+      // Reset form validations
+      for (const validation of Object.values(validations)) {
+        validation.validate(true);
+      }
+
+      // Reset button types
+      container?.querySelectorAll('button[data-provider]').forEach(btn => {
+        btn.setAttribute('type', 'button');
+      });
+
+      if (el.nodeName === 'BUTTON') {
+        const providerKey = el.dataset.provider as PaymentProvider;
+        validateForm(providerKey);
+        container?.querySelector('button[data-provider="' + providerKey + '"]')?.setAttribute('type', 'submit');
+        return providerKey;
+      }
+
+      const name = el.name;
+
+      // Credit card validation
+      if (name.startsWith('card')) {
+        validateForm(PaymentProvider.CREDIT_CARD);
+        container?.querySelector('button[data-provider="creditCard"]')?.setAttribute('type', 'submit');
+        return PaymentProvider.CREDIT_CARD;
+      }
+      
+      const wrapper = el.closest('[data-form-type]');
+      if (wrapper?.getAttribute('data-form-type') === 'subscriberId') {
+        const button = wrapper.nextElementSibling?.querySelector('button[data-provider]') as HTMLButtonElement;
+
+        if (button) {
+          const providerKey = button.dataset.provider as PaymentProvider;
+          validateForm(providerKey);
+          button.setAttribute('type', 'submit');
+          return providerKey;
+        }
+      }
+    }
+
+    return PaymentProvider.CREDIT_CARD;
+  }
+
+  async function handleForm(e: SubmitEvent) {
+    e.preventDefault();
+  }
+
+  async function onClickSubmitButton(this: HTMLButtonElement, e: PointerEvent | MouseEvent) {
+    const isMouseClick = (e as PointerEvent)?.pointerId !== -1;
+    const providerKey = isMouseClick || config.design.theme === DesignTheme.HORIZONTAL
+    ? this.dataset.provider as PaymentProvider // Provider by click
+    : detectAndValidateForm(); // Detect provider where input is focused
+
+    return handleFormSubmit(providerKey);
   }
 
   function hasAnyConfig() {
@@ -253,10 +320,17 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
         for (const item of tabContents) {
           item.setAttribute('data-tab-active', 'false');
+          if (config.design.theme === DesignTheme.HORIZONTAL) {
+            item.querySelector('button[data-provider]')?.setAttribute('type', 'button')
+          }
         }
 
         target.setAttribute('data-active', 'true');
         tabContent.setAttribute('data-tab-active', 'true');
+
+        if (config.design.theme === DesignTheme.HORIZONTAL) {
+          tabContent.querySelector('button[data-provider]')?.setAttribute('type', 'submit')
+        }
 
         if (tabName !== PaymentProvider.CREDIT_CARD) {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'true');
@@ -416,7 +490,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
-    if (!import.meta.env.VITE_SDK_API_URL) return;
+    if (!import.meta.env.VITE_SDK_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
     const subscriberInput = event?.target as HTMLInputElement;
     const subscriberId = subscriberInput?.value || '';
     const validationRules = subscriberInput?.dataset?.rules || '';
@@ -437,7 +511,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     } catch {
       setFormDisabled(false);
     }
-  }, 200)
+  }, 500)
 
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
@@ -559,12 +633,30 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       renderGooglePayButton(config);
     }
 
+    const submitButtons = getContainerElement()?.querySelectorAll('button[data-provider]');
+
+    if (submitButtons) {
+      for (let i = 0; i < submitButtons?.length; i++) {
+        const submit = submitButtons.item(i) as HTMLButtonElement;
+        submit.addEventListener('click', onClickSubmitButton, { passive: true });
+      }
+    }
+
     formElement?.addEventListener('submit', handleForm);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
     const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+    const submitButtons = getContainerElement()?.querySelectorAll('button[data-provider]');
+
+    if (submitButtons) {
+      for (let i = 0; i < submitButtons?.length; i++) {
+        const submit = submitButtons.item(i) as HTMLButtonElement;
+        submit.removeEventListener('click', onClickSubmitButton);
+      }
+    }
+
     formElement?.removeEventListener('submit', handleForm);
     handleSubscriberIdInputEventListeners('remove', onSubscriberIdEntered);
 

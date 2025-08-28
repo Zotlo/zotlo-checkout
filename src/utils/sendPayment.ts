@@ -81,6 +81,11 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
   }
 }
 
+async function registerPaymentUserIfNecessary(subscriberId: string, config: FormConfig, params: IZotloCheckoutParams) {
+  // If package is one time payment or no trial user will be registered once before payment, not everytime with onSubscriberIdEntered function
+  if (!config?.packageInfo?.isProviderRefreshNecessary) await registerPaymentUser(subscriberId, config, params);
+}
+
 export async function handlePaymentSuccess(payload: { params: IZotloCheckoutParams; }) {
   try {
     setFormLoading(true);
@@ -142,6 +147,7 @@ async function handleApplePayPayment(payload: {
   params: IZotloCheckoutParams;
   containerId: string;
   config: FormConfig;
+  subscriberId: string;
   refreshProviderConfigsFunction: () => Promise<void>;
 }) {
   const {
@@ -150,6 +156,7 @@ async function handleApplePayPayment(payload: {
     params,
     config,
     containerId,
+    subscriberId,
     refreshProviderConfigsFunction
   } = payload;
   try {
@@ -203,6 +210,8 @@ async function handleApplePayPayment(payload: {
       }
     };
 
+    await registerPaymentUserIfNecessary(subscriberId, config, params);
+
     // Show apple pay modal
     session.begin();
   } catch (error: any) {
@@ -220,6 +229,7 @@ async function handleGooglePayPayment(payload: {
   params: IZotloCheckoutParams;
   containerId: string;
   config: FormConfig;
+  subscriberId: string;
   refreshProviderConfigsFunction: () => Promise<void>;
 }) {
   const {
@@ -228,6 +238,7 @@ async function handleGooglePayPayment(payload: {
     params,
     config,
     containerId,
+    subscriberId,
     refreshProviderConfigsFunction
   } = payload;
   try {
@@ -240,6 +251,7 @@ async function handleGooglePayPayment(payload: {
       transactionId,
       googlePayToken,
     }
+    await registerPaymentUserIfNecessary(subscriberId, config, params);
     const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
     await handleCheckoutResponse({
       checkoutResponse,
@@ -271,6 +283,7 @@ export async function sendPayment(paymentParams: {
   try {
     const isSandboxPayment = !!config?.paymentData?.sandboxPayment;
     const payload = preparePayload({ providerKey, formData, params, config });
+    const { subscriberId = "" } = formData || {};
 
     if (!isSandboxPayment && providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({
       formPayload: payload, 
@@ -278,6 +291,7 @@ export async function sendPayment(paymentParams: {
       params,
       config,
       containerId,
+      subscriberId,
       refreshProviderConfigsFunction
     });
     if (!isSandboxPayment && providerKey === PaymentProvider.GOOGLE_PAY) return handleGooglePayPayment({ 
@@ -286,9 +300,12 @@ export async function sendPayment(paymentParams: {
       params,
       config,
       containerId,
+      subscriberId,
       refreshProviderConfigsFunction
     });
-    
+
+    await registerPaymentUserIfNecessary(subscriberId, config, params);
+
     // Send payment
     const checkoutResponse = await API.post("/payment/checkout", payload);
     handleCheckoutResponse({ checkoutResponse, params, containerId, config, refreshProviderConfigsFunction });

@@ -209,7 +209,8 @@ export function createCreditCardForm(params: {
   const { config, seperator, formType = 'both', className, showPrice } = params;
   const subscriberId = config.settings.registerType === 'other' ? '' : (config.general.subscriberId || '');
   const attrs = generateAttributes({
-    ...(params.attrs || {})
+    ...(params.attrs || {}),
+    ...({ 'data-form-type': formType })
   });
   const { $t } = useI18n(config.general.localization);
   let newForm = template(formElement, { FORM_TYPE: formType, ATTRIBUTES: attrs, CLASS_NAME: className || '', SHOW_PRICE: showPrice });
