@@ -6,9 +6,11 @@ import tooltipElement from '../html/tooltip.html?raw'
 import selectElement from '../html/select.html?raw'
 import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
+import paymentDetailsElement from '../html/payment-details.html?raw'
 import modalElement from '../html/modal.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
+import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme } from './types'
 import { FORM_ITEMS } from './fields'
@@ -328,7 +330,7 @@ export function prepareButtonSuccessLink(params: {
 }) {
   const { config, paymentDetail } = params;
   const theme = config.success.theme;
-  const os = paymentDetail.client.selectedOs || '';
+  const os = paymentDetail?.client?.selectedOs || '';
 
   if (theme === SuccessTheme.APP2WEB) {
     const iosLink = paymentDetail?.application.links.deeplinkIos || '';
@@ -357,6 +359,42 @@ export function prepareButtonSuccessLink(params: {
         return paymentDetail?.application.links.genericDownloadUrl || '';
     }
   }
+}
+
+export function preparePaymentDetailsSection(params: {
+  config: FormConfig;
+  paymentDetail: PaymentDetail;
+}) {
+  const { config, paymentDetail } = params;
+  const { $t } = useI18n(config.general.localization);
+  const productName = paymentDetail?.application?.name || '-';
+  const { 
+    purchase_date:purchaseDate = '-', 
+    expire_date:expireDate = '-', 
+    provider_key_translation:paymentMethod = '-' 
+  } = paymentDetail?.transaction?.[0] || {};
+  const paymentAmountText = import.meta.env.VITE_CONSOLE ? '-' : getPackagePaymentAmountText(config);
+  const isOneTimePayment = config.packageInfo?.condition === 'onetime_payment';
+  const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
+  const zotloAccountUrl = "https://account.zotlo.com/";
+
+  const paymentDetailsFooterElement = template($t('paymentSuccess.paymentDetails.footer'), {
+    CUSTOMER_SUPPORT_LINK: `<a href="${customerSupportUrl}" target="_blank">${$t('common.customerService')}</a>`,
+    ACCOUNT_LINK: `<a href="${zotloAccountUrl}" target="_blank">${$t('common.here')}</a>`
+  });
+
+  return template(paymentDetailsElement, {
+    TITLE: $t('paymentSuccess.paymentDetails.title'),
+    PRODUCT_TITLE: $t('common.product'),
+    PRODUCT_TEXT: productName,
+    DATE_TITLE: isOneTimePayment ? $t('common.paidOn') : $t('common.expiresOn'),
+    DATE_TEXT: isOneTimePayment ? purchaseDate : expireDate,
+    PAYMENT_METHOD_TITLE: $t('common.paymentMethod'),
+    PAYMENT_METHOD_TEXT: paymentMethod,
+    PAYMENT_AMOUNT_TITLE: $t('common.paymentAmount'),
+    PAYMENT_AMOUNT_TEXT: paymentAmountText,
+    FOOTER: paymentDetailsFooterElement
+  });
 }
 
 export function createPaymentSuccessForm(params: {
@@ -398,6 +436,8 @@ export function createPaymentSuccessForm(params: {
       }).join('')
     : '';
 
+  const paymentDetailsSection = preparePaymentDetailsSection({ config, paymentDetail });
+
   const htmlText = template(paymentSuccessElement, {
     THEME: successTheme,
     TITLE: $t('paymentSuccess.title'),
@@ -410,6 +450,7 @@ export function createPaymentSuccessForm(params: {
     STORE_BUTTONS: storeButtons,
     WEB2APP_DESC: $t('paymentSuccess.desc2'),
     SHOW_BUTTON: successTheme === SuccessTheme.APP2WEB || (successTheme === SuccessTheme.WEB2APP && config.success?.genericButton?.show),
+    PAYMENT_DETAILS: paymentDetailsSection,
   });
 
   function startTimer(timeInSeconds: number) {

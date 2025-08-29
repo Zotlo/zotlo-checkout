@@ -1,5 +1,6 @@
 import { type FormConfig, PackageInfoType, PackageType, TrialPackageType } from "../lib/types";
 import { useI18n } from "../utils";
+import { template } from "./template";
 
 export function getPackageInfo(config?: FormConfig): PackageInfoType {
   if (!config) return {} as PackageInfoType;
@@ -200,6 +201,31 @@ export function getPackageTemplateParams(config: FormConfig) {
     PERIOD: period === 0 ? '' : $t(`common.periods.${periodType}`, { count: period }),
     TRIAL_PERIOD: period === 0 ? '' : $t(`common.periods.${trialPeriodType}`, { count: trialPeriod }),
   };
+}
+
+export function getPackagePaymentAmountText(config: FormConfig) {
+  const { paymentData } = config || {};
+  const {
+    packageType = PackageType.CONSUMABLE,
+    trialPackageType = TrialPackageType.NO,
+  } = paymentData?.package || {};
+  const { $t } = useI18n(config.general.localization);
+  let text = "";
+  const templateParams = getPackageTemplateParams(config);
+  const isOneTimePayment = [PackageType.CONSUMABLE, PackageType.EPIN].includes(packageType);
+
+  if (isOneTimePayment) {
+    text = $t("paymentSuccess.paymentDetails.packagePriceInfo.oneTimePayment");
+  } else {
+    const trialTexts = {
+      [TrialPackageType.FREE_TRIAL]: $t("paymentSuccess.paymentDetails.packagePriceInfo.freeTrial"),
+      [TrialPackageType.STARTING_PRICE]: $t("paymentSuccess.paymentDetails.packagePriceInfo.startingPrice"),
+      [TrialPackageType.NO]: $t("paymentSuccess.paymentDetails.packagePriceInfo.noTrial"),
+    };
+    text = trialTexts[trialPackageType] || "";
+  }
+
+  return template(text, templateParams);
 }
 
 export function getPackageName(config: FormConfig) {
