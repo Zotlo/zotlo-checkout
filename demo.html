@@ -26,7 +26,7 @@
           gap: 8px;
           position: sticky;
           top: 0;
-          z-index: 30;
+          z-index: 19;
         }
 
         .sandbox-icon {
@@ -83,7 +83,6 @@
     <script src="./dist/cookiePopup.js"></script>
     <script src="./dist/toaster.js"></script>
     <script>
-      const win = window;
       let checkout;
 
       ZotloCheckout({
@@ -97,7 +96,7 @@
             // Set background color
             document.body.style.backgroundColor = (
               config.backgroundColor ||
-              win.getComputedStyle(document.body).backgroundColor
+              window.getComputedStyle(document.body).backgroundColor
             );
 
             if (config.sandbox) {
@@ -105,35 +104,35 @@
               if (strip) strip.style.display = 'flex';
             }
 
-            if (!win.Integration) return;
+            if (!window.Integration) return;
 
-            win.checkConsent(config.cookieText);
+            window.checkConsent(config.cookieText, config.countryCode);
 
             // Load itegrations
-            const Integration = win.Integration || {};
+            const Integration = window.Integration || {};
             Integration.debug = config.sandbox;
 
             const headScripts = Integration.init(config.countryCode, config.integrations);
             Integration.loadScripts(headScripts.script || []);
 
             // Load integration events
-            win.EventActions.payment.loadGTMClickEvents();
+            window.EventActions.payment.loadGTMClickEvents();
           },
           onSuccess(result) {
-            if (!win.EventActions) return;
+            if (!window.EventActions) return;
             setTimeout(() => {
-              win.EventActions.success.complete(result);
+              window.EventActions.success.complete(result);
             }, 0);
           },
           onFail(error) {
             const message = error.message || 'An error occurred during payment processing';
-            win.VueApp.addToaster('Error', message);
-            win.EventActions.payment.paymentGTMError(message);
+            window.VueApp.addToaster('Error', message);
+            window.EventActions.payment.paymentGTMError(message);
           },
           onInvalidForm(error) {
             const message = error.result.errors[0] || 'Unknown error';
             const formattedMessage = error.name ? `${error.name} - ${message}` : message;
-            win.EventActions.payment.paymentGTMError(formattedMessage);
+            window.EventActions.payment.paymentGTMError(formattedMessage);
           }
         }
       }).then((zcInstance) => {

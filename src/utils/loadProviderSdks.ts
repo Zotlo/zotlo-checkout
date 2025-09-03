@@ -25,7 +25,21 @@ function loadScript(src: string, id?: string): Promise<void> {
     if (id) script.id = id;
     script.src = src;
     script.async = true;
-    script.onload = () => resolve();
+    script.onload = () => {
+      // This resolves rendering problem for apple-pay-modal component on mobile devices
+      const modal = document.querySelector('apple-pay-modal') as HTMLElement | null;
+
+      if (modal) {
+        modal.style.display = 'none';
+        
+        setTimeout(() => {
+          modal.style.display = '';
+        }, 2000);
+      }
+
+      // Emit as done
+      resolve();
+    };
     script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
 
     document.head.appendChild(script);

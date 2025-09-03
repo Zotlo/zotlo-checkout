@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.4.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.3.0...v1.4.0)
+
+### 🚀 Enhancements
+
+- Add payment details section on payment success page ([3d315b8](https://github.com/Zotlo/zotlo-checkout/commit/3d315b8))
+
+### 🩹 Fixes
+
+- Update sandbox band z-index value to prevent overflow problem with toaster ([3524e82](https://github.com/Zotlo/zotlo-checkout/commit/3524e82))
+- Add country code control for consent-mandatory countries ([e611723](https://github.com/Zotlo/zotlo-checkout/commit/e611723))
+
+### 🏡 Chore
+
+- Update demo ([f51b603](https://github.com/Zotlo/zotlo-checkout/commit/f51b603))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.3.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.2.0...v1.3.0)

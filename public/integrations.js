@@ -205,12 +205,15 @@
    * 
    * @param {string} cookieText 
    */
-  function checkConsent(cookieText) {
+  function checkConsent(cookieText, countryCode) {
     const cookieApp = window.VueCookieApp;
     if (!cookieApp || !cookieApp._) return false;
 
     const cookiePopup = cookieApp._.refs.cookiePopup;
     if (!cookiePopup) return false;
+
+    const shouldGetConsent = countryCode ? consentCountries.includes(countryCode) : true;
+    if (!shouldGetConsent) return false;
 
     const consentValue = cookiePopup.currentConsentValue();
     if (consentValue !== null) return consentValue;

@@ -453,6 +453,45 @@ export type FormConfig = {
   };
 }
 
+export type TransactionDetail = {
+  payment_type: string;
+  original_transaction_id: string;
+  transaction_id: string;
+  provider_transaction_id: string;
+  package_id: string;
+  status: string;
+  purchase_date: string;
+  expire_date: string;
+  original_purchase_date: string;
+  price: string;
+  currency: string;
+  country: string;
+  subscriptionId: number;
+  provider_name: string;
+  provider_bank: string;
+  refund: null | any;
+  exchange: {
+    status: boolean;
+    detail: any[];
+  };
+  subscription: {
+    payment: {
+      type: string;
+      method: string;
+      bank: string;
+    };
+    package: {
+      name: string;
+      price: string;
+      currency: string;
+    };
+    paymentDate: string;
+    expireDate: string;
+  };
+  provider_key: string;
+  provider_key_translation: string;
+}
+
 export type PaymentDetail = {
   isSandbox: boolean;
   application: {
@@ -506,4 +545,5 @@ export type PaymentDetail = {
       }>;
     };
   };
+  transaction?: TransactionDetail[];
 }
