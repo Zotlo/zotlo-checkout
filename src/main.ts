@@ -22,9 +22,36 @@ import { ZotloCheckout } from './lib'
           const strip = document.getElementById('sandbox-strip');
           if (strip) strip.style.display = 'flex';
         }
+
+        if (!win.Integration) return;
+
+        win.checkConsent(config.cookieText, config.countryCode);
+
+        // Load itegrations
+        const Integration = win.Integration || {};
+        Integration.debug = config.sandbox;
+
+        const headScripts = Integration.init(config.countryCode, config.integrations);
+        Integration.loadScripts(headScripts.script || []);
+
+        // Load integration events
+        win.EventActions.payment.loadGTMClickEvents();
       },
-      onFail(e) {
-        win?.VueApp?.addToaster('Error', e?.message)
+      onSuccess(result) {
+        if (!win.EventActions) return;
+        setTimeout(() => {
+          win.EventActions.success.complete(result);
+        }, 0);
+      },
+      onFail(error) {
+        const message = error.message || 'An error occurred during payment processing';
+        win.VueApp.addToaster('Error', message);
+        win.EventActions.payment.paymentGTMError(message);
+      },
+      onInvalidForm(error) {
+        const message = error.result.errors[0] || 'Unknown error';
+        const formattedMessage = error.name ? `${error.name} - ${message}` : message;
+        win.EventActions.payment.paymentGTMError(formattedMessage);
       }
     }
   });

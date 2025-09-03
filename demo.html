@@ -107,7 +107,7 @@
 
             if (!win.Integration) return;
 
-            win.checkConsent(config.cookieText);
+            win.checkConsent(config.cookieText, config.countryCode);
 
             // Load itegrations
             const Integration = win.Integration || {};
