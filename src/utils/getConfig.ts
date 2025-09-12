@@ -49,7 +49,7 @@ export async function getPaymentData(uuid?: string) {
   try {
     // Pass uuid manually in header if available.
     const config = uuid
-      ? { headers: { [COOKIE.UUID]: uuid || '' } }
+      ? { headers: { Uuid: uuid || '' } }
       : undefined;
     const paymentRes = await API.get('/payment/init', config);
     const paymentInitData = paymentRes?.result || {};
