@@ -45,9 +45,13 @@ export const ErrorHandler = {
   response: null as Record<string, any> | null,
 }
 
-export async function getPaymentData() {
+export async function getPaymentData(uuid?: string) {
   try {
-    const paymentRes = await API.get("/payment/init");
+    // Pass uuid manually in header if available.
+    const config = uuid
+      ? { headers: { [COOKIE.UUID]: uuid || '' } }
+      : undefined;
+    const paymentRes = await API.get('/payment/init', config);
     const paymentInitData = paymentRes?.result || {};
     return paymentInitData as FormPaymentData;
   } catch (e: any) {
@@ -90,7 +94,9 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     const pathName = globalThis?.location?.pathname || "/";
     setCookie(COOKIE.UUID, initData?.uuid, 30, pathName);
 
-    const paymentInitData = await getPaymentData();
+    // Sometimes uuid cannot found on uuid cookie when loading form for the first time.
+    // Thats why we pass uuid manually in header to get payment init data.
+    const paymentInitData = await getPaymentData(initData?.uuid);
     const settings = initData?.settings;
 
     config.integrations = initData?.integrations || {} as InitResult['integrations'];
