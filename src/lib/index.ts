@@ -578,7 +578,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
             img.alt = currentMask.name
           }
         } else {
-          rightSide.innerHTML = `<img src="${imgUrl}" alt="${currentMask.name}" class="h-24">`
+          rightSide.innerHTML = `<img src="${imgUrl}" alt="${currentMask.name}" class="zotlo-checkout__card-icon" />`
         }
       }
     }
