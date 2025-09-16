@@ -12,7 +12,7 @@ function preparePayload(payload: {
   config: FormConfig
 }) {
   const { providerKey, formData, params, config } = payload;
-  const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV } = formData || {};
+  const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV, zipCode } = formData || {};
   const { returnUrl } = params || {};
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
   let data = {};
@@ -54,6 +54,7 @@ function preparePayload(payload: {
   
   return {
     ...data,
+    ...(zipCode && { zipCode }),
     ...(returnUrl && { returnUrl }),
   }
 }

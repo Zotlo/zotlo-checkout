@@ -221,6 +221,7 @@ export function createCreditCardForm(params: {
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
   const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
   const isPhoneRegister = registerType === 'phoneNumber';
+  const isZipcodeRequired = config.general.isZipcodeRequired;
   const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
@@ -233,7 +234,8 @@ export function createCreditCardForm(params: {
 
     if (
       isPhoneRegister && key === 'SUBSCRIBER_ID_EMAIL' ||
-      !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE'
+      !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE' ||
+      !isZipcodeRequired && key === 'ZIP_CODE'
     ) {
       newForm = template(newForm, { [key]: '' });
       continue;
@@ -257,7 +259,7 @@ export function createCreditCardForm(params: {
       [key]: key === 'AGREEMENT_CHECKBOX'
         ? (
           config.general.isPolicyRequired ?
-              createCheckbox({
+            createCheckbox({
               ...options,
               label: $t(`form.${key}.label`, {
                 distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
