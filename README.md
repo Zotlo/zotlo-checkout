@@ -29,6 +29,9 @@ const checkout = await ZotloCheckout({
   packageId: 'YOUR_PACKAGE_ID',
   returnUrl: 'YOUR_RETURN_URL',
   language: 'en',
+  customParameters: { // Optional
+    myCustomParam: 'OK!'
+  },
   events: {
     onSuccess() {
       // Handle success here
@@ -74,6 +77,9 @@ You can also include Zotlo Checkout SDK directly in the browser using CDN links:
     packageId: 'YOUR_PACKAGE_ID',
     returnUrl: 'YOUR_RETURN_URL',
     language: 'en',
+    customParameters: { // Optional
+      myCustomParam: 'OK!'
+    },
     events: {
       onSuccess() {
         // Handle success here
@@ -98,6 +104,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `returnUrl`             | **true** | The URL to redirect the user after payment completion.                                                                       |
 | `subscriberId`          | false    | (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4.                                |
 | `style`                 | false    | Custom styling on config                                                                                                     |
+| `customParameters`      | false    | Send custom parameters to webhooks                                                                                           |
 | `events`                | false    | Event listeners that can be used during the checkout process.                                                                |
 | `events.onLoad`         | false    | Triggers after form loaded.                                                                                                  |
 | `events.onSubmit`       | false    | Triggered after the form is submitted.                                                                                       |

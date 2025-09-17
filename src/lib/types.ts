@@ -100,6 +100,9 @@ export interface IZotloCheckoutParams {
 
   /** Event listeners that can be used during the checkout process. */
   events?: IZotloCheckoutEvents;
+
+  /** Send custom parameters to webhooks */
+  customParameters?: Record<string, any>;
 }
 
 export interface IZotloCheckoutReturn {
