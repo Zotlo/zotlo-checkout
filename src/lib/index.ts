@@ -38,7 +38,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       language: params.language,
       subscriberId: params.subscriberId,
       returnUrl: params.returnUrl,
-      style: params.style
+      style: params.style,
+      customParameters: params.customParameters
     });
     await refreshProviderConfigs();
   }

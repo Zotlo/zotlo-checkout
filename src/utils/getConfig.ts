@@ -78,12 +78,14 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     packageId,
     language = navigator.language?.split("-")?.[0] || "en",
     subscriberId,
+    customParameters
   } = params || {};
 
   const payload = {
     applicationHash: token,
     packageId,
     ...(subscriberId && { subscriberId }),
+    ...(customParameters && typeof customParameters === 'object' && { customParameters: JSON.stringify(customParameters) }),
   };
 
   const reqConfig = { headers: { Language: language } };
