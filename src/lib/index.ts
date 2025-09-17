@@ -18,7 +18,7 @@ import {
   activateDisabledSubscriberIdInputs,
   useI18n,
   handlePriceChangesBySubscriptionStatus,
-  syncSubscriberIdInputs
+  syncInputsOnTabs
 } from "../utils";
 import { getConfig, getPaymentData, ErrorHandler } from "../utils/getConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
@@ -110,7 +110,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const errors = [];
     const bypassProtectedFields = [
       FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
-      FORM_ITEMS.AGREEMENT_CHECKBOX.input.name
+      FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
+      FORM_ITEMS.ZIP_CODE.input.name
     ]
 
     for (const validation of Object.values(validations)) {
@@ -337,7 +338,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         } else {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
         }
-        syncSubscriberIdInputs(tabName);
+        syncInputsOnTabs(tabName, ['subscriberId', 'zipCode']);
         initFormInputs();
       }
     }

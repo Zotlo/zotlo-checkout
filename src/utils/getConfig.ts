@@ -26,6 +26,7 @@ type InitResult = {
   showPaypal: boolean;
   currency: string;
   isPolicyRequired: boolean;
+  isZipcodeRequired: boolean;
   appName?: string;
   appLogo?: string;
   productImage?: string;
@@ -133,6 +134,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       privacyUrl: initData?.privacyUrl,
       privacyAndTosUrlStatus: !!+initData?.privacyAndTosUrlStatus,
       isPolicyRequired: initData?.isPolicyRequired,
+      isZipcodeRequired: initData?.isZipcodeRequired,
       appName: initData?.appName || '',
       appLogo: initData?.appLogo || '',
       packageName: initData?.packageName || '',
