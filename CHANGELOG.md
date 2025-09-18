@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.5.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.4.3...v1.5.0)
+
+### 🚀 Enhancements
+
+- Send custom parameters to webhooks ([dbdf00e](https://github.com/Zotlo/zotlo-checkout/commit/dbdf00e))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.4.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.3.0...v1.4.0)
