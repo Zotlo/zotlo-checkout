@@ -84,7 +84,10 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
 
 async function registerPaymentUserIfNecessary(subscriberId: string, config: FormConfig, params: IZotloCheckoutParams) {
   // If package is one time payment or no trial user will be registered once before payment, not everytime with onSubscriberIdEntered function
-  if (!config?.packageInfo?.isProviderRefreshNecessary) await registerPaymentUser(subscriberId, config, params);
+  if (!config?.packageInfo?.isProviderRefreshNecessary) { 
+    const response = await registerPaymentUser(subscriberId, config, params);
+    return response; 
+  }
 }
 
 export async function handlePaymentSuccess(payload: { params: IZotloCheckoutParams; }) {
@@ -211,7 +214,8 @@ async function handleApplePayPayment(payload: {
       }
     };
 
-    await registerPaymentUserIfNecessary(subscriberId, config, params);
+    const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
+    if (registerResponse?.meta?.errorCode) return;
 
     // Show apple pay modal
     session.begin();
@@ -252,7 +256,10 @@ async function handleGooglePayPayment(payload: {
       transactionId,
       googlePayToken,
     }
-    await registerPaymentUserIfNecessary(subscriberId, config, params);
+
+    const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
+    if (registerResponse?.meta?.errorCode) return;
+
     const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
     await handleCheckoutResponse({
       checkoutResponse,
@@ -305,7 +312,8 @@ export async function sendPayment(paymentParams: {
       refreshProviderConfigsFunction
     });
 
-    await registerPaymentUserIfNecessary(subscriberId, config, params);
+    const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
+    if (registerResponse?.meta?.errorCode) return;
 
     // Send payment
     const checkoutResponse = await API.post("/payment/checkout", payload);
