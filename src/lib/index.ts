@@ -26,7 +26,6 @@ import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
-import { ErrorCode } from "./errors";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
@@ -501,7 +500,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     try {
       setFormDisabled();
       const response = await registerPaymentUser(subscriberId, config, params);
-      if (response?.meta?.errorCode === ErrorCode.USER_ALREADY_SUBSCRIBED_ERROR) {
+      if (response?.meta?.errorCode) {
         activateDisabledSubscriberIdInputs();
         subscriberInput.focus();
         return;
