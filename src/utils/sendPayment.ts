@@ -248,6 +248,10 @@ async function handleGooglePayPayment(payload: {
   } = payload;
   try {
     const paymentDataRequest = JSON.parse(JSON.stringify(providerConfig?.paymentDataRequest));
+    
+    const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
+    if (registerResponse?.meta?.errorCode) return;
+
     const googleClientResponse = await getGooglePayClient()?.loadPaymentData(paymentDataRequest);
     const googlePayToken = googleClientResponse?.paymentMethodData?.tokenizationData?.token;
     const transactionId = providerConfig?.transactionId;
@@ -256,9 +260,6 @@ async function handleGooglePayPayment(payload: {
       transactionId,
       googlePayToken,
     }
-
-    const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
-    if (registerResponse?.meta?.errorCode) return;
 
     const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
     await handleCheckoutResponse({
