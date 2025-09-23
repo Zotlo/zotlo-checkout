@@ -68,7 +68,7 @@
   font-family: var(--zc-fontFamily, inherit);
   background-color: var(--zc-form-backgroundColor);
   display: grid;
-  gap: 24px;
+  gap: 16px;
   min-width: 320px;
   max-width: 460px;
   color: var(--zc-color);
@@ -531,7 +531,6 @@
 
 @media (min-width: 640px) {
   .zotlo-checkout {
-    padding: 24px;
     border: var(--zc-form-borderWidth, 1px) solid var(--zc-form-borderColor, #E7EAEE);
   }
 }

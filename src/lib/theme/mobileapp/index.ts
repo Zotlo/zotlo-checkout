@@ -2,7 +2,7 @@ import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
-import { createProviderButton, createButton, createCreditCardForm } from '../../create'
+import { createProviderButton, createButton, createCreditCardForm, createPaymentHeader } from '../../create'
 import { getPackageName } from '../../../utils/getPackageInfo';
 
 function prepareProvider(params: {
@@ -129,7 +129,6 @@ export function generateThemeMobileApp(params: {
   }
 
   const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
-  const showHeader = Object.prototype.hasOwnProperty.call(config.design, 'header') ? !!config.design.header?.show : true;
   const showProductImage = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'productImage') ? !!config.design?.product?.productImage?.show : true;
   const showSubtotal = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'showSubtotalText') ? !!config.design?.product?.showSubtotalText : true;
   const showAdditonalText = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'additionalText') ? !!config.design?.product?.additionalText?.show : true;
@@ -145,14 +144,12 @@ export function generateThemeMobileApp(params: {
     )
     : '';
 
-  const closeButtonUrl = config.design.header?.close?.url;
+  const paymentHeader = createPaymentHeader({ config });
 
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
-    SHOW_HEADER: showHeader && (!!config.general.appName || !!config.general.appLogo),
-    APP_NAME: config.general.appName || '',
-    LOGO: config.general.appLogo || '',
+    HEADER: paymentHeader || '',
     PACKAGE_NAME: packageName,
     PACKAGE_IMAGE: productImage,
     PRIMARY_PROVIDER: primaryProvider,
@@ -171,8 +168,5 @@ export function generateThemeMobileApp(params: {
     ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
     ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
     ATTRIBUTES: generateAttributes({ autocomplete: 'off' }),
-    SHOW_CLOSE_BUTTON: !!config.design.header?.close?.show && !!closeButtonUrl,
-    CLOSE_BUTTON_URL: closeButtonUrl,
-    CLOSE_BUTTON_TEXT: $t('common.close'),
   })
 }
