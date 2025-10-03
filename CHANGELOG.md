@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.5.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.0...v1.6.0)
+
+### 💅 Refactors
+
+- Manage session on localStorage instead of cookie ([75f0add](https://github.com/Zotlo/zotlo-checkout/commit/75f0add))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.5.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.4.3...v1.5.0)
