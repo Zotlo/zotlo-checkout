@@ -2,7 +2,7 @@ import { mergeDeep } from "./index";
 import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../lib/types";
 import { DesignTheme, PaymentProvider, SuccessTheme } from "../lib/types";
 import { API } from "../utils/api";
-import { setCookie, COOKIE } from "./cookie";
+import { setSession } from "./session";
 import { getPackageInfo } from "./getPackageInfo";
 
 type InitResult = {
@@ -94,12 +94,11 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     const initRes = await API.post("/init", payload, reqConfig);
     const initData = initRes?.result as InitResult;
     if (!initData || Array.isArray(initData)) return config;
-    const pathName = globalThis?.location?.pathname || "/";
-    setCookie(COOKIE.UUID, initData?.uuid, 30, pathName);
+    setSession(initData?.uuid, 30);
 
     // Sometimes uuid cannot found on uuid cookie when loading form for the first time.
     // Thats why we pass uuid manually in header to get payment init data.
-    const paymentInitData = await getPaymentData(initData?.uuid);
+    const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
 
     config.integrations = initData?.integrations || {} as InitResult['integrations'];
