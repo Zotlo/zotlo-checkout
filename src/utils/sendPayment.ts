@@ -3,7 +3,7 @@ import { createPaymentSuccessForm } from "../lib/create";
 import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
 import { API } from "./api";
-import { deleteUuidCookie } from "./cookie";
+import { deleteSession } from "./session";
 
 function preparePayload(payload: {
   providerKey: PaymentProvider;
@@ -97,7 +97,7 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
       return null
     }
 
-    deleteUuidCookie();
+    deleteSession();
     params.events?.onSuccess?.(result as PaymentDetail);
     return result as PaymentDetail;
   } catch {

@@ -1,4 +1,4 @@
-import { getCookie, COOKIE } from "./cookie";
+import { getSession } from "./session";
 
 interface RequestConfig {
   headers?: Record<string, string>;
@@ -61,7 +61,7 @@ export class API {
 
       const url = this.buildUrl(endpoint);
       const xhr = new XMLHttpRequest();
-      const existingUuid = getCookie(COOKIE.UUID);
+      const existingUuid = getSession()?.id;
 
       // Initialize the request
       xhr.open(method, url, true);
