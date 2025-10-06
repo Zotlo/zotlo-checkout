@@ -157,7 +157,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
           formData: { packageId: params.packageId, ...result },
           params,
           config,
-          containerId,
           refreshProviderConfigsFunction: refreshProviderConfigs
         });
       } finally {
