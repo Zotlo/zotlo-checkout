@@ -1,5 +1,4 @@
 import { setFormLoading } from "./index";
-import { createPaymentSuccessForm } from "../lib/create";
 import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
 import { API } from "./api";
@@ -114,8 +113,6 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
 async function handleCheckoutResponse(payload: {
   checkoutResponse: Record<string, any>;
   params: IZotloCheckoutParams;
-  containerId: string;
-  config: FormConfig;
   refreshProviderConfigsFunction: () => Promise<void>;
   actions?: {
     redirectAction?: () => void;
@@ -123,7 +120,7 @@ async function handleCheckoutResponse(payload: {
     errorAction?: () => void;
   };
 }) {
-  const { checkoutResponse, params, containerId, config, actions, refreshProviderConfigsFunction } = payload;
+  const { checkoutResponse, params, actions, refreshProviderConfigsFunction } = payload;
   const { meta, result } = checkoutResponse || {};
   if (meta?.errorCode) {
     if (actions?.errorAction) actions.errorAction();
@@ -133,14 +130,14 @@ async function handleCheckoutResponse(payload: {
 
   if (meta.httpStatus === 200) {
     const { status, redirectUrl, payment } = result || {};
+    const returnUrl = payment?.returnUrl || '';
     if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && globalThis?.location?.href) {
       if (actions?.redirectAction) return actions.redirectAction();
       globalThis.location.href = redirectUrl;
     }
     if (status === PaymentResultStatus.COMPLETE && payment) {
       if (actions?.completeAction) actions.completeAction();
-      const paymentDetail = await handlePaymentSuccess({ params });
-      if (paymentDetail) createPaymentSuccessForm({ containerId, config, paymentDetail });
+      if (returnUrl) globalThis.location.href = returnUrl;
     }
   }
 }
@@ -149,7 +146,6 @@ async function handleApplePayPayment(payload: {
   formPayload: Record<string, any>;
   providerConfig: ProviderConfigs["applePay"];
   params: IZotloCheckoutParams;
-  containerId: string;
   config: FormConfig;
   subscriberId: string;
   refreshProviderConfigsFunction: () => Promise<void>;
@@ -159,7 +155,6 @@ async function handleApplePayPayment(payload: {
     providerConfig,
     params,
     config,
-    containerId,
     subscriberId,
     refreshProviderConfigsFunction
   } = payload;
@@ -195,8 +190,6 @@ async function handleApplePayPayment(payload: {
         await handleCheckoutResponse({
           checkoutResponse,
           params,
-          config,
-          containerId,
           refreshProviderConfigsFunction,
           actions: {
             completeAction: () => {
@@ -232,7 +225,6 @@ async function handleGooglePayPayment(payload: {
   formPayload: Record<string, any>;
   providerConfig: ProviderConfigs["googlePay"];
   params: IZotloCheckoutParams;
-  containerId: string;
   config: FormConfig;
   subscriberId: string;
   refreshProviderConfigsFunction: () => Promise<void>;
@@ -242,7 +234,6 @@ async function handleGooglePayPayment(payload: {
     providerConfig,
     params,
     config,
-    containerId,
     subscriberId,
     refreshProviderConfigsFunction
   } = payload;
@@ -265,8 +256,6 @@ async function handleGooglePayPayment(payload: {
     await handleCheckoutResponse({
       checkoutResponse,
       params,
-      config,
-      containerId,
       refreshProviderConfigsFunction,
     });
   } catch (error: any) {
@@ -285,10 +274,9 @@ export async function sendPayment(paymentParams: {
   formData: Record<string, any>;
   params: IZotloCheckoutParams;
   config: FormConfig;
-  containerId: string;
   refreshProviderConfigsFunction: () => Promise<void>;
 }) {
-  const { providerKey, formData, params, config, containerId, refreshProviderConfigsFunction } = paymentParams;
+  const { providerKey, formData, params, config, refreshProviderConfigsFunction } = paymentParams;
   try {
     const isSandboxPayment = !!config?.paymentData?.sandboxPayment;
     const payload = preparePayload({ providerKey, formData, params, config });
@@ -299,7 +287,6 @@ export async function sendPayment(paymentParams: {
       providerConfig: config?.providerConfigs?.applePay, 
       params,
       config,
-      containerId,
       subscriberId,
       refreshProviderConfigsFunction
     });
@@ -308,7 +295,6 @@ export async function sendPayment(paymentParams: {
       providerConfig: config?.providerConfigs?.googlePay, 
       params,
       config,
-      containerId,
       subscriberId,
       refreshProviderConfigsFunction
     });
@@ -318,7 +304,7 @@ export async function sendPayment(paymentParams: {
 
     // Send payment
     const checkoutResponse = await API.post("/payment/checkout", payload);
-    handleCheckoutResponse({ checkoutResponse, params, containerId, config, refreshProviderConfigsFunction });
+    handleCheckoutResponse({ checkoutResponse, params, refreshProviderConfigsFunction });
 
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });
