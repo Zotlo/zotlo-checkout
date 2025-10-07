@@ -78,7 +78,8 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     packageId,
     language = navigator.language?.split("-")?.[0] || "en",
     subscriberId,
-    customParameters
+    customParameters,
+    useCookie = false,
   } = params || {};
 
   const payload = {
@@ -94,10 +95,8 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     const initRes = await API.post("/init", payload, reqConfig);
     const initData = initRes?.result as InitResult;
     if (!initData || Array.isArray(initData)) return config;
-    setSession(initData?.uuid, 30);
+    setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie });
 
-    // Sometimes uuid cannot found on uuid cookie when loading form for the first time.
-    // Thats why we pass uuid manually in header to get payment init data.
     const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
 

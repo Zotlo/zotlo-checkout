@@ -94,6 +94,8 @@ export interface IZotloCheckoutParams {
 
   /** Send custom parameters to webhooks */
   customParameters?: Record<string, any>;
+
+  useCookie?: boolean;
 }
 
 export interface IZotloCheckoutReturn {
