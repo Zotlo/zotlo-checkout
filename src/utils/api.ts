@@ -20,11 +20,15 @@ interface ApiResponse {
  * API utility class for making HTTP requests using XMLHttpRequest
  */
 export class API {
+  private static useCookie: boolean = false;
   private static baseUrl: string = import.meta.env.VITE_SDK_API_URL || "";
   private static defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
   };
   private static defaultTimeout: number = 30000;
+  public static setUseCookie(value: boolean) {
+    this.useCookie = value;
+  }
 
   static get(endpoint: string, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("GET", endpoint, null, config);
@@ -61,7 +65,7 @@ export class API {
 
       const url = this.buildUrl(endpoint);
       const xhr = new XMLHttpRequest();
-      const existingUuid = getSession()?.id;
+      const existingUuid = getSession({ useCookie: this.useCookie })?.id;
 
       // Initialize the request
       xhr.open(method, url, true);
