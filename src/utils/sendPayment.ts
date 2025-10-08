@@ -96,7 +96,7 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
       return null
     }
 
-    deleteSession();
+    deleteSession({ useCookie: !!params.useCookie });
     params.events?.onSuccess?.(result as PaymentDetail);
     return result as PaymentDetail;
   } catch {

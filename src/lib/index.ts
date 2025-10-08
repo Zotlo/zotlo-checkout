@@ -27,11 +27,13 @@ import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
 import { ErrorCode } from "./errors";
+import { API } from "../utils/api";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
   if (import.meta.env.VITE_SDK_API_URL) {
+    API.setUseCookie(!!params?.useCookie);
     config = await getConfig({ 
       token: params.token,
       packageId: params.packageId,
@@ -39,7 +41,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       subscriberId: params.subscriberId,
       returnUrl: params.returnUrl,
       style: params.style,
-      customParameters: params.customParameters
+      customParameters: params.customParameters,
+      useCookie: !!params?.useCookie,
     });
     await refreshProviderConfigs();
   }
