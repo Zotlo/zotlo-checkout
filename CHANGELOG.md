@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.5.2
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.1...v1.5.2)
+
+### 🩹 Fixes
+
+- Redirect to returnUrl in non-redirect payments ([230bfd9](https://github.com/Zotlo/zotlo-checkout/commit/230bfd9))
+- Add parametric session management ([5b2b501](https://github.com/Zotlo/zotlo-checkout/commit/5b2b501))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.5.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.0...v1.6.0)
