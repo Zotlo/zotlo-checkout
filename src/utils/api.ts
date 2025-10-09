@@ -66,6 +66,7 @@ export class API {
       const url = this.buildUrl(endpoint);
       const xhr = new XMLHttpRequest();
       const existingUuid = getSession({ useCookie: this.useCookie })?.id;
+      const clientDomain = window.location.host || window.location.hostname || "";
 
       // Initialize the request
       xhr.open(method, url, true);
@@ -74,6 +75,7 @@ export class API {
       const mergedHeaders = { 
         ...this.defaultHeaders,
         ...(existingUuid && { Uuid: existingUuid } as Record<string, string>),
+        ...(clientDomain && { "Client-Domain": clientDomain } as Record<string, string>),
         ...headers 
       };
       Object.keys(mergedHeaders).forEach((key) => {
