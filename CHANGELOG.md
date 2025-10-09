@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.5.3
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.2...v1.5.3)
+
+### 🚀 Enhancements
+
+- Add Client-Domain to requests header ([2076a66](https://github.com/Zotlo/zotlo-checkout/commit/2076a66))
+
+### ❤️ Contributors
+
+- Yiğit Şahin
+
 ## v1.5.2
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.1...v1.5.2)
