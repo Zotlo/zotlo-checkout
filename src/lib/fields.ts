@@ -81,5 +81,12 @@ export const FORM_ITEMS = {
       name: 'acceptPolicy',
       'data-rules': 'required',
     }
+  },
+  SAVE_CARD_CHECKBOX: {
+    label: 'Pay faster next time with this card',
+    className: 'zotlo-checkout__save-card',
+    input: {
+      name: 'saveCard',
+    }
   }
 }

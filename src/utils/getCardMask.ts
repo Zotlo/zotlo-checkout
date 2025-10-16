@@ -1,3 +1,5 @@
+import { getCDNUrl } from "../utils/getCDNUrl";
+
 export function getCardMask(value: string) {
   const cardTypes = [
     {
@@ -83,5 +85,14 @@ export function getCardMask(value: string) {
     length: 16,
     regex: "",
     icon: ""
+  };
+}
+
+export function getCardIcon(value: string) {
+  const currentMask = getCardMask(value);
+  const url = getCDNUrl(`cards/${currentMask.icon}.svg`);
+  return {
+    url,
+    iconName: currentMask.icon
   };
 }

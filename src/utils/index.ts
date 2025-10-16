@@ -169,6 +169,12 @@ export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' =
   });
 }
 
+export function handleSavedCardsInputs() {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const cardItemRadio = formElement?.querySelectorAll('.zotlo-checkout__card-item input[type="radio"]') as NodeListOf<HTMLInputElement>;
+  if (cardItemRadio.length > 0) cardItemRadio[0].checked = true;
+}
+
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageCondition = config?.packageInfo?.condition || 'package_with_trial';

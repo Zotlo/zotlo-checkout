@@ -45,6 +45,9 @@ export function createStyle(config: FormConfig) {
   --zc-form-submit-hover-borderColor: ${design?.button?.hover?.borderColor || '#301BA3'};
   --zc-form-submit-hover-backgroundColor: ${design?.button?.hover?.backgroundColor || '#301BA3'};
 
+  --zc-form-card-item-backgroundColor: ${(design?.button?.backgroundColor + '1F') || '#765EF51F'};
+  --zc-form-card-item-borderColor: ${design?.button?.backgroundColor || '#765EF5'};
+
   --zc-form-spinner-color: #BBBFFF;
   
   --zc-tab-button-backgroundColor: ${(design?.button?.backgroundColor + opacity) || '#301BA3'};

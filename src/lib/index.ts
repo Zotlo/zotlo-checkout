@@ -18,7 +18,8 @@ import {
   activateDisabledSubscriberIdInputs,
   useI18n,
   handlePriceChangesBySubscriptionStatus,
-  syncInputsOnTabs
+  syncInputsOnTabs,
+  handleSavedCardsInputs
 } from "../utils";
 import { getConfig, getPaymentData, ErrorHandler } from "../utils/getConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
@@ -42,6 +43,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       style: params.style,
       customParameters: params.customParameters,
       useCookie: !!params?.useCookie,
+      showSavedCards: params?.showSavedCards
     });
     await refreshProviderConfigs();
   }
@@ -647,6 +649,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     formElement?.addEventListener('submit', handleForm);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
+    handleSavedCardsInputs();
+    // TODO: Select default card on form from radio button
   }
 
   function destroyFormInputs() {

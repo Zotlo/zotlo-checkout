@@ -38,7 +38,9 @@
   --zc-form-submit-hover-color: #FFFFFF;
   --zc-form-submit-hover-borderColor: #301BA3;
   --zc-form-submit-hover-backgroundColor: #301BA3;
-  --zc-form-spinner-color: '#BBBFFF';
+  --zc-form-card-item-backgroundColor: #765EF51F;
+  --zc-form-card-item-borderColor: #765EF5;
+  --zc-form-spinner-color: #BBBFFF;
   --zc-form-disabled-opacity: 0.5;
   --zc-form-disabled-cursor: not-allowed;
   --zc-footer-color: #737380;
@@ -180,14 +182,16 @@
   gap: 16px;
 }
 
-.zotlo-checkout__agreement {
+.zotlo-checkout__agreement, .zotlo-checkout__save-card  {
   color: var(--zc-form-consent-color);
   font-size: var(--zc-form-consent-fontSize);
   font-style: var(--zc-form-consent-fontStyle);
   text-decoration: var(--zc-form-consent-textDecoration);
 }
 .zotlo-checkout__agreement .tw-checkbox-label,
-.zotlo-checkout__agreement .tw-checkbox-label a {
+.zotlo-checkout__agreement .tw-checkbox-label a,
+.zotlo-checkout__save-card .tw-checkbox-label,
+.zotlo-checkout__save-card .tw-checkbox-label a {
   font-size: var(--zc-form-consent-fontSize);
   font-weight: var(--zc-form-consent-fontWeight);
 }
@@ -518,6 +522,158 @@
 
 .gpay-card-info-container[disabled].white.hover {
   background-color: #FFF;
+}
+
+.zotlo-checkout__card-all-cards-button {
+  background: transparent;
+  border: none;
+  color: #008BFF;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  line-height: 20px;
+  text-decoration: none;
+  align-self: flex-end;
+}
+
+.zotlo-checkout__card-item {
+  background: white;
+  border: 1px solid #E7EAEE;
+  border-radius: 8px;
+  padding: 8px 16px 8px 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.zotlo-checkout input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.zotlo-checkout input[type="radio"]:disabled {
+  cursor: not-allowed;
+}
+
+.zotlo-checkout__card-item .zotlo-checkout__card-item-info {
+  flex: 1;
+}
+
+.zotlo-checkout input[type="radio"]:checked ~ .zotlo-checkout__radio-button {
+  border-color: #4329CC;
+  background: #4329CC;
+  position: relative;
+}
+
+.zotlo-checkout input[type="radio"]:checked ~ .zotlo-checkout__radio-button::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+}
+
+.zotlo-checkout__card-item:has(input[type="radio"]:checked), .zotlo-checkout__form-container:has(input[type="radio"]:checked) {
+  background: var(--zc-form-card-item-backgroundColor);
+  border-color: var(--zc-form-card-item-borderColor);
+}
+
+.zotlo-checkout__card-item:has(input[type="radio"]:disabled) {
+  background: #F6F7F9;
+  color: #C3C9D5;
+  cursor: not-allowed;
+}
+
+.zotlo-checkout__card-item:has(input[type="radio"]:disabled) .zotlo-checkout__card-item-number,
+.zotlo-checkout__card-item:has(input[type="radio"]:disabled) .zotlo-checkout__card-item-expiry-date {
+  color: #C3C9D5;
+}
+
+.zotlo-checkout__card-item:has(input[type="radio"]:disabled) {
+  background: #F6F7F9;
+}
+
+.zotlo-checkout__card-item:has(input[type="radio"]:disabled) .zotlo-checkout__radio-button {
+  border: none;
+}
+
+.zotlo-checkout__radio-button {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #E7EAEE;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zotlo-checkout__card-item .zotlo-checkout__card-item-number {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #0D0626;
+}
+
+.zotlo-checkout__card-item .zotlo-checkout__card-item-expiry-date {
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 400;
+  color: #737380;
+}
+
+.zotlo-checkout__card-item-logo {
+  display: flex;
+  align-items: center;
+}
+
+.zotlo-checkout__card-item-logo img {
+  max-height: 24px;
+}
+
+.zotlo-checkout__card-item-logo span {
+  font-size: 9px;
+  line-height: 14px;
+  color: #FF2D55;
+  font-weight: 400;
+}
+
+.zotlo-checkout__form-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #E7EAEE;
+  border-radius: 8px;
+}
+
+.zotlo-checkout__form-container:has(input[type="radio"]:checked) .zotlo-checkout__form-card-fields {
+  display: flex;
+}
+
+.zotlo-checkout__form-container-radio {
+  padding: 16px 8px 16px 10px;
+  display: flex;
+  flex: 1;
+  cursor: pointer;
+}
+
+.zotlo-checkout__form-container-radio-text {
+  color: #0D0626;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.zotlo-checkout__form-card-fields {
+  position: relative;
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 8px 16px;
 }
 
 @keyframes spin {

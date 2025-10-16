@@ -1,0 +1,16 @@
+<label class="zotlo-checkout__card-item">
+  <input id="card-{{CARD_ID}}" type="radio" name="{{RADIO_GROUP_NAME}}" value="{{CARD_ID}}" />
+  <div class="zotlo-checkout__radio-button"></div>
+  <div class="zotlo-checkout__card-item-info">
+    <div class="zotlo-checkout__card-item-number">{{CARD_NUMBER_TEXT}}</div>
+    <div class="zotlo-checkout__card-item-expiry-date">{{CARD_EXPIRY_TEXT}}</div>
+  </div>
+  <div class="zotlo-checkout__card-item-logo">
+    <% IF(IS_CARD_EXPIRED===0) %>
+      {{CARD_LOGO}}
+    <% ENDIF %>
+    <% IF(IS_CARD_EXPIRED===1) %>
+      <span>{{EXPIRED_TEXT}}</span>
+    <% ENDIF %>
+  </div>
+</label>

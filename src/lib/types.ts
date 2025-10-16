@@ -95,6 +95,9 @@ export interface IZotloCheckoutParams {
   /** Send custom parameters to webhooks */
   customParameters?: Record<string, any>;
 
+  /** Show saved credit cards if the user has any saved cards. Default is `false`. (To use this feature contact with support, a permission must be granted.) */
+  showSavedCards?: boolean;
+
   useCookie?: boolean;
 }
 
@@ -324,6 +327,7 @@ export type FormGeneral = {
     distanceSalesAgreement: string;
     informationForm: string;
   };
+  showSavedCards: boolean;
 }
 
 export type FormSuccess = {
