@@ -538,7 +538,6 @@
 }
 
 .zotlo-checkout__card-item {
-  background: white;
   border: 1px solid #E7EAEE;
   border-radius: 8px;
   padding: 8px 16px 8px 10px;
@@ -616,7 +615,7 @@
   font-size: 14px;
   line-height: 20px;
   font-weight: 500;
-  color: #0D0626;
+  color: var(--zc-form-card-item-color);
 }
 
 .zotlo-checkout__card-item .zotlo-checkout__card-item-expiry-date {
@@ -662,7 +661,7 @@
 }
 
 .zotlo-checkout__form-container-radio-text {
-  color: #0D0626;
+  color: var(--zc-form-card-item-color);
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;

@@ -47,6 +47,7 @@ export function createStyle(config: FormConfig) {
 
   --zc-form-card-item-backgroundColor: ${(design?.button?.backgroundColor + '1F') || '#765EF51F'};
   --zc-form-card-item-borderColor: ${design?.button?.backgroundColor || '#765EF5'};
+  --zc-form-card-item-color: ${config.design.darkMode ? '#FFFFFF' : '#0D0626'};
 
   --zc-form-spinner-color: #BBBFFF;
   
