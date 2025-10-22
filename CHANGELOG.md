@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.6.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.4...v1.6.0)
+
+### 🚀 Enhancements
+
+- Add zip code input and controls ([97bc00d](https://github.com/Zotlo/zotlo-checkout/commit/97bc00d))
+- Add payment header for all themes and adjust styles ([2ac77ce](https://github.com/Zotlo/zotlo-checkout/commit/2ac77ce))
+
+### 🩹 Fixes
+
+- Stop payment process if registration has error ([53cdd06](https://github.com/Zotlo/zotlo-checkout/commit/53cdd06))
+- Change registration order on google pay process ([b29c09f](https://github.com/Zotlo/zotlo-checkout/commit/b29c09f))
+
+### 🏡 Chore
+
+- Add details for events object on README ([f30e157](https://github.com/Zotlo/zotlo-checkout/commit/f30e157))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.5.4
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.3...v1.6.0)
@@ -25,7 +48,7 @@
 
 ### ❤️ Contributors
 
-- Yiğit Şahin
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
 
 ## v1.5.2
 
