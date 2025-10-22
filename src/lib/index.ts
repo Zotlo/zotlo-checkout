@@ -27,8 +27,12 @@ import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
 import { API } from "../utils/api";
+import { loadSentry } from './logger';
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
+  // Load Sentry for error tracking
+  await loadSentry();
+
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
   if (import.meta.env.VITE_SDK_API_URL) {

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:rc": "tsc && vite build --mode rc",
     "preview": "vite preview"
   },
   "files": [
@@ -21,6 +22,7 @@
     "./dist/zotlo-checkout.css": "./dist/zotlo-checkout.css"
   },
   "devDependencies": {
+    "@sentry/browser": "^10.20.0",
     "autoprefixer": "^10.4.21",
     "terser": "^5.43.1",
     "typescript": "~5.7.2",
