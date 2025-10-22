@@ -67,19 +67,25 @@ export function getGooglePayClient() {
   return googlePayClient;
 }
 
-export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"], options?: GooglePayButtonOptions): HTMLDivElement {
-  const {
-    buttonColor = 'default',
-  } = options || {};
-  const allowedPaymentMethods = JSON.parse(JSON.stringify(googlePayConfig?.paymentDataRequest?.allowedPaymentMethods || []));
-  const payload = JSON.parse(JSON.stringify({
-    buttonColor,
-    buttonType: 'plain',
-    buttonSizeMode: 'fill',
-    buttonRadius: 6,
-    allowedPaymentMethods,
-  }));
-  return getGooglePayClient()?.createButton(payload);
+export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"], options?: GooglePayButtonOptions): HTMLDivElement | null {
+  try {
+    const {
+      buttonColor = 'default',
+    } = options || {};
+    const allowedPaymentMethods = JSON.parse(JSON.stringify(googlePayConfig?.paymentDataRequest?.allowedPaymentMethods || []));
+    const payload = JSON.parse(JSON.stringify({
+      buttonColor,
+      buttonType: 'plain',
+      buttonSizeMode: 'fill',
+      buttonRadius: 6,
+      allowedPaymentMethods
+    }));
+    const client = getGooglePayClient();
+    return client?.createButton({...payload, onClick: () => {}});
+  } catch (e) {
+    console.error('Failed to create Google Pay button', e);
+    return null;
+  }
 }
 
 export function renderGooglePayButton(config: FormConfig) {
@@ -97,7 +103,7 @@ export function renderGooglePayButton(config: FormConfig) {
     innerButton?.setAttribute('type', 'button');
   }
 
-  if (!hasExistingButton) wrapper?.appendChild(googlePayButton);
+  if (!hasExistingButton && googlePayButton) wrapper?.appendChild(googlePayButton);
 }
 
 function prefetchGooglePaymentData(providerConfigs?: ProviderConfigs) {

@@ -66,7 +66,7 @@ export class API {
       const url = this.buildUrl(endpoint);
       const xhr = new XMLHttpRequest();
       const existingUuid = getSession({ useCookie: this.useCookie })?.id;
-      const clientDomain = window.location.host || window.location.hostname || "";
+      const clientDomain = window.location.hostname || window.location.host || "";
 
       // Initialize the request
       xhr.open(method, url, true);
