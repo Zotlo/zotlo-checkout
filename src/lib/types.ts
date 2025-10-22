@@ -55,28 +55,19 @@ export interface IZotloCheckoutStyle {
 
 export interface IZotloCheckoutEvents {
   /** Triggers after form loaded. */
-  onLoad?: (params: {
-    sandbox: boolean;
-    countryCode: string;
-    integrations: FormConfig['integrations'];
-    backgroundColor: string;
-    cookieText: string;
-  }) => void;
+  onLoad?: (params: IFormLoad) => void;
 
-  /** Triggered after the form is submitted. */
+  /** Triggers after the form is submitted. */
   onSubmit?: (data?: Record<string, any>) => void;
 
-  /** Triggered after a successful payment. */
+  /** Triggers after a successful payment. */
   onSuccess?: (result: PaymentDetail) => void;
 
-  /** Triggered when a payment fails. */
+  /** Triggers when a payment fails. */
   onFail?: (error: FailEventData) => void;
 
   /** Triggers when form has an invalid field. */
-  onInvalidForm?: (error: {
-    name: string;
-    result: ValidationResult;
-  }) => void;
+  onInvalidForm?: (error: IFormInvalid) => void;
 }
 
 export interface IZotloCheckoutParams {
@@ -552,4 +543,17 @@ export type PaymentDetail = {
     };
   };
   transaction?: TransactionDetail[];
+}
+
+export interface IFormLoad {
+  sandbox: boolean;
+  countryCode: string;
+  integrations: FormConfig['integrations'];
+  backgroundColor: string;
+  cookieText: string;
+}
+
+export interface IFormInvalid {
+  name: string;
+  result: ValidationResult;
 }
