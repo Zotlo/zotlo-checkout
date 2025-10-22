@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.5.4
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.3...v1.6.0)
+
+### 🩹 Fixes
+
+- Bump to v1.5.4 ([cec6f01](https://github.com/Zotlo/zotlo-checkout/commit/cec6f01))
+- handle gpay button create action ([e5a12f0](https://github.com/Zotlo/zotlo-checkout/commit/e5a12f0))
+  - add missing onClick parameter to createButton
+  - set client-domain header primarily with hostname
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.5.3
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.2...v1.5.3)
