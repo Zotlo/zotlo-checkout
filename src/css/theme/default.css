@@ -1,6 +1,6 @@
 .zotlo-checkout__header {
-  padding: 8px 32px;
-  margin: 0 -32px;
+  padding: 8px 16px;
+  margin: -16px -16px 0;
 }
 
 .zotlo-checkout__tab {

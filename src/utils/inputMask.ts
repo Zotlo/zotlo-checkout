@@ -22,9 +22,24 @@ class InputMask {
     };
   }
 
+  public isRegexMask(): boolean {
+    return this.options.mask.startsWith('/') && /\/(g?m?d?i?y?s?u?v?)?$/.test(this.options.mask);
+  }
+
   public apply(value: string): string {
     let maskedValue = '';
     let valueIndex = 0;
+
+    if (this.isRegexMask()) {
+      let stringPattern = this.options.mask.slice(1);
+      const endOfPattern = stringPattern.match(/\/(g?m?d?i?y?s?u?v?)?$/)?.[0];
+      if (endOfPattern) {
+        stringPattern = stringPattern.replace(new RegExp(endOfPattern+'$'), '');
+      }
+      const regex = new RegExp(stringPattern);
+      if (regex.test(value)) return value;
+      return value.slice(0, -1);
+    }
 
     for (let i = 0; i < this.options.mask.length && valueIndex < value.length; i++) {
       const maskChar: string = this.options.mask[i];
@@ -67,7 +82,8 @@ function maskInput(
   let mask = new InputMask(options);
 
   function updateValue(val?: string) {
-    const value = (val || inputElement.value).replace(/\D/g, ''); // Remove non-digits
+    const tempVal = val || inputElement.value;
+    const value = mask.isRegexMask() ? tempVal : tempVal.replace(/\D/g, ''); // Remove non-digits
     const maskedValue = mask.apply(value);
     inputElement.value = maskedValue;
     return maskedValue

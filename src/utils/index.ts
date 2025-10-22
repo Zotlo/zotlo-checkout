@@ -212,18 +212,20 @@ export async function handlePriceChangesBySubscriptionStatus(config: FormConfig)
   updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
 }
 
-export function syncSubscriberIdInputs(tabName: string | null) {
+export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
   setTimeout(() => {
-    const cardInput = document?.querySelector('[data-tab-content="creditCard"] input[name="subscriberId"]') as HTMLInputElement;
-    const providersInput = document?.querySelector('[data-tab-content="subscriberId"] input[name="subscriberId"]') as HTMLInputElement;
-    const isCreditCardTab = tabName === PaymentProvider.CREDIT_CARD;
-    // Sync subscriberId inputs based on the active tab and trigger blur event to update validation
-    if (isCreditCardTab && cardInput) {
-      cardInput.value = providersInput?.value;
-      if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
-    } else if (providersInput) {
-      providersInput.value = cardInput?.value;
-      if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
-    }
+    inputNames.forEach(inputName => {
+      const cardInput = document?.querySelector(`[data-tab-content="creditCard"] input[name="${inputName}"]`) as HTMLInputElement;
+      const providersInput = document?.querySelector(`[data-tab-content="subscriberId"] input[name="${inputName}"]`) as HTMLInputElement;
+      const isCreditCardTab = tabName === PaymentProvider.CREDIT_CARD;
+      // Sync inputs based on the active tab and trigger blur event to update validation
+      if (isCreditCardTab && cardInput) {
+        cardInput.value = providersInput?.value;
+        if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
+      } else if (providersInput) {
+        providersInput.value = cardInput?.value;
+        if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
+      }
+    });
   }, 0);
 }

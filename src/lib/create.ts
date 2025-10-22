@@ -7,6 +7,7 @@ import selectElement from '../html/select.html?raw'
 import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
 import paymentDetailsElement from '../html/payment-details.html?raw'
+import paymentHeaderElement from '../html/payment-header.html?raw'
 import modalElement from '../html/modal.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
@@ -221,6 +222,7 @@ export function createCreditCardForm(params: {
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
   const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
   const isPhoneRegister = registerType === 'phoneNumber';
+  const isZipcodeRequired = config.general.isZipcodeRequired;
   const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
@@ -233,7 +235,8 @@ export function createCreditCardForm(params: {
 
     if (
       isPhoneRegister && key === 'SUBSCRIBER_ID_EMAIL' ||
-      !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE'
+      !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE' ||
+      !isZipcodeRequired && key === 'ZIP_CODE'
     ) {
       newForm = template(newForm, { [key]: '' });
       continue;
@@ -257,7 +260,7 @@ export function createCreditCardForm(params: {
       [key]: key === 'AGREEMENT_CHECKBOX'
         ? (
           config.general.isPolicyRequired ?
-              createCheckbox({
+            createCheckbox({
               ...options,
               label: $t(`form.${key}.label`, {
                 distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
@@ -501,5 +504,23 @@ export function createAgreementModal(params: {
     MODAL_NAME: 'agreement',
     TITLE: $t(`agreement.title.${key}`),
     FRAME_URL: config.general.documents[key]
+  })
+}
+
+export function createPaymentHeader(params: {
+  config: FormConfig;
+}) {
+  const { config } = params;
+  const { $t } = useI18n(config.general.localization);
+  const showHeader = Object.prototype.hasOwnProperty.call(config.design, 'header') ? !!config.design.header?.show : true;
+  const closeButtonUrl = config.design.header?.close?.url;
+
+  return template(paymentHeaderElement, {
+    LOGO: config.general.appLogo || '',
+    APP_NAME: config.general.appName || '',
+    SHOW_HEADER: showHeader && (!!config.general.appName || !!config.general.appLogo),
+    SHOW_CLOSE_BUTTON: !!config.design.header?.close?.show && !!closeButtonUrl,
+    CLOSE_BUTTON_URL: closeButtonUrl,
+    CLOSE_BUTTON_TEXT: $t('common.close'),
   })
 }
