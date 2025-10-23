@@ -1,6 +1,6 @@
 {
   "name": "zotlo-checkout",
-  "version": "1.5.4",
+  "version": "1.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,7 +24,7 @@
     "autoprefixer": "^10.4.21",
     "terser": "^5.43.1",
     "typescript": "~5.7.2",
-    "vite": "^6.3.6",
-    "vite-plugin-dts": "^4.5.3"
+    "vite": "^7.1.12",
+    "vite-plugin-dts": "^4.5.4"
   }
 }
