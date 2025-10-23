@@ -64,6 +64,16 @@ export const FORM_ITEMS = {
       'data-mask': '+90 (###)###-####',
     }
   },
+  ZIP_CODE: {
+    label: 'Zip Code',
+    input: {
+      name: 'zipCode',
+      type: 'text',
+      placeholder: 'ZIP CODE',
+      'data-rules': 'required|zipCode',
+      'data-mask': /^[\d-]*$/,
+    }
+  },
   AGREEMENT_CHECKBOX: {
     label: 'I read and agree to <a target="_blank" href="#">distance sales agreement</a> and <a href="#" target="_blank">information form</a>',
     className: 'zotlo-checkout__agreement',

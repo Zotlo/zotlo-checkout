@@ -143,6 +143,12 @@ export const ValidationRules = {
       return getValidationMessage('phone');
     }
     return true;
+  },
+  zipCode(value: string) {
+    const pattern = /^[\d-]*$/;
+    const isValid = pattern.test(value);
+    if (!isValid) return getValidationMessage('zipCode');
+    return true;
   }
 };
 

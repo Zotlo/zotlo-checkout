@@ -10,7 +10,7 @@ Add the `zotlo-checkout` package to your project:
 
 #### npm
 ```bash
-npm install zotlo-checkout
+npm install --save-dev zotlo-checkout
 ```
 
 #### yarn
@@ -33,10 +33,10 @@ const checkout = await ZotloCheckout({
     myCustomParam: 'OK!'
   },
   events: {
-    onSuccess() {
+    onSuccess(result) {
       // Handle success here
     },
-    onFail() {
+    onFail(error) {
       // Handle fails here
     }
   }
@@ -81,10 +81,10 @@ You can also include Zotlo Checkout SDK directly in the browser using CDN links:
       myCustomParam: 'OK!'
     },
     events: {
-      onSuccess() {
+      onSuccess(result) {
         // Handle success here
       },
-      onFail() {
+      onFail(error) {
         // Handle fails here
       }
     }
@@ -99,20 +99,124 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 
 | Name                    | Required | Description                                                                                                                  |
 |-------------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
-| `token`                 | **true** | The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. |
-| `packageId`             | **true** | The ID of the package you want to use.                                                                                       |
-| `returnUrl`             | **true** | The URL to redirect the user after payment completion.                                                                       |
-| `subscriberId`          | false    | (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4.                                |
-| `style`                 | false    | Custom styling on config                                                                                                     |
-| `customParameters`      | false    | Send custom parameters to webhooks                                                                                           |
-| `events`                | false    | Event listeners that can be used during the checkout process.                                                                |
-| `events.onLoad`         | false    | Triggers after form loaded.                                                                                                  |
-| `events.onSubmit`       | false    | Triggered after the form is submitted.                                                                                       |
-| `events.onSuccess`      | false    | Triggered after a successful payment.                                                                                        |
-| `events.onFail`         | false    | Triggered when a payment fails.                                                                                              |
-| `events.onInvalidForm`  | false    | Triggers when form has an invalid field.                                                                                     |
+| `token`                 | **yes** | The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. |
+| `packageId`             | **yes** | The ID of the package you want to use.                                                                                       |
+| `returnUrl`             | **yes** | The URL to redirect the user after payment completion.                                                                       |
+| `subscriberId`          | no      | (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4.                                |
+| `style`                 | no      | Custom styling on config                                                                                                     |
+| `customParameters`      | no      | Send custom parameters to webhooks                                                                                           |
+| `events`                | no      | Event listeners that can be used during the checkout process.                                                                |
+| `events.onLoad`         | no      | Triggers after form loaded.                                                                                                  |
+| `events.onSubmit`       | no      | Triggered after the form is submitted.                                                                                       |
+| `events.onSuccess`      | no      | Triggered after a successful payment.                                                                                        |
+| `events.onFail`         | no      | Triggered when a payment fails.                                                                                              |
+| `events.onInvalidForm`  | no      | Triggers when form has an invalid field.                                                                                     |
 
 **Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts) file.
+
+## Events
+Please view [`IZotloCheckoutEvents`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L56) for full details on [src/lib/types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L56) file.
+
+### onLoad
+Triggers after form loaded.
+
+```typescript
+onLoad?: (params: IFormLoad) => void;
+```
+
+**Note:** You can see `params` details on type [`IFormLoad`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L545)
+
+```typescript
+{
+  ...
+  events: {
+    onLoad(params) {
+      // Update page bg color by form bg color
+      document.body.style.backgroundColor = params.backgroundColor;
+    }
+  }
+}
+```
+
+### onSubmit
+Triggers after the form is submitted. When you submit card form, you will receive form fields with values.
+
+```typescript
+onSubmit?: (data?: Record<string, any>) => void;
+```
+
+```typescript
+{
+  ...
+  events: {
+    onSubmit(data) {
+      console.log('Form fields', data)
+    }
+  }
+}
+```
+
+### onSuccess
+Triggers after a successful payment.
+
+```typescript
+onSuccess?: (result: PaymentDetail) => void;
+```
+
+**Note:** You can see `result` details on type [`PaymentDetail`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L489)
+
+```typescript
+{
+  ...
+  events: {
+    onSuccess(result) {
+      const emailEl = document.getElementById('email')
+      emailEl.innerText = result.client.subscriberId;
+      alert('Success done!');
+    }
+  }
+}
+```
+
+### onFail
+Triggers when a payment fails.
+
+```typescript
+onFail?: (error: FailEventData) => void;
+```
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L110)
+
+```typescript
+{
+  ...
+  events: {
+    onFail(error) {
+      alert(error.message)
+    }
+  }
+}
+```
+
+### onInvalidForm
+Triggers when form has an invalid field.
+
+```typescript
+onInvalidForm?: (error: IFormInvalid) => void;
+```
+
+**Note:** You can see `error` details on type [`IFormInvalid`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L553)
+
+
+```typescript
+{
+  ...
+  events: {
+    onInvalidForm(error) {
+      alert('Invalid field:', error.name)
+    }
+  }
+}
+```
 
 ## Methods
 User methods available after Checkout is started:

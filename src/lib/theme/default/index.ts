@@ -2,7 +2,7 @@ import mainHTML from './html/main.html?raw'
 import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme } from '../../types'
 import { useI18n, getCDNUrl, generateAttributes } from '../../../utils'
 import { template } from "../../../utils/template";
-import { createButton, createCreditCardForm, createProviderButton } from '../../create'
+import { createButton, createCreditCardForm, createProviderButton, createPaymentHeader } from '../../create'
 
 export function generateThemeDefault(params: {
   config: FormConfig;
@@ -97,12 +97,15 @@ export function generateThemeDefault(params: {
     }, '');
   }
 
+  const paymentHeader = createPaymentHeader({ config });
+
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
     THEME: config.design.theme === DesignTheme.HORIZONTAL && paymentMethods.length > 1
       ? DesignTheme.HORIZONTAL
       : DesignTheme.VERTICAL,
+    HEADER: paymentHeader || '',
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
     PRICE_INFO: footerInfo.PRICE_INFO,

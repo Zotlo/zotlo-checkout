@@ -18,7 +18,7 @@ import {
   activateDisabledSubscriberIdInputs,
   useI18n,
   handlePriceChangesBySubscriptionStatus,
-  syncSubscriberIdInputs
+  syncInputsOnTabs
 } from "../utils";
 import { getConfig, getPaymentData, ErrorHandler } from "../utils/getConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
@@ -26,7 +26,6 @@ import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
-import { ErrorCode } from "./errors";
 import { API } from "../utils/api";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
@@ -114,7 +113,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const errors = [];
     const bypassProtectedFields = [
       FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
-      FORM_ITEMS.AGREEMENT_CHECKBOX.input.name
+      FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
+      FORM_ITEMS.ZIP_CODE.input.name
     ]
 
     for (const validation of Object.values(validations)) {
@@ -340,7 +340,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         } else {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
         }
-        syncSubscriberIdInputs(tabName);
+        syncInputsOnTabs(tabName, ['subscriberId', 'zipCode']);
         initFormInputs();
       }
     }
@@ -502,7 +502,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     try {
       setFormDisabled();
       const response = await registerPaymentUser(subscriberId, config, params);
-      if (response?.meta?.errorCode === ErrorCode.USER_ALREADY_SUBSCRIBED_ERROR) {
+      if (response?.meta?.errorCode) {
         activateDisabledSubscriberIdInputs();
         subscriberInput.focus();
         return;
