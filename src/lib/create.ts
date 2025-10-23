@@ -16,11 +16,9 @@ import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
 import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
-import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme } from './types'
+import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName } from './types'
 import { FORM_ITEMS } from './fields'
-
-import DUMMY_CARDS from '../utils/dummy-cards';
-import { getCardIcon } from '../utils/getCardMask';
+import { getCardInfoFromCardNumber } from '../utils/getCardMask';
 
 export function createSelect(payload: {
   name: string;
@@ -211,24 +209,24 @@ export function prepareCreditCardSection(params: { config: FormConfig }) {
   const { config } = params || {};
   const { $t } = useI18n(config.general.localization);
 
-  const showSaveCards = true; // TODO: Change this with real config value for savedCards
-  const isSavedCardAvailable = false; // TODO: Change this with real saved cards availability check
+  if (import.meta.env.VITE_CONSOLE) return creditCardFieldsElement;
 
-  // TODO: Subscriber id boş gelirse normal form dönülecek
-  if (!showSaveCards && !isSavedCardAvailable) return creditCardFieldsElement;
-  
-  // get first non expired card from dummy data if available
-  const firstUseableCard = DUMMY_CARDS.find(card => !card.creditCardExpired);
+  const showSavedCards = config.general.showSavedCards;
+  if (!showSavedCards) return creditCardFieldsElement;
+
+  const savedCardList = config?.paymentData?.savedCardList || [];
+  const isSavedCardAvailable = savedCardList.length > 0;
+  if (!isSavedCardAvailable) return creditCardFieldsElement;
+
+  const firstUseableCard = savedCardList.find(card => !card.creditCardExpired);
   if (!firstUseableCard) return creditCardFieldsElement;
 
-  const radioGroupName = 'cards';
-  const { url: cardIconUrl, iconName: cardIconName } = getCardIcon(firstUseableCard.creditCardNumber);
-  const cardIconImg = cardIconUrl ? `<img src="${cardIconUrl}" alt="${cardIconName}" />` : '';
+  const { cardNumber, cardIconImg } = getCardInfoFromCardNumber(firstUseableCard.creditCardNumber);
 
   const savedCardItem = template(savedCardItemElement, {
-    RADIO_GROUP_NAME: radioGroupName,
+    RADIO_GROUP_NAME: SavedCardsGroupName.ON_PAYMENT_FORM,
     CARD_ID: firstUseableCard.creditCardId,
-    CARD_NUMBER_TEXT: firstUseableCard.creditCardNumber,
+    CARD_NUMBER_TEXT: cardNumber,
     CARD_EXPIRY_TEXT: $t('form.cards.expiresIn', { date: firstUseableCard.creditCardExpireDate }),
     CARD_LOGO: cardIconImg,
     EXPIRED_TEXT: $t('form.cards.expired'),
@@ -237,7 +235,7 @@ export function prepareCreditCardSection(params: { config: FormConfig }) {
 
   return template(savedCardsFormElement, {
     SAVED_CARDS: savedCardItem,
-    RADIO_GROUP_NAME: radioGroupName,
+    RADIO_GROUP_NAME: SavedCardsGroupName.ON_PAYMENT_FORM,
     ALL_CARDS_TEXT: $t('form.cards.allCards'),
     USE_NEW_CARD_TEXT: $t('form.cards.useNewCard'),
     CARD_FIELDS: creditCardFieldsElement,
@@ -260,8 +258,6 @@ export function createCreditCardForm(params: {
   });
   const { $t } = useI18n(config.general.localization);
 
-  // TODO: Change this with real config value (config.general.showSavedCards) for savedCards
-  const isSavedCardCheckboxVisible = true;
 
   let newForm = template(formElement, { 
     FORM_TYPE: formType, 
@@ -325,7 +321,7 @@ export function createCreditCardForm(params: {
           : '';
         break;
       case "SAVE_CARD_CHECKBOX":
-        fieldContent = isSavedCardCheckboxVisible ? createCheckbox(options) : '';
+        fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
         break;
       default:
         fieldContent = createInput(options);

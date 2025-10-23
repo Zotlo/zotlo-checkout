@@ -1,4 +1,5 @@
-import { getCDNUrl } from "../utils/getCDNUrl";
+import { getCDNUrl } from "./getCDNUrl";
+import { InputMask } from "./inputMask";
 
 export function getCardMask(value: string) {
   const cardTypes = [
@@ -78,7 +79,6 @@ export function getCardMask(value: string) {
     return new RegExp(card.regex, "g").test(value);
   })
 
-
   return card || {
     name: "Default",
     mask: "0000 0000 0000 0000",
@@ -88,11 +88,16 @@ export function getCardMask(value: string) {
   };
 }
 
-export function getCardIcon(value: string) {
-  const currentMask = getCardMask(value);
+export function getCardInfoFromCardNumber(cardNumber: string) {
+  const currentMask = getCardMask(cardNumber);
+  const cardMask = currentMask.mask.replace(/0/g, '#');
+  const cardMaskInstance = new InputMask({ mask: cardMask, validChars: /^[0-9 *]+$/ });
+  const formattedCardNumber = cardMaskInstance.apply(cardNumber);
   const url = getCDNUrl(`cards/${currentMask.icon}.svg`);
+  const cardIconImg = url ? `<img src="${url}" alt="${currentMask.icon}" />` : '';
+  
   return {
-    url,
-    iconName: currentMask.icon
+    cardNumber: formattedCardNumber,
+    cardIconImg
   };
 }

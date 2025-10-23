@@ -40,6 +40,11 @@ export enum DesignTheme {
   MOBILEAPP = 'mobileapp'
 }
 
+export enum SavedCardsGroupName {
+  ON_PAYMENT_FORM = 'cards',
+  ON_ALL_CARDS_MODAL = 'all-cards'
+}
+
 type DeepPartial<T> = T extends object ? {
     [P in keyof T]?: DeepPartial<T[P]>;
 } : T;
@@ -258,6 +263,14 @@ export type SubscriberStatusesData = {
   hasPurchasedAnyPackageBefore: boolean;
 };
 
+export type SavedCreditCardData = {
+  creditCardId: number;
+  creditCardHolderName: string;
+  creditCardNumber: string;
+  creditCardExpireDate: string;
+  creditCardExpired: boolean;
+};
+
 export type FormPaymentData = {
   package: PackageData;
   providers: Record<PaymentProvider, boolean>;
@@ -274,6 +287,8 @@ export type FormPaymentData = {
     distanceSalesAgreement: string;
     informationForm: string;
   };
+  showSavedCards: boolean;
+  savedCardList?: SavedCreditCardData[];
 }
 
 export type PackageInfoType = {
