@@ -11,8 +11,9 @@ function preparePayload(payload: {
   config: FormConfig
 }) {
   const { providerKey, formData, params, config } = payload;
-  const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV, zipCode } = formData || {};
+  const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV, zipCode, saveCard, cardId = 0 } = formData || {};
   const { returnUrl } = params || {};
+  const showSavedCards = config.general.showSavedCards;
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
   let data = {};
 
@@ -21,13 +22,24 @@ function preparePayload(payload: {
       data = {
         providerKey,
         acceptPolicy,
+      };
+      if (cardId) {
+        data = {
+          ...data,
+          cardId,
+        }
+        break;
+      }
+      data = {
+        ...data,
         creditCardDetails: {
           cardHolder,
           cardNumber: cardNumber?.replace(/\s/g, '') || '',
           cardExpirationMonth,
           cardExpirationYear: `20${cardExpirationYear}`,
           cardCVV,
-        }
+        },
+        ...(showSavedCards && { saveCard }),
       }
       break;
     case PaymentProvider.PAYPAL:

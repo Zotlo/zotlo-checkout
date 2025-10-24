@@ -40,6 +40,11 @@ export enum DesignTheme {
   MOBILEAPP = 'mobileapp'
 }
 
+export enum SavedCardsGroupName {
+  ON_PAYMENT_FORM = 'cards',
+  ON_ALL_CARDS_MODAL = 'all-cards'
+}
+
 type DeepPartial<T> = T extends object ? {
     [P in keyof T]?: DeepPartial<T[P]>;
 } : T;
@@ -94,6 +99,9 @@ export interface IZotloCheckoutParams {
 
   /** Send custom parameters to webhooks */
   customParameters?: Record<string, any>;
+
+  /** Show saved credit cards if the user has any saved cards. Default is `false`. (To use this feature contact with support, a permission must be granted.) */
+  showSavedCards?: boolean;
 
   useCookie?: boolean;
 }
@@ -255,6 +263,14 @@ export type SubscriberStatusesData = {
   hasPurchasedAnyPackageBefore: boolean;
 };
 
+export type SavedCreditCardData = {
+  creditCardId: number;
+  creditCardHolderName: string;
+  creditCardNumber: string;
+  creditCardExpireDate: string;
+  creditCardExpired: boolean;
+};
+
 export type FormPaymentData = {
   package: PackageData;
   providers: Record<PaymentProvider, boolean>;
@@ -271,6 +287,8 @@ export type FormPaymentData = {
     distanceSalesAgreement: string;
     informationForm: string;
   };
+  showSavedCards: boolean;
+  savedCardList?: SavedCreditCardData[];
 }
 
 export type PackageInfoType = {
@@ -324,6 +342,7 @@ export type FormGeneral = {
     distanceSalesAgreement: string;
     informationForm: string;
   };
+  showSavedCards: boolean;
 }
 
 export type FormSuccess = {

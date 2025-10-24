@@ -40,6 +40,7 @@ type InitResult = {
     cookiePolicy?: string;
   };
   integrations?: FormConfig['integrations'];
+  showSavedCards: boolean;
 };
 
 export const ErrorHandler = {
@@ -80,11 +81,13 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     subscriberId,
     customParameters,
     useCookie = false,
+    showSavedCards,
   } = params || {};
 
   const payload = {
     applicationHash: token,
     packageId,
+    ...(showSavedCards !== undefined && { showSavedCards }),
     ...(subscriberId && { subscriberId }),
     ...(customParameters && typeof customParameters === 'object' && { customParameters: JSON.stringify(customParameters) }),
   };
@@ -149,13 +152,14 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
         termsOfService: initData?.zotloUrls?.termsOfService || '',
         cookiePolicy: initData?.zotloUrls?.cookiePolicy || '',
       },
-      documents: paymentInitData?.documents || {}
+      documents: paymentInitData?.documents || {},
+      showSavedCards: !!initData?.showSavedCards,
     };
     config.settings = {
       paymentMethodSetting: initData?.paymentMethodSetting || [],
       registerType: initData?.registerType,
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
-      hideSubscriberIdIfAlreadySet: !!+initData?.hideSubscriberIdIfAlreadySet,
+      hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards) ? initData?.registerType !== 'other' : !!+initData?.hideSubscriberIdIfAlreadySet,
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);

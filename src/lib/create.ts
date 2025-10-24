@@ -9,12 +9,16 @@ import paymentSuccessElement from '../html/payment-success.html?raw'
 import paymentDetailsElement from '../html/payment-details.html?raw'
 import paymentHeaderElement from '../html/payment-header.html?raw'
 import modalElement from '../html/modal.html?raw'
+import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
+import savedCardItemElement from '../html/saved-card-item.html?raw'
+import savedCardsFormElement from '../html/saved-cards-form.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
 import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
-import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme } from './types'
+import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName } from './types'
 import { FORM_ITEMS } from './fields'
+import { getCardInfoFromCardNumber } from '../utils/getCardMask';
 
 export function createSelect(payload: {
   name: string;
@@ -201,6 +205,43 @@ export function createButton(payload: {
   });
 }
 
+export function prepareCreditCardSection(params: { config: FormConfig }) {
+  const { config } = params || {};
+  const { $t } = useI18n(config.general.localization);
+
+  if (import.meta.env.VITE_CONSOLE) return creditCardFieldsElement;
+
+  const showSavedCards = config.general.showSavedCards;
+  if (!showSavedCards) return creditCardFieldsElement;
+
+  const savedCardList = config?.paymentData?.savedCardList || [];
+  const isSavedCardAvailable = savedCardList.length > 0;
+  if (!isSavedCardAvailable) return creditCardFieldsElement;
+
+  const firstUseableCard = savedCardList.find(card => !card.creditCardExpired);
+  if (!firstUseableCard) return creditCardFieldsElement;
+
+  const { cardNumber, cardIconImg } = getCardInfoFromCardNumber(firstUseableCard.creditCardNumber);
+
+  const savedCardItem = template(savedCardItemElement, {
+    RADIO_GROUP_NAME: SavedCardsGroupName.ON_PAYMENT_FORM,
+    CARD_ID: firstUseableCard.creditCardId,
+    CARD_NUMBER_TEXT: cardNumber,
+    CARD_EXPIRY_TEXT: $t('form.cards.expiresIn', { date: firstUseableCard.creditCardExpireDate }),
+    CARD_LOGO: cardIconImg,
+    EXPIRED_TEXT: $t('form.cards.expired'),
+    IS_CARD_EXPIRED: firstUseableCard.creditCardExpired ? 1 : 0,
+  });
+
+  return template(savedCardsFormElement, {
+    SAVED_CARDS: savedCardItem,
+    RADIO_GROUP_NAME: SavedCardsGroupName.ON_PAYMENT_FORM,
+    ALL_CARDS_TEXT: $t('form.cards.allCards'),
+    USE_NEW_CARD_TEXT: $t('form.cards.useNewCard'),
+    CARD_FIELDS: creditCardFieldsElement,
+  });
+}
+
 export function createCreditCardForm(params: {
   config: FormConfig;
   formType?: 'creditCard' | 'subscriberId' | 'both';
@@ -216,7 +257,16 @@ export function createCreditCardForm(params: {
     ...({ 'data-form-type': formType })
   });
   const { $t } = useI18n(config.general.localization);
-  let newForm = template(formElement, { FORM_TYPE: formType, ATTRIBUTES: attrs, CLASS_NAME: className || '', SHOW_PRICE: showPrice });
+
+
+  let newForm = template(formElement, { 
+    FORM_TYPE: formType, 
+    ATTRIBUTES: attrs, 
+    CLASS_NAME: className || '', 
+    SHOW_PRICE: showPrice,
+    CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
+  });
+
   let cardTop = '';
   let cardBottom = '';
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
@@ -256,20 +306,30 @@ export function createCreditCardForm(params: {
       }
     }
 
-    newForm = template(newForm, {
-      [key]: key === 'AGREEMENT_CHECKBOX'
-        ? (
-          config.general.isPolicyRequired ?
-            createCheckbox({
+    let fieldContent = '';
+    
+    switch (key) {
+      case "AGREEMENT_CHECKBOX":
+        fieldContent = config.general.isPolicyRequired
+          ? createCheckbox({
               ...options,
               label: $t(`form.${key}.label`, {
                 distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
                 info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
               })
             })
-          : ''
-        )
-        : createInput(options)
+          : '';
+        break;
+      case "SAVE_CARD_CHECKBOX":
+        fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
+        break;
+      default:
+        fieldContent = createInput(options);
+        break;
+    }
+
+    newForm = template(newForm, {
+      [key]: fieldContent
     });
   }
 

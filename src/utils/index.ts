@@ -1,5 +1,5 @@
 import Countries from '../countries.json';
-import { type FormConfig, PaymentProvider } from '../lib/types';
+import { type FormConfig, PaymentProvider, SavedCardsGroupName } from '../lib/types';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
 import { template } from "./template";
@@ -169,6 +169,12 @@ export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' =
   });
 }
 
+export function handleSavedCardsInputs() {
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const cardItemRadio = formElement?.querySelectorAll('.zotlo-checkout__card-item input[type="radio"]') as NodeListOf<HTMLInputElement>;
+  if (cardItemRadio.length > 0) cardItemRadio[0].checked = true;
+}
+
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
@@ -228,4 +234,19 @@ export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
       }
     });
   }, 0);
+}
+
+export function getActiveSavedCardId(params: { providerKey: PaymentProvider; config: FormConfig; groupName?: SavedCardsGroupName }): number {
+  const { providerKey, config, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
+  if (providerKey !== PaymentProvider.CREDIT_CARD || !config.general?.showSavedCards) return 0;
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const checkedInput = formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"]:checked`);
+  const cardId = +(checkedInput?.value || 0);
+  return cardId;
+}
+
+export function getIsSavedCardPayment(params: { providerKey: PaymentProvider; config: FormConfig }): boolean {
+  const { providerKey, config } = params;
+  const cardId = getActiveSavedCardId({ providerKey, config, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
+  return cardId > 0;
 }
