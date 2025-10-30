@@ -19,7 +19,7 @@ import {
   useI18n,
   handlePriceChangesBySubscriptionStatus,
   syncInputsOnTabs,
-  handleSavedCardsInputs,
+  handleSavedCardsEvents,
   getActiveSavedCardId,
   getIsSavedCardPayment
 } from "../utils";
@@ -55,6 +55,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
   let destroyAgreementLinks = null as (() => void) | null;
+  let destroySavedCardsEvents = null as (() => void) | null;
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
@@ -649,7 +650,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     if (import.meta.env.VITE_SDK_API_URL) {
       const { destroy } = handleAgreementLinks();
+      const { destroy: destroyFn } = handleSavedCardsEvents({ config });
       destroyAgreementLinks = destroy;
+      destroySavedCardsEvents = destroyFn;
       renderGooglePayButton(config);
     }
 
@@ -664,8 +667,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     formElement?.addEventListener('submit', handleForm);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
-    handleSavedCardsInputs();
-    // TODO: Select default card on form from radio button
   }
 
   function destroyFormInputs() {
@@ -699,6 +700,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     validatorInstance?.clearRules();
     destroyAgreementLinks?.();
+    destroySavedCardsEvents?.();
   }
 
   function init() {

@@ -675,6 +675,52 @@
   padding: 0 8px 16px;
 }
 
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content {
+  max-width: 440px;
+  height: auto;
+  max-height: 95%;
+}
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__header {
+  padding: 16px 24px;
+  border-color: #E7EAEE;
+}
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__header__title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__body {
+  display: flex;
+  flex-flow: column;
+  padding: 24px;
+  gap: 16px;
+  overflow: auto;
+}
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__footer {
+  border-color: #E7EAEE;
+}
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__footer a {
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__footer button {
+  max-height: 40px;
+}
+
+.zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__footer .zotlo-checkout__modal--all-cards-footer-holder {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 @keyframes spin {
   from { 
     transform: rotate(0deg); 
@@ -687,5 +733,26 @@
 @media (min-width: 640px) {
   .zotlo-checkout {
     border: var(--zc-form-borderWidth, 1px) solid var(--zc-form-borderColor, #E7EAEE);
+  }
+}
+
+@media screen and (max-width: 440px) {
+  .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__header,
+  .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__body,
+  .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__footer {
+    padding: 16px;
+  }
+
+  .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__footer .zotlo-checkout__modal--all-cards-footer-holder {
+    flex-direction: column-reverse;
+    gap: 16px;
+  }
+
+  .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__button-container {
+    width: 100%;
+  }
+
+  .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content__footer button {
+    flex: 1;
   }
 }
