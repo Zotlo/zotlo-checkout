@@ -37,7 +37,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   if (import.meta.env.VITE_SDK_API_URL) {
     API.setUseCookie(!!params?.useCookie);
-    config = await getConfig({ 
+    config = await getConfig({
       token: params.token,
       packageId: params.packageId,
       language: params.language,

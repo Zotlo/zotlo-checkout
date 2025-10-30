@@ -63,6 +63,10 @@ export const Logger = {
 
   async loadSentry() {
     return new Promise((resolve) => {
+      if (this.getEnv() === 'development') {
+        resolve(false);
+        return;
+      }
       const script = document.createElement('script');
       script.src = 'https://js-de.sentry-cdn.com/153957e4d927936b0b109b0bb75dc1ae.min.js';
       script.crossOrigin = 'anonymous';
