@@ -4,6 +4,7 @@ import { DesignTheme, PaymentProvider, SuccessTheme } from "../lib/types";
 import { API } from "../utils/api";
 import { setSession } from "./session";
 import { getPackageInfo } from "./getPackageInfo";
+import { Logger } from "../lib/logger";
 
 type InitResult = {
   uuid: string;
@@ -58,6 +59,7 @@ export async function getPaymentData(uuid?: string) {
     return paymentInitData as FormPaymentData;
   } catch (e: any) {
     ErrorHandler.response = e;
+    Logger.client?.captureException(e);
     return {} as FormPaymentData;
   }
 }
@@ -165,6 +167,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     config.packageInfo = getPackageInfo(config);
   } catch (e: any) {
     ErrorHandler.response = e;
+    Logger.client?.captureException(e);
     return config;
   }
 
@@ -178,6 +181,7 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
     return data;
   } catch (e: any) {
     ErrorHandler.response = e;
+    Logger.client?.captureException(e);
     return {};
   }
 }

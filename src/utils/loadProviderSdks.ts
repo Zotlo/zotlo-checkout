@@ -1,5 +1,6 @@
 import { type FormPaymentData, PaymentProvider, type FormConfig, type ProviderConfigs, DesignTheme } from "../lib/types";
 import { getProvidersConfig } from "../utils/getConfig";
+import { Logger } from "../lib/logger";
 
 export type GooglePayButtonOptions = {
   buttonColor?: 'default' | 'black' | 'white';
@@ -40,7 +41,11 @@ function loadScript(src: string, id?: string): Promise<void> {
       // Emit as done
       resolve();
     };
-    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    script.onerror = () => {
+      const err = new Error(`Failed to load script: ${src}`);
+      Logger.client?.captureException(err);
+      reject(err);
+    };
 
     document.head.appendChild(script);
   });
@@ -83,7 +88,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
     const client = getGooglePayClient();
     return client?.createButton({...payload, onClick: () => {}});
   } catch (e) {
-    console.error('Failed to create Google Pay button', e);
+    Logger.client?.captureException(e);
     return null;
   }
 }
@@ -107,8 +112,12 @@ export function renderGooglePayButton(config: FormConfig) {
 }
 
 function prefetchGooglePaymentData(providerConfigs?: ProviderConfigs) {
-  const payload = JSON.parse(JSON.stringify(providerConfigs?.googlePay?.paymentDataRequest));
-  getGooglePayClient()?.prefetchPaymentData(payload);
+  try {
+    const payload = JSON.parse(JSON.stringify(providerConfigs?.googlePay?.paymentDataRequest));
+    getGooglePayClient()?.prefetchPaymentData(payload);
+  } catch (e) {
+    Logger.client?.captureException(e);
+  }
 }
 
 export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs) {
@@ -117,7 +126,8 @@ export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs
     const isReadyToPayRequest = JSON.parse(JSON.stringify((providerConfigs?.googlePay?.isReadyToPayRequest || {})));
     const response = await getGooglePayClient()?.isReadyToPay(isReadyToPayRequest);
     return !!response?.result;
-  } catch {
+  } catch (e) {
+    Logger.client?.captureException(e);
     return false;
   }
 }
@@ -126,7 +136,8 @@ export function canMakeApplePayPayments() {
   if (import.meta.env.VITE_CONSOLE) return true;
   try {
     return (globalThis as any)?.ApplePaySession?.canMakePayments();
-  } catch {
+  } catch (e) {
+    Logger.client?.captureException(e);
     return false;
   }
 }
