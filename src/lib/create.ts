@@ -581,7 +581,7 @@ export function createAllCardsModal(params: {
 }) {
   const { config } = params;
   const { $t } = useI18n(config.general.localization);
-  const zotloAccountUrl = "https://account.zotlo.com/";
+  const zotloAccountUrl = "https://account.zotlo.com/account";
   const savedCardList = config?.paymentData?.savedCardList || [];
   let savedCardsHtml = '';
   savedCardList.forEach(card => {
