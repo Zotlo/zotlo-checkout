@@ -618,10 +618,6 @@
   color: var(--zc-form-card-item-color);
 }
 
-[data-theme="dark"] .zotlo-checkout__card-item .zotlo-checkout__card-item-number {
-  color: #0D0626;
-}
-
 .zotlo-checkout__card-item .zotlo-checkout__card-item-expiry-date {
   font-size: 10px;
   line-height: 14px;
@@ -679,6 +675,9 @@
   padding: 0 8px 16px;
 }
 
+[data-theme="dark"] .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__card-item .zotlo-checkout__card-item-number {
+  color: #0D0626;
+}
 
 .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__modal__content {
   max-width: 440px;
