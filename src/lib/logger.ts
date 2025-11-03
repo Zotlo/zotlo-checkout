@@ -63,7 +63,7 @@ export const Logger = {
 
   async loadSentry() {
     return new Promise((resolve) => {
-      if (this.getEnv() === 'development') {
+      if (this.getEnv() === 'development' || !import.meta.env.VITE_SDK_API_URL) {
         resolve(false);
         return;
       }
