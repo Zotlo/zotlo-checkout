@@ -76,11 +76,6 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
     const response = await API.post("/payment/register", { subscriberId });
     if (response?.meta?.errorCode) {
       params.events?.onFail?.({ message: response?.meta?.message, data: response?.meta })
-      Logger.client?.captureEvent({
-        level: 'error',
-        message: response?.meta?.message || 'Payment user registration failed -> registerPaymentUser',
-        extra: response?.meta
-      });
     };
     return response;
   } catch (err:any) {
@@ -106,11 +101,6 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
 
     if (meta?.errorCode) {
       params.events?.onFail?.({ message: meta?.message, data: meta });
-      Logger.client?.captureEvent({
-        level: 'error',
-        message: meta?.message || 'Fetching payment detail failed -> handlePaymentSuccess',
-        extra: meta
-      });
       return null
     }
 
@@ -140,11 +130,6 @@ async function handleCheckoutResponse(payload: {
   if (meta?.errorCode) {
     if (actions?.errorAction) actions.errorAction();
     await refreshProviderConfigsFunction();
-    Logger.client?.captureEvent({
-      level: 'error',
-      message: meta?.message || 'Payment checkout failed -> handleCheckoutResponse',
-      extra: meta
-    });
     return params.events?.onFail?.({ message: meta?.message, data: meta });
   }
 
@@ -190,11 +175,6 @@ async function handleApplePayPayment(payload: {
       const sessionUrl = event.validationURL;
       const { result, meta } = await API.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
       if (meta?.errorCode) {
-        Logger.client?.captureEvent({
-          level: 'error',
-          message: meta?.message || 'Apple Pay merchant validation failed',
-          extra: meta
-        });
         return params.events?.onFail?.({ message: meta?.message, data: meta });
       }
       const sessionData = result?.sessionData;
