@@ -217,6 +217,7 @@ export function createSavedCardItem(params: { config: FormConfig, card: SavedCre
     CARD_LOGO: cardIconImg,
     EXPIRED_TEXT: $t('form.cards.expired'),
     IS_CARD_EXPIRED: card.creditCardExpired ? 1 : 0,
+    RADIO_ATTRIBUTES: card.creditCardExpired ? 'disabled' : '',
   });
   return savedCardItem;
 }
