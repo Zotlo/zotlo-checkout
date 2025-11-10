@@ -131,13 +131,27 @@ async function handleCheckoutResponse(payload: {
   if (meta.httpStatus === 200) {
     const { status, redirectUrl, payment } = result || {};
     const returnUrl = payment?.returnUrl || '';
-    if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && globalThis?.location?.href) {
+    const currentUrl = globalThis?.location?.href || '';
+    const currentUrlBase = globalThis?.location.origin + globalThis?.location.pathname;
+    const returnUrlObj = new URL(params.returnUrl);
+    const returnUrlBase = returnUrlObj.origin + returnUrlObj.pathname;
+    const isSamePage = returnUrlBase === currentUrlBase;
+
+    if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && currentUrl) {
       if (actions?.redirectAction) return actions.redirectAction();
+      if (!isSamePage) {
+        deleteSession({ useCookie: !!params.useCookie });
+      }
       globalThis.location.href = redirectUrl;
     }
     if (status === PaymentResultStatus.COMPLETE && payment) {
       if (actions?.completeAction) actions.completeAction();
-      if (returnUrl) globalThis.location.href = returnUrl;
+      if (returnUrl) {
+        if (!isSamePage) {
+          deleteSession({ useCookie: !!params.useCookie });
+        }
+        globalThis.location.href = returnUrl;
+      }
     }
   }
 }
