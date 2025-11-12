@@ -3,6 +3,7 @@ import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheck
 import { getGooglePayClient } from "./loadProviderSdks";
 import { API } from "./api";
 import { deleteSession } from "./session";
+import { Logger } from "../lib/logger";
 
 function preparePayload(payload: {
   providerKey: PaymentProvider;
@@ -73,10 +74,13 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
       subscriberId = subscriberId.replace(/[^0-9]/g, '');
     }
     const response = await API.post("/payment/register", { subscriberId });
-    if (response?.meta?.errorCode) params.events?.onFail?.({ message: response?.meta?.message, data: response?.meta });
+    if (response?.meta?.errorCode) {
+      params.events?.onFail?.({ message: response?.meta?.message, data: response?.meta })
+    };
     return response;
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message || "Failed to register user", data: err?.meta });
+    Logger.client?.captureException(err);
     return err;
   }
 }
@@ -103,7 +107,8 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
     deleteSession({ useCookie: !!params.useCookie });
     params.events?.onSuccess?.(result as PaymentDetail);
     return result as PaymentDetail;
-  } catch {
+  } catch (e) {
+    Logger.client?.captureException(e);
     return null;
   } finally {
     setFormLoading(false);
@@ -183,7 +188,9 @@ async function handleApplePayPayment(payload: {
     session.onvalidatemerchant = async (event: any) => {
       const sessionUrl = event.validationURL;
       const { result, meta } = await API.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
-      if (meta?.errorCode) return params.events?.onFail?.({ message: meta?.message, data: meta });
+      if (meta?.errorCode) {
+        return params.events?.onFail?.({ message: meta?.message, data: meta });
+      }
       const sessionData = result?.sessionData;
       session.completeMerchantValidation(sessionData);
     };
@@ -215,9 +222,10 @@ async function handleApplePayPayment(payload: {
             },
           },
         });
-      } catch {
+      } catch (e) {
         session.completePayment(ApplePaySession.STATUS_FAILURE);
         session.abort();
+        Logger.client?.captureException(e || 'Apple Pay checkout error -> onpaymentauthorized');
       }
     };
 
@@ -232,6 +240,7 @@ async function handleApplePayPayment(payload: {
       message,
       data: typeof error !== 'string' ? error : {}
     });
+    Logger.client?.captureException(error);
   }
 }
 
@@ -280,6 +289,7 @@ async function handleGooglePayPayment(payload: {
       message,
       data: typeof error !== 'string' ? error : {}
     });
+    Logger.client?.captureException(error);
   }
 }
 
@@ -322,5 +332,6 @@ export async function sendPayment(paymentParams: {
 
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });
+    Logger.client?.captureException(err);
   }
 }
