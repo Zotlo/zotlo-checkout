@@ -27,13 +27,17 @@ import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
 import { API } from "../utils/api";
+import { Logger } from './logger';
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
+  // Load Sentry for error tracking
+  await Logger.loadSentry();
+
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
   if (import.meta.env.VITE_SDK_API_URL) {
     API.setUseCookie(!!params?.useCookie);
-    config = await getConfig({ 
+    config = await getConfig({
       token: params.token,
       packageId: params.packageId,
       language: params.language,
@@ -162,6 +166,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
           config,
           refreshProviderConfigsFunction: refreshProviderConfigs
         });
+      } catch (e) {
+        Logger.client?.captureException(e);
       } finally {
         setFormLoading(false);
       }
@@ -244,30 +250,34 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     function handleClick(this: HTMLElement) {
-      const target = this as HTMLElement;
-      const agreement = target.getAttribute('data-agreement') as any;
-      const modalHTML = createAgreementModal({ key: agreement, config })
-      const parser = new DOMParser();
-      let modalDOM = parser.parseFromString(modalHTML, 'text/html')?.body.firstChild as HTMLElement;
+      try {
+        const target = this as HTMLElement;
+        const agreement = target.getAttribute('data-agreement') as any;
+        const modalHTML = createAgreementModal({ key: agreement, config })
+        const parser = new DOMParser();
+        let modalDOM = parser.parseFromString(modalHTML, 'text/html')?.body.firstChild as HTMLElement;
 
-      // Add modal close action
-      modalDOM?.querySelector('[data-modal-close]')?.addEventListener('click', handleClose);
+        // Add modal close action
+        modalDOM?.querySelector('[data-modal-close]')?.addEventListener('click', handleClose);
 
-      container?.insertBefore(modalDOM, container.firstChild as HTMLElement);
-      modalDOM = container?.querySelector(`[data-modal="agreement"]`) as HTMLElement;
+        container?.insertBefore(modalDOM, container.firstChild as HTMLElement);
+        modalDOM = container?.querySelector(`[data-modal="agreement"]`) as HTMLElement;
 
-      setTimeout(() => {
-        modalDOM?.classList.remove('zotlo-checkout__modal-enter-from');
-        modalDOM?.classList.remove('zotlo-checkout__modal-enter-active');
-      }, 0)
+        setTimeout(() => {
+          modalDOM?.classList.remove('zotlo-checkout__modal-enter-from');
+          modalDOM?.classList.remove('zotlo-checkout__modal-enter-active');
+        }, 0)
 
-      function handleClose(this: HTMLElement) {
-        const closeBtn = this as HTMLElement;
-        modalDOM?.classList.add('zotlo-checkout__modal-enter-from');
-        modalDOM?.classList.add('zotlo-checkout__modal-enter-active');
-        closeBtn.removeEventListener('click', handleClose);
-        
-        setTimeout(() => closeAgreement(), 150);
+        function handleClose(this: HTMLElement) {
+          const closeBtn = this as HTMLElement;
+          modalDOM?.classList.add('zotlo-checkout__modal-enter-from');
+          modalDOM?.classList.add('zotlo-checkout__modal-enter-active');
+          closeBtn.removeEventListener('click', handleClose);
+          
+          setTimeout(() => closeAgreement(), 150);
+        }
+      } catch (e) {
+        Logger.client?.captureException(e);
       }
     }
 
@@ -310,11 +320,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const tabSubscriberIdContent = document.querySelector('.zotlo-checkout [data-tab-content="subscriberId"]');
 
     function handleTabClick(e: Event) {
-      const target = e.target as HTMLElement;
-      const tabName = target.getAttribute('data-tab');
-      const tabContent =  document.querySelector(`.zotlo-checkout [data-tab-content="${tabName}"]`) as HTMLElement;
+      try {
+        const target = e.target as HTMLElement;
+        const tabName = target.getAttribute('data-tab');
+        const tabContent =  document.querySelector(`.zotlo-checkout [data-tab-content="${tabName}"]`) as HTMLElement;
 
-      if (tabContent) {
+        if (!tabContent) return;
+
         destroyFormInputs();
 
         for (const item of tabItems) {
@@ -342,6 +354,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         }
         syncInputsOnTabs(tabName, ['subscriberId', 'zipCode']);
         initFormInputs();
+      } catch (err) {
+        Logger.client?.captureException(err);
       }
     }
 
@@ -353,48 +367,52 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   async function refresh() {
-    if (!containerId) return;
+    try {
+      if (!containerId) return;
 
-    if (import.meta.env.VITE_CONSOLE) {
-      if ((globalThis as any)?.getZotloConfig) {
-        config = await (globalThis as any)?.getZotloConfig?.() as FormConfig;
+      if (import.meta.env.VITE_CONSOLE) {
+        if ((globalThis as any)?.getZotloConfig) {
+          config = await (globalThis as any)?.getZotloConfig?.() as FormConfig;
+        }
       }
-    }
 
-    if (hasAnyConfig()) {
-      updateValidationMessages(config.general.localization.form.validation.rule);
-      loadFontsOnPage([config.design.fontFamily]);
-    }
-
-    // Destroy everything before re-rendering
-    unmount();
-
-    let form = generateTheme({ config });
-    const style = createStyle(config);
-    const container = getContainerElement();
-
-    if (import.meta.env.VITE_SDK_API_URL) {
-      if (ErrorHandler.response) {
-        form = generateEmptyPage({
-          config,
-          title: config?.general?.localization?.empty?.error?.title || 'An error occured',
-          message: ErrorHandler.response?.meta?.message
-        });
+      if (hasAnyConfig()) {
+        updateValidationMessages(config.general.localization.form.validation.rule);
+        loadFontsOnPage([config.design.fontFamily]);
       }
-    }
 
-    if (container) container.innerHTML = `<style>${style}</style>` + form;
+      // Destroy everything before re-rendering
+      unmount();
 
-    init();
+      let form = generateTheme({ config });
+      const style = createStyle(config);
+      const container = getContainerElement();
 
-    if (import.meta.env.VITE_CONSOLE) {
-      if ((config as any).render === 'after-payment')  {
-        createPaymentSuccessForm({
-          containerId,
-          config,
-          paymentDetail: (config as any).paymentDetail as any
-        })
+      if (import.meta.env.VITE_SDK_API_URL) {
+        if (ErrorHandler.response) {
+          form = generateEmptyPage({
+            config,
+            title: config?.general?.localization?.empty?.error?.title || 'An error occured',
+            message: ErrorHandler.response?.meta?.message
+          });
+        }
       }
+
+      if (container) container.innerHTML = `<style>${style}</style>` + form;
+
+      init();
+
+      if (import.meta.env.VITE_CONSOLE) {
+        if ((config as any).render === 'after-payment')  {
+          createPaymentSuccessForm({
+            containerId,
+            config,
+            paymentDetail: (config as any).paymentDetail as any
+          })
+        }
+      }
+    } catch (err) {
+      Logger.client?.captureException(err);
     }
   }
 

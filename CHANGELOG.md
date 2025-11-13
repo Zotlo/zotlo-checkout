@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.7.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.6.0...v1.7.0)
+
+### 🚀 Enhancements
+
+- Initialize Sentry integration ([0cbfc9d](https://github.com/Zotlo/zotlo-checkout/commit/0cbfc9d))
+- Add logger to some critical methods ([d22e2ac](https://github.com/Zotlo/zotlo-checkout/commit/d22e2ac))
+- Prevent sentry load for development ([6517fed](https://github.com/Zotlo/zotlo-checkout/commit/6517fed))
+- Prevent logger load if api sdk is not found ([95381e6](https://github.com/Zotlo/zotlo-checkout/commit/95381e6))
+- Clear session if user redirect to outside ([a2616d4](https://github.com/Zotlo/zotlo-checkout/commit/a2616d4))
+
+### 🏡 Chore
+
+- Remove api response logs ([b5d17a8](https://github.com/Zotlo/zotlo-checkout/commit/b5d17a8))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.6.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.5.4...v1.6.0)
