@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/browser';
 
 export const Logger = {
   client: undefined as ReturnType<typeof Sentry['init']> | undefined,
+  scope: undefined as Sentry.Scope | undefined,
 
   getSentry() {
     return (window as any)?.Sentry as (typeof Sentry | undefined);
@@ -19,9 +20,10 @@ export const Logger = {
     return 'production';
   },
 
-  getConfig() : Sentry.BrowserOptions {
+  getConfig() : ConstructorParameters<typeof Sentry.BrowserClient>[0] {
     const env = this.getEnv();
     const release = `${__APP_NAME__}@${__APP_VERSION__}`;
+    const SentryBrowser = this.getSentry() as typeof Sentry;
 
     return {
       dsn: 'https://153957e4d927936b0b109b0bb75dc1ae@o4509214333140992.ingest.de.sentry.io/4510227417923664',
@@ -30,6 +32,9 @@ export const Logger = {
       replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
       sendDefaultPii: true,
       environment: env,
+      transport: SentryBrowser.makeFetchTransport,
+      stackParser: SentryBrowser.defaultStackParser,
+      integrations: SentryBrowser.getDefaultIntegrations({}),
       release,
       // Known Error/ad/3rd-party and loop sources (allowUrls defined will probably block these, but let's call it extra security)
       denyUrls: [
@@ -59,11 +64,18 @@ export const Logger = {
     const SentryBrowser = this.getSentry();
     if (!SentryBrowser) return;
 
-    SentryBrowser?.init(this.getConfig());
+    const client = new SentryBrowser.BrowserClient(this.getConfig());
+    const scope = new SentryBrowser.Scope();
 
-    if (typeof SentryBrowser?.getClient === 'function') {
-      this.client = SentryBrowser?.getClient();
-    }
+    // Set client and scope
+    scope.setClient(client);
+
+    // initialize client
+    client.init();
+    
+    // Save references
+    this.client = client;
+    this.scope = scope;
   },
 
   async loadSentry() {
@@ -75,15 +87,12 @@ export const Logger = {
       const script = document.createElement('script');
       script.src = 'https://js-de.sentry-cdn.com/153957e4d927936b0b109b0bb75dc1ae.min.js';
       script.crossOrigin = 'anonymous';
-      script.onload = () => {
-        this.getSentry()?.onLoad(() => {
-          this.initSentryOnBrowser();
-          resolve(true);
-        });
-      };
 
-      script.onerror = () => {
-        resolve(false);
+      script.onerror = () => resolve(false);
+
+      (globalThis as any).sentryOnLoad = function onLoadZotloSentry () {
+        Logger.initSentryOnBrowser();
+        resolve(true);
       }
 
       document.head.appendChild(script);
