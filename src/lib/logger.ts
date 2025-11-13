@@ -57,8 +57,13 @@ export const Logger = {
 
   initSentryOnBrowser() {
     const SentryBrowser = this.getSentry();
+    if (!SentryBrowser) return;
+
     SentryBrowser?.init(this.getConfig());
-    this.client = SentryBrowser?.getClient();
+
+    if (typeof SentryBrowser?.getClient === 'function') {
+      this.client = SentryBrowser?.getClient();
+    }
   },
 
   async loadSentry() {
