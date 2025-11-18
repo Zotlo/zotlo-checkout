@@ -267,12 +267,11 @@ async function handleGooglePayPayment(payload: {
     if (registerResponse?.meta?.errorCode) return;
 
     const googleClientResponse = await getGooglePayClient()?.loadPaymentData(paymentDataRequest);
-    const googlePayToken = googleClientResponse?.paymentMethodData?.tokenizationData?.token;
     const transactionId = providerConfig?.transactionId;
     const checkoutPayload = {
       ...formPayload,
       transactionId,
-      googlePayToken,
+      googlePayToken: JSON.stringify(googleClientResponse),
     }
 
     const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
