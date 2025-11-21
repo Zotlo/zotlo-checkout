@@ -310,9 +310,10 @@ export function createProviderButton(params: {
   const { $t } = useI18n(config.general.localization);
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
+  const buttonsRenderedBySdks = [PaymentProvider.GOOGLE_PAY, PaymentProvider.PAYPAL];
 
-  if (provider === PaymentProvider.GOOGLE_PAY && import.meta.env.VITE_SDK_API_URL) {
-    return `<div id="google-pay-button" class="zotlo-checkout__payment-provider" ${tabAvailable ? 'data-tab-content="googlePay" data-tab-active="true"' : ''}></div>`;
+  if (import.meta.env.VITE_SDK_API_URL && buttonsRenderedBySdks.includes(provider)) {
+    return `<div id="${provider}-button" class="zotlo-checkout__payment-provider zotlo-checkout__payment-provider-button-wrapper" ${tabAvailable ? `data-tab-content="${provider}" data-tab-active="true"` : ''}></div>`;
   }
 
   return createButton({
