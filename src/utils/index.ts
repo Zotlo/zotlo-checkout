@@ -173,7 +173,7 @@ export const debounce: any = (func: any, waitFor = 300) => {
 export function setFormDisabled(disabled = true) {
   const formElement = ZOTLO_GLOBAL.formElement;
   const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
-  const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox') as NodeListOf<HTMLElement>;
+  const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox, .zotlo-checkout__payment-provider') as NodeListOf<HTMLElement>;
   for (const wrapper of wrappers) {
     if (disabled) {
     wrapper.classList.add('disabled');
