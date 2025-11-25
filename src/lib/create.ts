@@ -195,7 +195,6 @@ export function createCheckbox(payload: {
 
 export function createButton(payload: {
   content: string;
-  description?: string;
   className?: string;
   attrs?: Record<string, string | number | boolean>;
   wrapperAttrs?: Record<string, string | number | boolean>;
@@ -205,7 +204,6 @@ export function createButton(payload: {
     WRAPPER_ATTRIBUTES: generateAttributes(payload.wrapperAttrs || {}),
     ATTRIBUTES: generateAttributes(payload.attrs || {}),
     CONTENT: payload.content || '',
-    DESC: payload.description || ''
   });
 }
 
@@ -436,7 +434,6 @@ export function createProviderButton(params: {
   tabAvailable?: boolean;
 }) {
   const { provider, config, tabAvailable } = params;
-  const { $t } = useI18n(config.general.localization);
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
   const buttonsRenderedBySdks = [PaymentProvider.GOOGLE_PAY, PaymentProvider.PAYPAL];
@@ -448,7 +445,6 @@ export function createProviderButton(params: {
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
-    description: provider === PaymentProvider.PAYPAL ? $t('paypalMotto') : undefined,
     attrs: { 'data-provider': provider },
     wrapperAttrs: {
       class: 'zotlo-checkout__payment-provider',
