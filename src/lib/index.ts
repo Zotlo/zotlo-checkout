@@ -28,6 +28,7 @@ import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
+import { renderPaypalButton } from "../utils/sendPayment";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
 import { API } from "../utils/api";
 import { Logger } from './logger';
@@ -61,8 +62,14 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   let destroyAgreementLinks = null as (() => void) | null;
   let destroySavedCardsEvents = null as (() => void) | null;
 
+  function handleRenderPaypalButton(payload: { config: FormConfig; forceRender?: boolean }) {
+    const { config, forceRender = false } = payload;
+    renderPaypalButton({ config, params, validateForm, getFormValues, refreshProviderConfigs, forceRender });
+  }
+
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
+    handleRenderPaypalButton({ config, forceRender: true });
   }
 
   async function refreshPaymentInitData() {
@@ -71,7 +78,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     config.packageInfo = getPackageInfo(config);
   }
 
-  function getFormValues(form: HTMLFormElement) {
+  function getFormValues(form: HTMLFormElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement) {
     const payload: Partial<Record<string, any>> = {};
     const activeForm = config.design.theme === DesignTheme.HORIZONTAL
       ? form.querySelector('[data-tab-active="true"]')?.querySelectorAll('input, select') as NodeListOf<HTMLInputElement>
@@ -672,6 +679,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       destroyAgreementLinks = destroy;
       destroySavedCardsEvents = destroyFn;
       renderGooglePayButton(config);
+      handleRenderPaypalButton({ config });
     }
 
     const submitButtons = getContainerElement()?.querySelectorAll('button[data-provider]');

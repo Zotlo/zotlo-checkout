@@ -342,6 +342,19 @@
   font-weight: 600;
 }
 
+.zotlo-checkout .zotlo-checkout__payment-provider {
+  min-height: 48px;
+}
+
+.zotlo-checkout .zotlo-checkout__payment-provider.zotlo-checkout__payment-provider-button-wrapper.disabled {
+  opacity: var(--zc-form-disabled-opacity);
+  cursor: var(--zc-form-disabled-cursor);
+}
+
+.zotlo-checkout .zotlo-checkout__payment-provider.zotlo-checkout__payment-provider-button-wrapper.disabled * {
+  pointer-events: none;
+}
+
 .zotlo-checkout .zotlo-checkout__payment-provider[data-tab-active="false"] {
   display: none;
   visibility: hidden;
@@ -482,7 +495,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 20;
+  z-index: 200;
   width: 100%;
   height: 100%;
   background-color: #0B0B0BA3;
@@ -502,13 +515,19 @@
   animation: spin 1s linear infinite;
 }
 
-.zotlo-checkout__payment-provider .gpay-card-info-container-fill, 
+.zotlo-checkout__payment-provider .gpay-card-info-container-fill,
+.zotlo-checkout__payment-provider .gpay-button-fill,
 .zotlo-checkout__payment-provider .gpay-card-info-container-fill > .gpay-card-info-container {
   height: 48px;
 }
 .zotlo-checkout__payment-provider .gpay-card-info-container, 
 .zotlo-checkout__payment-provider .gpay-card-info-animation-container {
   outline: none !important;
+}
+
+.zotlo-checkout__payment-provider .gpay-card-info-container.gpay-card-info-custom-radius, 
+.zotlo-checkout__payment-provider .gpay-button.gpay-card-info-custom-radius {
+  border-radius: 8px;
 }
 
 .gpay-card-info-container[disabled] {

@@ -289,6 +289,7 @@ export type FormPaymentData = {
   };
   showSavedCards: boolean;
   savedCardList?: SavedCreditCardData[];
+  useNewPayPal?: boolean;
 }
 
 export type PackageInfoType = {
@@ -435,6 +436,13 @@ export type ProviderConfigs = {
       };
     };
   },
+  paypal?: {
+    captureMode: string;
+    clientId: string;
+    integrationMode: string;
+    merchantId: string;
+    transactionId?: string;
+  };
 }
 
 export type FormConfig = {

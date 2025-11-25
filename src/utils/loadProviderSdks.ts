@@ -1,5 +1,6 @@
 import { type FormPaymentData, PaymentProvider, type FormConfig, type ProviderConfigs, DesignTheme } from "../lib/types";
 import { getProvidersConfig } from "../utils/getConfig";
+import { template } from "./template";
 import { Logger } from "../lib/logger";
 
 export type GooglePayButtonOptions = {
@@ -8,6 +9,7 @@ export type GooglePayButtonOptions = {
 
 const googlePaySdkUrl = 'https://pay.google.com/gp/p/js/pay.js';
 const applePaySdkUrl = 'https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js';
+const paypalSdkBaseUrl = 'https://www.paypal.com/sdk/js?client-id={{CLIENT_ID}}&merchant-id={{MERCHANT_ID}}&intent=tokenize&vault=true';
 let googlePayClient: any = null;
 
 function loadScript(src: string, id?: string): Promise<void> {
@@ -51,12 +53,22 @@ function loadScript(src: string, id?: string): Promise<void> {
   });
 }
 
-export async function loadProviderSDKs(paymentInitData?: FormPaymentData): Promise<void[]> {
+export async function loadProviderSDKs(params: { paymentInitData?: FormPaymentData, providerConfigs?: ProviderConfigs }): Promise<void[]> {
+  const { paymentInitData, providerConfigs } = params || {};
   const { providers = {} as Record<PaymentProvider, boolean> } = paymentInitData || {};
   const promises: Promise<void>[] = [];
 
   if (providers?.[PaymentProvider.APPLE_PAY]) promises.push(loadScript(applePaySdkUrl, 'apple-pay-sdk'));
   if (providers?.[PaymentProvider.GOOGLE_PAY]) promises.push(loadScript(googlePaySdkUrl, 'google-pay-sdk'));
+  if (providers?.[PaymentProvider.PAYPAL] && !!paymentInitData?.useNewPayPal) {
+    const clientId = providerConfigs?.paypal?.clientId || '';
+    const merchantId = providerConfigs?.paypal?.merchantId || '';
+    const paypalSdkUrl = template(paypalSdkBaseUrl, {
+      CLIENT_ID: clientId,
+      MERCHANT_ID: merchantId,
+    });
+    promises.push(loadScript(paypalSdkUrl, 'paypal-sdk'));
+  }
 
   return Promise.all(promises);
 }
@@ -95,7 +107,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
 
 export function renderGooglePayButton(config: FormConfig) {
   const googlePayConfig = config?.providerConfigs?.googlePay || {} as ProviderConfigs["googlePay"];
-  const wrapper = document.getElementById('google-pay-button');
+  const wrapper = document.getElementById('googlePay-button');
   const hasExistingButton = wrapper?.querySelector('button');
   const googlePayButton = getGooglePayButton(googlePayConfig, { 
     buttonColor: config?.design?.darkMode ? 'white' : 'black' 
@@ -144,10 +156,8 @@ export function canMakeApplePayPayments() {
 
 export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
-  [providerConfigs] = await Promise.all([
-    getProvidersConfig(config?.paymentData || {} as FormPaymentData, returnUrl, config?.general?.countryCode),
-    loadProviderSDKs(config?.paymentData)
-  ]);
+  providerConfigs = await getProvidersConfig(config?.paymentData || {} as FormPaymentData, returnUrl, config?.general?.countryCode);
+  await loadProviderSDKs({ paymentInitData: config?.paymentData, providerConfigs });
 
   const canAppleMakePayments = canMakeApplePayPayments();
   const isGoogleReadyToPay = await canMakeGooglePayPayments(providerConfigs);

@@ -191,7 +191,6 @@ export function createCheckbox(payload: {
 
 export function createButton(payload: {
   content: string;
-  description?: string;
   className?: string;
   attrs?: Record<string, string | number | boolean>;
   wrapperAttrs?: Record<string, string | number | boolean>;
@@ -201,7 +200,6 @@ export function createButton(payload: {
     WRAPPER_ATTRIBUTES: generateAttributes(payload.wrapperAttrs || {}),
     ATTRIBUTES: generateAttributes(payload.attrs || {}),
     CONTENT: payload.content || '',
-    DESC: payload.description || ''
   });
 }
 
@@ -374,18 +372,20 @@ export function createProviderButton(params: {
   tabAvailable?: boolean;
 }) {
   const { provider, config, tabAvailable } = params;
-  const { $t } = useI18n(config.general.localization);
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
+  const buttonsRenderedBySdks = [
+    PaymentProvider.GOOGLE_PAY,
+    ...(!!config.paymentData?.useNewPayPal ? [PaymentProvider.PAYPAL] : [])
+  ];
 
-  if (provider === PaymentProvider.GOOGLE_PAY && import.meta.env.VITE_SDK_API_URL) {
-    return `<div id="google-pay-button" class="zotlo-checkout__payment-provider" ${tabAvailable ? 'data-tab-content="googlePay" data-tab-active="true"' : ''}></div>`;
+  if (import.meta.env.VITE_SDK_API_URL && buttonsRenderedBySdks.includes(provider)) {
+    return `<div id="${provider}-button" class="zotlo-checkout__payment-provider zotlo-checkout__payment-provider-button-wrapper" ${tabAvailable ? `data-tab-content="${provider}" data-tab-active="true"` : ''}></div>`;
   }
 
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
-    description: provider === PaymentProvider.PAYPAL ? $t('paypalMotto') : undefined,
     attrs: { 'data-provider': provider },
     wrapperAttrs: {
       class: 'zotlo-checkout__payment-provider',
