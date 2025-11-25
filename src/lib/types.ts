@@ -307,6 +307,7 @@ export type FormPaymentData = {
   };
   showSavedCards: boolean;
   savedCardList?: SavedCreditCardData[];
+  useNewPayPal?: boolean;
 }
 
 export type PackageInfoType = {

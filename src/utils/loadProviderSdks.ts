@@ -60,7 +60,7 @@ export async function loadProviderSDKs(params: { paymentInitData?: FormPaymentDa
 
   if (providers?.[PaymentProvider.APPLE_PAY]) promises.push(loadScript(applePaySdkUrl, 'apple-pay-sdk'));
   if (providers?.[PaymentProvider.GOOGLE_PAY]) promises.push(loadScript(googlePaySdkUrl, 'google-pay-sdk'));
-  if (providers?.[PaymentProvider.PAYPAL]) {
+  if (providers?.[PaymentProvider.PAYPAL] && !!paymentInitData?.useNewPayPal) {
     const clientId = providerConfigs?.paypal?.clientId || '';
     const merchantId = providerConfigs?.paypal?.merchantId || '';
     const paypalSdkUrl = template(paypalSdkBaseUrl, {
