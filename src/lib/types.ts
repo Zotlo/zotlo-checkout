@@ -271,6 +271,7 @@ export type FormPaymentData = {
     distanceSalesAgreement: string;
     informationForm: string;
   };
+  useNewPayPal?: boolean;
 }
 
 export type PackageInfoType = {

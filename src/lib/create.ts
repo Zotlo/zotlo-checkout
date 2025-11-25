@@ -307,7 +307,10 @@ export function createProviderButton(params: {
   const { provider, config, tabAvailable } = params;
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
-  const buttonsRenderedBySdks = [PaymentProvider.GOOGLE_PAY, PaymentProvider.PAYPAL];
+  const buttonsRenderedBySdks = [
+    PaymentProvider.GOOGLE_PAY,
+    ...(!!config.paymentData?.useNewPayPal ? [PaymentProvider.PAYPAL] : [])
+  ];
 
   if (import.meta.env.VITE_SDK_API_URL && buttonsRenderedBySdks.includes(provider)) {
     return `<div id="${provider}-button" class="zotlo-checkout__payment-provider zotlo-checkout__payment-provider-button-wrapper" ${tabAvailable ? `data-tab-content="${provider}" data-tab-active="true"` : ''}></div>`;

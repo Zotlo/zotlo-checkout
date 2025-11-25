@@ -313,6 +313,7 @@ export async function renderPaypalButton(payload: {
   } = payload || {};
 
   try {
+    if (!config.paymentData?.useNewPayPal) return;
     const paypal = (window as any)?.paypal;
     const paypalButtonContainer = document.getElementById('paypal-button');
     if (!paypalButtonContainer) return;
