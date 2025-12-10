@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.8.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.7.0...v1.8.0)
+
+### 🚀 Enhancements
+
+- Add saved card list UI and refactor credit card form ([58f698b](https://github.com/Zotlo/zotlo-checkout/commit/58f698b))
+- Update card item styles to adapt for dark mode ([493091e](https://github.com/Zotlo/zotlo-checkout/commit/493091e))
+- Add saved card flow integrations ([d3169c8](https://github.com/Zotlo/zotlo-checkout/commit/d3169c8))
+- Add saved card modal UI and integrations ([c35081b](https://github.com/Zotlo/zotlo-checkout/commit/c35081b))
+- Update zotlo account url in all cards modal ([946b7ba](https://github.com/Zotlo/zotlo-checkout/commit/946b7ba))
+- Add maskCardNumber helper ([00d5345](https://github.com/Zotlo/zotlo-checkout/commit/00d5345))
+
+### 🩹 Fixes
+
+- Adapt card item number color for dark mode ([90066b1](https://github.com/Zotlo/zotlo-checkout/commit/90066b1))
+- Adapt card number color for dark mode on payment form ([2334182](https://github.com/Zotlo/zotlo-checkout/commit/2334182))
+- Add disabled attr for expired cards radio input ([b619f14](https://github.com/Zotlo/zotlo-checkout/commit/b619f14))
+
+### 🏡 Chore
+
+- Control for sentry client ([be368f4](https://github.com/Zotlo/zotlo-checkout/commit/be368f4))
+- Refactor sentry loader ([0c04487](https://github.com/Zotlo/zotlo-checkout/commit/0c04487))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin
+
 ## v1.7.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.6.0...v1.7.0)
