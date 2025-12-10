@@ -3,13 +3,7 @@
 
   <div class="zotlo-checkout__form">
     <% IF(FORM_TYPE===["creditCard", "both"]) %>
-    {{CARD_NUMBER}}
-    {{CARD_HOLDER}}
-    
-    <div class="zotlo-checkout__form__col2">
-      {{EXPIRATION_DATE}}
-      {{SECURITY_CODE}}
-    </div>
+    {{CREDIT_CARD_SECTION}}
     <% ENDIF %>
 
     <% IF(FORM_TYPE===["subscriberId", "both"]) %>

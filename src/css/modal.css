@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 20;
+  z-index: 120;
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
@@ -36,9 +36,23 @@
 }
 
 .zotlo-checkout__modal__content__header__title {
+  display: flex;
   flex: 1;
   font-size: 20px;
   font-weight: 600;
+  align-items: center;
+  gap: 16px;
+}
+
+.zotlo-checkout__modal__content__header__title-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 1px solid #E7EAEE;
+  color: #1A1822;
 }
 
 .zotlo-checkout__modal__content__header__close {
@@ -59,6 +73,28 @@
 
 .zotlo-checkout__modal__content__body iframe {
   height: 100%;
+}
+
+.zotlo-checkout__modal__content__footer {
+  padding: 24px;
+  border-top: 1px solid #c3c9d5;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.zotlo-checkout__modal__content__footer .zotlo-checkout__button {
+  font-size: 14px;
+  line-height: 20px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  min-height: 40px;
+  width: auto;
+  font-weight: 500;
+}
+
+.zotlo-checkout__modal__content__footer a {
+  text-decoration: none;
+  color: #008BFF;
 }
 
 .zotlo-checkout__modal-enter-from,

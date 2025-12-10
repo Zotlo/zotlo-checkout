@@ -18,7 +18,10 @@ import {
   activateDisabledSubscriberIdInputs,
   useI18n,
   handlePriceChangesBySubscriptionStatus,
-  syncInputsOnTabs
+  syncInputsOnTabs,
+  handleSavedCardsEvents,
+  getActiveSavedCardId,
+  getIsSavedCardPayment
 } from "../utils";
 import { getConfig, getPaymentData, ErrorHandler } from "../utils/getConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
@@ -46,6 +49,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       style: params.style,
       customParameters: params.customParameters,
       useCookie: !!params?.useCookie,
+      showSavedCards: params?.showSavedCards
     });
     await refreshProviderConfigs();
   }
@@ -55,6 +59,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
   let destroyAgreementLinks = null as (() => void) | null;
+  let destroySavedCardsEvents = null as (() => void) | null;
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
@@ -115,17 +120,26 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function validateForm(providerKey: PaymentProvider) {
     const errors = [];
-    const bypassProtectedFields = [
+    const creditCardFields = [
+      FORM_ITEMS.CARD_NUMBER.input.name,
+      FORM_ITEMS.CARD_HOLDER.input.name,
+      FORM_ITEMS.SECURITY_CODE.input.name,
+      FORM_ITEMS.EXPIRATION_DATE.input.name
+    ];
+    const sharedFields = [
       FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
       FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
       FORM_ITEMS.ZIP_CODE.input.name
-    ]
+    ];
+    const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
 
     for (const validation of Object.values(validations)) {
       const name = validation.name;
-      const bypass = providerKey !== PaymentProvider.CREDIT_CARD ? !bypassProtectedFields.includes(name) : false;
+      const shouldSkipValidation = isSavedCardPayment 
+        ? creditCardFields.includes(name) && providerKey === PaymentProvider.CREDIT_CARD
+        : !sharedFields.includes(name) && providerKey !== PaymentProvider.CREDIT_CARD;
 
-      const result = validation.validate(bypass);
+      const result = validation.validate(shouldSkipValidation);
       if (!result.isValid) {
         errors.push({ name, result });
       }
@@ -155,13 +169,17 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (import.meta.env.VITE_SDK_API_URL) {
       const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
       const result = getFormValues(formElement);
+      const cardId = getActiveSavedCardId({ providerKey, config });
       params.events?.onSubmit?.(result);
-
       try {
         setFormLoading(true);
         await sendPayment({
           providerKey,
-          formData: { packageId: params.packageId, ...result },
+          formData: {
+            packageId: params.packageId, 
+            ...result, 
+            ...(cardId && { cardId }) 
+          },
           params,
           config,
           refreshProviderConfigsFunction: refreshProviderConfigs
@@ -650,7 +668,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     if (import.meta.env.VITE_SDK_API_URL) {
       const { destroy } = handleAgreementLinks();
+      const { destroy: destroyFn } = handleSavedCardsEvents({ config });
       destroyAgreementLinks = destroy;
+      destroySavedCardsEvents = destroyFn;
       renderGooglePayButton(config);
     }
 
@@ -698,6 +718,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     validatorInstance?.clearRules();
     destroyAgreementLinks?.();
+    destroySavedCardsEvents?.();
   }
 
   function init() {

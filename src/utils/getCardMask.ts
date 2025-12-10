@@ -1,3 +1,6 @@
+import { getCDNUrl } from "./getCDNUrl";
+import { InputMask } from "./inputMask";
+
 export function getCardMask(value: string) {
   const cardTypes = [
     {
@@ -76,12 +79,32 @@ export function getCardMask(value: string) {
     return new RegExp(card.regex, "g").test(value);
   })
 
-
   return card || {
     name: "Default",
     mask: "0000 0000 0000 0000",
     length: 16,
     regex: "",
     icon: ""
+  };
+}
+
+function maskCardNumber(cardNumber: string, cardMask: string) {
+  // Mask all digits except the first 4 and last 4, even if BE returns digits unmasked
+  const cardMaskInstance = new InputMask({ mask: cardMask, validChars: /^[0-9 *]+$/ });
+  const maskedDigits = cardNumber.slice(0, 4) + '*'.repeat(Math.max(0, cardNumber.length - 8)) + cardNumber.slice(-4);
+  const maskedCardNumber = cardMaskInstance.apply(maskedDigits);
+  return maskedCardNumber;
+}
+
+export function getCardInfoFromCardNumber(cardNumber: string) {
+  const currentMask = getCardMask(cardNumber);
+  const url = getCDNUrl(`cards/${currentMask.icon}.svg`);
+  const cardIconImg = url ? `<img src="${url}" alt="${currentMask.icon}" />` : '';
+  const cardMask = currentMask.mask.replace(/0/g, '#');
+  const maskedCardNumber = maskCardNumber(cardNumber, cardMask);
+
+  return {
+    cardNumber: maskedCardNumber,
+    cardIconImg
   };
 }

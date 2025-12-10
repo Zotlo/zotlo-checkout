@@ -9,12 +9,16 @@ import paymentSuccessElement from '../html/payment-success.html?raw'
 import paymentDetailsElement from '../html/payment-details.html?raw'
 import paymentHeaderElement from '../html/payment-header.html?raw'
 import modalElement from '../html/modal.html?raw'
+import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
+import savedCardItemElement from '../html/saved-card-item.html?raw'
+import savedCardsFormElement from '../html/saved-cards-form.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
 import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
-import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme } from './types'
+import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData } from './types'
 import { FORM_ITEMS } from './fields'
+import { getCardInfoFromCardNumber } from '../utils/getCardMask';
 
 export function createSelect(payload: {
   name: string;
@@ -201,6 +205,50 @@ export function createButton(payload: {
   });
 }
 
+export function createSavedCardItem(params: { config: FormConfig, card: SavedCreditCardData, groupName?: SavedCardsGroupName }) {
+  const { card, config, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
+  const { $t } = useI18n(config.general.localization);
+  const { cardNumber, cardIconImg } = getCardInfoFromCardNumber(card.creditCardNumber);
+  const savedCardItem = template(savedCardItemElement, {
+    RADIO_GROUP_NAME: groupName,
+    CARD_ID: card.creditCardId,
+    CARD_NUMBER_TEXT: cardNumber,
+    CARD_EXPIRY_TEXT: $t('form.cards.expiresIn', { date: card.creditCardExpireDate }),
+    CARD_LOGO: cardIconImg,
+    EXPIRED_TEXT: $t('form.cards.expired'),
+    IS_CARD_EXPIRED: card.creditCardExpired ? 1 : 0,
+    RADIO_ATTRIBUTES: card.creditCardExpired ? 'disabled' : '',
+  });
+  return savedCardItem;
+}
+
+export function prepareCreditCardSection(params: { config: FormConfig }) {
+  const { config } = params || {};
+  const { $t } = useI18n(config.general.localization);
+
+  if (import.meta.env.VITE_CONSOLE) return creditCardFieldsElement;
+
+  const showSavedCards = config.general.showSavedCards;
+  if (!showSavedCards) return creditCardFieldsElement;
+
+  const savedCardList = config?.paymentData?.savedCardList || [];
+  const isSavedCardAvailable = savedCardList.length > 0;
+  if (!isSavedCardAvailable) return creditCardFieldsElement;
+
+  const firstUseableCard = savedCardList.find(card => !card.creditCardExpired);
+  if (!firstUseableCard) return creditCardFieldsElement;
+
+  const savedCardItem = createSavedCardItem({ config, card: firstUseableCard });
+
+  return template(savedCardsFormElement, {
+    SAVED_CARDS: savedCardItem,
+    RADIO_GROUP_NAME: SavedCardsGroupName.ON_PAYMENT_FORM,
+    ALL_CARDS_TEXT: $t('form.cards.allCards'),
+    USE_NEW_CARD_TEXT: $t('form.cards.useNewCard'),
+    CARD_FIELDS: creditCardFieldsElement,
+  });
+}
+
 export function createCreditCardForm(params: {
   config: FormConfig;
   formType?: 'creditCard' | 'subscriberId' | 'both';
@@ -216,7 +264,16 @@ export function createCreditCardForm(params: {
     ...({ 'data-form-type': formType })
   });
   const { $t } = useI18n(config.general.localization);
-  let newForm = template(formElement, { FORM_TYPE: formType, ATTRIBUTES: attrs, CLASS_NAME: className || '', SHOW_PRICE: showPrice });
+
+
+  let newForm = template(formElement, { 
+    FORM_TYPE: formType, 
+    ATTRIBUTES: attrs, 
+    CLASS_NAME: className || '', 
+    SHOW_PRICE: showPrice,
+    CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
+  });
+
   let cardTop = '';
   let cardBottom = '';
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
@@ -256,20 +313,30 @@ export function createCreditCardForm(params: {
       }
     }
 
-    newForm = template(newForm, {
-      [key]: key === 'AGREEMENT_CHECKBOX'
-        ? (
-          config.general.isPolicyRequired ?
-            createCheckbox({
+    let fieldContent = '';
+    
+    switch (key) {
+      case "AGREEMENT_CHECKBOX":
+        fieldContent = config.general.isPolicyRequired
+          ? createCheckbox({
               ...options,
               label: $t(`form.${key}.label`, {
                 distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
                 info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
               })
             })
-          : ''
-        )
-        : createInput(options)
+          : '';
+        break;
+      case "SAVE_CARD_CHECKBOX":
+        fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
+        break;
+      default:
+        fieldContent = createInput(options);
+        break;
+    }
+
+    newForm = template(newForm, {
+      [key]: fieldContent
     });
   }
 
@@ -500,10 +567,50 @@ export function createAgreementModal(params: {
   const { key, config } = params;
   const { $t } = useI18n(config.general.localization);
 
+  const bodyContent = `<iframe src="${config.general.documents[key]}" frameborder="0" width="100%" height="100%"></iframe>`;
+
   return template(modalElement, {
     MODAL_NAME: 'agreement',
     TITLE: $t(`agreement.title.${key}`),
-    FRAME_URL: config.general.documents[key]
+    BODY_CONTENT: bodyContent,
+    SHOW_CLOSE_BUTTON: true,
+  })
+}
+
+export function createAllCardsModal(params: {
+  config: FormConfig;
+}) {
+  const { config } = params;
+  const { $t } = useI18n(config.general.localization);
+  const zotloAccountUrl = "https://account.zotlo.com/account";
+  const savedCardList = config?.paymentData?.savedCardList || [];
+  let savedCardsHtml = '';
+  savedCardList.forEach(card => {
+    const savedCardItem = createSavedCardItem({ config, card, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
+    savedCardsHtml += savedCardItem;
+  });
+
+  const titleIcon = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18.3747 16.9167C17.8914 16.9167 17.4997 17.3085 17.4997 17.7917C17.4997 18.275 17.8914 18.6667 18.3747 18.6667H21.2913C21.7746 18.6667 22.1663 18.275 22.1663 17.7917C22.1663 17.3085 21.7746 16.9167 21.2913 16.9167H18.3747ZM2.33301 9.62504C2.33301 7.53096 4.03059 5.83337 6.12467 5.83337H21.8747C23.9688 5.83337 25.6663 7.53096 25.6663 9.62504V18.375C25.6663 20.4691 23.9688 22.1667 21.8747 22.1667H6.12467C4.03059 22.1667 2.33301 20.4691 2.33301 18.375V9.62504ZM23.9163 11.0834V9.62504C23.9163 8.49746 23.0023 7.58337 21.8747 7.58337H6.12467C4.99709 7.58337 4.08301 8.49746 4.08301 9.62504V11.0834H23.9163ZM4.08301 12.8334V18.375C4.08301 19.5026 4.99709 20.4167 6.12467 20.4167H21.8747C23.0023 20.4167 23.9163 19.5026 23.9163 18.375V12.8334H4.08301Z" fill="currentColor"/>
+  </svg>`;
+
+  const footerContent = `
+    <div class="zotlo-checkout__modal--all-cards-footer-holder">
+      <a href="${zotloAccountUrl}" target="_blank">${$t('form.cards.manageCreditCards')}</a>
+      <div class="zotlo-checkout__button-container">
+        <button class="zotlo-checkout__button zotlo-checkout__button--secondary" data-all-cards-cancel-button>${$t('common.cancel')}</button>
+        <button class="zotlo-checkout__button" data-all-cards-select-button>${$t('common.continue')}</button>
+      </div>
+    </div>
+  `;
+
+  return template(modalElement, {
+    MODAL_NAME: 'all-cards',
+    TITLE_ICON: titleIcon,
+    TITLE: $t('form.cards.myCards'),
+    BODY_CONTENT: savedCardsHtml,
+    SHOW_CLOSE_BUTTON: false,
+    FOOTER_CONTENT: footerContent,
   })
 }
 
