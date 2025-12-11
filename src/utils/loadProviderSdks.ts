@@ -67,7 +67,7 @@ export async function loadProviderSDKs(params: { paymentInitData?: FormPaymentDa
       CLIENT_ID: clientId,
       MERCHANT_ID: merchantId,
     });
-    promises.push(loadScript(paypalSdkUrl, 'paypal-sdk'));
+    if (clientId && merchantId) promises.push(loadScript(paypalSdkUrl, 'paypal-sdk'));
   }
 
   return Promise.all(promises);
