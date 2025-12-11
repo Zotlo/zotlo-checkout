@@ -374,9 +374,10 @@ export function createProviderButton(params: {
   const { provider, config, tabAvailable } = params;
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
+  const isNewPaypalCanBeUsed = !!config.paymentData?.useNewPayPal && config.providerConfigs?.paypal?.clientId && config.providerConfigs?.paypal?.merchantId;
   const buttonsRenderedBySdks = [
     PaymentProvider.GOOGLE_PAY,
-    ...(!!config.paymentData?.useNewPayPal ? [PaymentProvider.PAYPAL] : [])
+    ...(isNewPaypalCanBeUsed ? [PaymentProvider.PAYPAL] : [])
   ];
 
   if (import.meta.env.VITE_SDK_API_URL && buttonsRenderedBySdks.includes(provider)) {
