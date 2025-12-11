@@ -1,5 +1,6 @@
 import Countries from '../countries.json';
-import { type FormConfig, PaymentProvider } from '../lib/types';
+import { type FormConfig, PaymentProvider, SavedCardsGroupName } from '../lib/types';
+import { createAllCardsModal, createSavedCardItem } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
 import { template } from "./template";
@@ -169,6 +170,83 @@ export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' =
   });
 }
 
+function selectSavedCard(params: { cardId: number, groupName?: SavedCardsGroupName }) {
+  const { cardId, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
+  if (!cardId) return;
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const cardInput = formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"][value="${cardId}"]`);
+  if (cardInput) cardInput.checked = true;
+}
+
+export function handleSavedCardsEvents(params: { config: FormConfig }) {
+  const { config } = params;
+  // Select first radio input for saved cards by default
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const cardItemRadio = formElement?.querySelectorAll('.zotlo-checkout__card-item input[type="radio"]') as NodeListOf<HTMLInputElement>;
+  if (cardItemRadio.length > 0) cardItemRadio[0].checked = true;
+  const allCardsButton = formElement?.querySelector('[data-all-cards-button]') as HTMLButtonElement;
+
+  function closeAllCardsModal() {
+    formElement.querySelector('[data-modal="all-cards"]')?.remove();
+  }
+
+  function handleCardSelection() {
+    const savedCardList = config?.paymentData?.savedCardList || [];
+    const selectedCardId = getActiveSavedCardId({ config, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
+    if (!selectedCardId) return closeAllCardsModal();
+    const selectedCard = savedCardList.find(card => card.creditCardId === selectedCardId);
+    if (!selectedCard) return closeAllCardsModal();
+    // Replace selected card on the payment form
+    const selectedCardHtml = createSavedCardItem({ card: selectedCard, groupName: SavedCardsGroupName.ON_PAYMENT_FORM, config });
+    const parser = new DOMParser();
+    const selectedCardDOM = parser.parseFromString(selectedCardHtml, 'text/html')?.body.firstChild as HTMLElement;
+    const existingCardOnForm = formElement.querySelector(`.zotlo-checkout__card-item input[type="radio"][name="${SavedCardsGroupName.ON_PAYMENT_FORM}"]`)?.closest('.zotlo-checkout__card-item');
+    existingCardOnForm?.remove();
+    allCardsButton.after(selectedCardDOM);
+    selectSavedCard({ cardId: selectedCardId, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
+    closeAllCardsModal();
+  }
+
+  function handleAllCardsClick(this: HTMLElement) {
+    const modalHTML = createAllCardsModal({ config });
+    const parser = new DOMParser();
+    let modalDOM = parser.parseFromString(modalHTML, 'text/html')?.body.firstChild as HTMLElement;
+
+    // Add modal close action
+    modalDOM?.querySelector('[data-all-cards-cancel-button]')?.addEventListener('click', handleClose);
+    modalDOM?.querySelector('[data-all-cards-select-button]')?.addEventListener('click', handleCardSelection);
+
+    formElement.insertBefore(modalDOM, formElement.firstChild as HTMLElement);
+    const activeCardId = getActiveSavedCardId({ config });
+    selectSavedCard({ cardId: activeCardId, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
+
+    modalDOM = formElement.querySelector(`[data-modal="all-cards"]`) as HTMLElement;
+
+    setTimeout(() => {
+      modalDOM?.classList.remove('zotlo-checkout__modal-enter-from');
+      modalDOM?.classList.remove('zotlo-checkout__modal-enter-active');
+    }, 0)
+
+    function handleClose(this: HTMLElement) {
+      const closeBtn = this as HTMLElement;
+      modalDOM?.classList.add('zotlo-checkout__modal-enter-from');
+      modalDOM?.classList.add('zotlo-checkout__modal-enter-active');
+      closeBtn.removeEventListener('click', handleClose);
+      
+      setTimeout(() => closeAllCardsModal(), 150);
+    }
+  }
+
+  allCardsButton?.addEventListener('click', handleAllCardsClick);
+
+  function destroy() {
+    closeAllCardsModal();
+    allCardsButton?.removeEventListener('click', handleAllCardsClick);
+  }
+
+  return { destroy };
+}
+
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
@@ -228,4 +306,19 @@ export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
       }
     });
   }, 0);
+}
+
+export function getActiveSavedCardId(params: { providerKey?: PaymentProvider; config: FormConfig; groupName?: SavedCardsGroupName }): number {
+  const { providerKey = PaymentProvider.CREDIT_CARD, config, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
+  if (providerKey !== PaymentProvider.CREDIT_CARD || !config.general?.showSavedCards) return 0;
+  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const checkedInput = formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"]:checked`);
+  const cardId = +(checkedInput?.value || 0);
+  return cardId;
+}
+
+export function getIsSavedCardPayment(params: { providerKey?: PaymentProvider; config: FormConfig }): boolean {
+  const { providerKey = PaymentProvider.CREDIT_CARD, config } = params;
+  const cardId = getActiveSavedCardId({ providerKey, config, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
+  return cardId > 0;
 }
