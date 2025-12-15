@@ -170,7 +170,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
       const result = getFormValues(formElement);
       const cardId = getActiveSavedCardId({ providerKey, config });
-      params.events?.onSubmit?.(result);
+      params.events?.onSubmit?.();
       try {
         setFormLoading(true);
         await sendPayment({

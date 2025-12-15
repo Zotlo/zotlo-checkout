@@ -139,18 +139,18 @@ onLoad?: (params: IFormLoad) => void;
 ```
 
 ### onSubmit
-Triggers after the form is submitted. When you submit card form, you will receive form fields with values.
+Triggers after the form is submitted.
 
 ```typescript
-onSubmit?: (data?: Record<string, any>) => void;
+onSubmit?: () => void;
 ```
 
 ```typescript
 {
   ...
   events: {
-    onSubmit(data) {
-      console.log('Form fields', data)
+    onSubmit() {
+      console.log('Form submitted')
     }
   }
 }
