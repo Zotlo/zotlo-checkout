@@ -2,51 +2,10 @@ import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
-import { createProviderButton, createButton, createCreditCardForm, createPaymentHeader } from '../../create'
+import { createButton, createCreditCardForm, createPaymentHeader } from '../../create'
 import { getPackageName } from '../../../utils/getPackageInfo';
-
-function prepareProvider(params: {
-  config: FormConfig;
-  paymentMethods: FormSetting['paymentMethodSetting'];
-  method: FormSetting['paymentMethodSetting'][number];
-  index: number;
-  tabAvailable?: boolean;
-}) {
-  const { config, paymentMethods, method, index, tabAvailable } = params;
-
-  if (method?.providerKey !== PaymentProvider.CREDIT_CARD) {
-    return createProviderButton({
-      provider: method?.providerKey,
-      config,
-      tabAvailable: !!index
-    });
-  }
-
-  if (method?.providerKey === PaymentProvider.CREDIT_CARD) {
-    const isFirstItem = index === 0;
-    const isLastItem = index === paymentMethods.length - 1;
-    const isOnlyItem = paymentMethods.length === 1;
-    const isMiddleItem = !isFirstItem && !isLastItem;
-    let seperator = undefined as undefined | 'top' | 'bottom' | 'both';
-
-    if (!isOnlyItem && !isFirstItem && isMiddleItem) {
-      seperator = 'both';
-    } else if (!isOnlyItem && isFirstItem) {
-      seperator = 'bottom';
-    } else if (!isOnlyItem && isLastItem) {
-      seperator = 'top';
-    }
-
-    return createCreditCardForm({
-      ...params,
-      formType: index === 0 ? 'both' : 'creditCard',
-      seperator,
-      className: 'zotlo-checkout__payment-provider',
-      attrs: tabAvailable ?  { 'data-tab-content': PaymentProvider.CREDIT_CARD, 'data-tab-active': 'true' } : {},
-      showPrice: false
-    });
-  }
-}
+import { generateCardUpdateThemeMobileApp } from './card';
+import { prepareProvider } from './utils';
 
 export function generateThemeMobileApp(params: {
   config: FormConfig;
@@ -62,6 +21,11 @@ export function generateThemeMobileApp(params: {
   };
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
+
+  if (config.cardUpdate) {
+    return generateCardUpdateThemeMobileApp(params);
+  }
+
   const { $t } = useI18n(config.general.localization);
   const providerGroups = paymentMethods.filter((_, index) => index > 0);
   const firstProvider = paymentMethods?.[0];
@@ -147,6 +111,7 @@ export function generateThemeMobileApp(params: {
   const paymentHeader = createPaymentHeader({ config });
 
   return template(mainHTML, {
+    PACKAGE_SUMMARY: true,
     DIR: dir,
     DARK_MODE: themePreference,
     HEADER: paymentHeader || '',

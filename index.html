@@ -66,7 +66,17 @@
     </header>
     <div id="app"></div>
     <div id="app2"></div>
+
+    <div style="display: flex; justify-content: center; padding: 16px 0">
+      <button
+        id="toggle-form-button"
+        style="font-size: 16px; padding: 8px 10px; border-radius: 8px; cursor: pointer; border: 1px solid #CCCCCC;"
+        data-switchto="checkout"
+      >Load Form</button>
+    </div>
+
     <div id="zotlo-checkout" style="max-width: 460px; margin: 0 auto;"></div>
+    <div id="zotlo-card" style="max-width: 460px; margin: 0 auto;"></div>
     <script type="module" src="/src/main.ts"></script>
     <script src="https://unpkg.com/vue@3.5.15/dist/vue.global.prod.js"></script>
     <script src="/integrations.js"></script>

@@ -1,6 +1,7 @@
 <form id="zotlo-checkout-form" class="zotlo-checkout zotlo-checkout--mobileapp" dir="{{DIR}}" data-theme="{{DARK_MODE}}" {{ATTRIBUTES}}>
   {{HEADER}}
   
+  <% IF(PACKAGE_SUMMARY) %>
   <div class="zotlo-checkout__mobileapp__package">
     <% IF(PACKAGE_IMAGE) %>
     <div class="zotlo-checkout__mobileapp__package__image">
@@ -40,6 +41,7 @@
       </tfoot>
     </table>
   </div>
+  <% ENDIF %>
 
   {{PRIMARY_PROVIDER}}
 

@@ -445,6 +445,8 @@ export type FormConfig = {
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
   providerConfigs?: ProviderConfigs;
+  /** This is the flag that indicates whether the form is in card update mode */
+  cardUpdate?: boolean;
   integrations?: {
     gtmData: {
       isActive: 0 | 1;
@@ -575,4 +577,9 @@ export interface IFormLoad {
 export interface IFormInvalid {
   name: string;
   result: ValidationResult;
+}
+
+export interface IZotloCardParams extends IZotloCheckoutParams {
+  /** Default subscriber ID for registration; can be an email, phone number, or UUID v4. */
+  subscriberId: string;
 }

@@ -31,6 +31,8 @@ import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSd
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
 import { API } from "../utils/api";
 import { Logger } from './logger';
+import { getFormValues, loadSelectbox } from "./common";
+import { EventBus } from "../utils/eventBus";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   // Load Sentry for error tracking
@@ -52,6 +54,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       showSavedCards: params?.showSavedCards
     });
     await refreshProviderConfigs();
+
+    // Provide config to ZotloCard to prevent multiple API calls
+    EventBus.on('configZotloCheckout', () => JSON.parse(JSON.stringify(config)));
   }
 
   let containerId = '';
@@ -69,24 +74,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const paymentInitData = await getPaymentData();
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);
-  }
-
-  function getFormValues(form: HTMLFormElement) {
-    const payload: Partial<Record<string, any>> = {};
-    const activeForm = config.design.theme === DesignTheme.HORIZONTAL
-      ? form.querySelector('[data-tab-active="true"]')?.querySelectorAll('input, select') as NodeListOf<HTMLInputElement>
-      : form.elements;
-
-    if (!activeForm) return payload;
-
-    for (const item of activeForm as NodeListOf<HTMLInputElement>) {
-      const name = item?.name;
-      if (name) {
-        payload[name] = item?.type === 'checkbox' ? !!item?.checked : item?.value || '';
-      }
-    }
-
-    return payload;
   }
 
   function checkboxValidation(input: HTMLInputElement, result: ValidationResult) {
@@ -131,7 +118,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
       FORM_ITEMS.ZIP_CODE.input.name
     ];
-    const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
+    const isSavedCardPayment = getIsSavedCardPayment.bind({
+      container: getContainerElement()
+    })({ providerKey, config });
 
     for (const validation of Object.values(validations)) {
       const name = validation.name;
@@ -167,12 +156,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (!validation.isValid) return;
     
     if (import.meta.env.VITE_SDK_API_URL) {
-      const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-      const result = getFormValues(formElement);
-      const cardId = getActiveSavedCardId({ providerKey, config });
+      const container = getContainerElement();
+      const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
+      const result = getFormValues(formElement, config);
+      const cardId = getActiveSavedCardId.bind({ container })({ providerKey, config });
       params.events?.onSubmit?.();
       try {
-        setFormLoading(true);
+        setFormLoading.bind({ container })(true);
         await sendPayment({
           providerKey,
           formData: {
@@ -187,7 +177,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       } catch (e) {
         Logger.client?.captureException(e);
       } finally {
-        setFormLoading(false);
+        setFormLoading.bind({ container })(false);
       }
     }
   }
@@ -434,100 +424,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
-  function loadSelectbox(item: HTMLElement, options: {
-    onSelect: (value: string) => void;
-  }) {
-    if (item.getAttribute('disabled') === 'true') {
-      return {};
-    }
-
-    const toggle = item.querySelector('[data-select-toggle]') as HTMLElement;
-    const items = item.querySelectorAll('[data-select-list] [data-select-item]') as NodeListOf<HTMLElement>;
-    const selectbox = item.querySelector('select') as HTMLSelectElement;
-
-    function closeSelectbox() {
-      item.setAttribute('data-toggle', 'closed');
-    }
-
-    function clickOutside(e: MouseEvent) {
-      const closest = (e.target as HTMLElement).parentElement?.closest('[data-select]')
-      if (!closest) {
-        closeSelectbox();
-        document.removeEventListener('click', clickOutside);
-      }
-    }
-
-    function toggleSelectbox() {
-      const dataToggle = item.getAttribute('data-toggle') === 'open' ? 'closed' : 'open';
-      item.setAttribute('data-toggle', dataToggle);
-
-      if (dataToggle === 'open') {
-        document.addEventListener('click', clickOutside);
-        item.querySelector('[data-select-list] [data-selected="true"]')?.scrollIntoView({ block: 'center' });
-        (item.querySelector('[data-select-list] [data-selected="true"]') as HTMLElement)?.focus();
-      }
-    }
-
-    function handleKeydown(e: KeyboardEvent) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleSelectbox();
-      }
-    }
-
-    function handleItemKeydown(e: KeyboardEvent) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const activeItem = item.querySelector('[data-select-list] [data-selected]:focus');
-        if (activeItem) selectItem.bind(activeItem as HTMLElement)();
-      }
-    }
-
-    function selectItem(this: HTMLElement) {
-      const target = this as HTMLElement;
-      const value = target?.getAttribute('data-value');
-
-      for (const item of items) {
-        item.setAttribute('data-selected', 'false');
-      }
-
-      target.setAttribute('data-selected', 'true');
-      const textElement = target.querySelector('[data-select-text]') as HTMLElement;
-      toggle.innerHTML = target.outerHTML.replace(new RegExp(textElement.innerText, 'gm'), value || '');
-      selectbox.value = value || '';
-      options.onSelect(value || '');
-
-      closeSelectbox();
-    }
-
-    function init() {
-      toggle?.addEventListener('click', toggleSelectbox);
-      toggle?.addEventListener('keydown', handleKeydown);
-
-      for (const item of items) {
-        item.addEventListener('click', selectItem);
-        item.addEventListener('keydown', handleItemKeydown);
-      }
-    }
-
-    function destroy() {
-      toggle?.removeEventListener('click', toggleSelectbox);
-      toggle?.removeEventListener('keydown', handleKeydown);
-      document.removeEventListener('click', clickOutside);
-
-      for (const item of items) {
-        item.removeEventListener('click', selectItem);
-      }
-    }
-
-    init();
-
-    return {
-      init,
-      destroy
-    }
-  }
-
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
     if (!import.meta.env.VITE_SDK_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
     const subscriberInput = event?.target as HTMLInputElement;
@@ -535,29 +431,31 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const validationRules = subscriberInput?.dataset?.rules || '';
     const isValidSubscriberId = validatorInstance?.validate(subscriberId, validationRules)?.isValid;
     if (!isValidSubscriberId) return;
+    const container = getContainerElement() as HTMLElement;
     try {
-      setFormDisabled();
+      setFormDisabled.bind({ container })();
       const response = await registerPaymentUser(subscriberId, config, params);
       if (response?.meta?.errorCode) {
-        activateDisabledSubscriberIdInputs();
+        activateDisabledSubscriberIdInputs(container);
         subscriberInput.focus();
         return;
       }
       await Promise.all([refreshPaymentInitData(), refreshProviderConfigs()]);
-      handlePriceChangesBySubscriptionStatus(config);
-      setFormDisabled(false);
+      handlePriceChangesBySubscriptionStatus.bind({ container })(config);
+      setFormDisabled.bind({ container })(false);
       subscriberInput.focus();
     } catch {
-      setFormDisabled(false);
+      setFormDisabled.bind({ container })(false);
     }
   }, 500)
 
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
-    const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+    const container = getContainerElement() as HTMLElement;
+    const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
     const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');
-    const selectboxes = getContainerElement()?.querySelectorAll(wrapper + '[data-select]');
+    const selectboxes = container?.querySelectorAll(wrapper + '[data-select]');
 
     function updatePhoneMask(code: string, input: HTMLInputElement) {
       const country = getCountryByCode(code);
@@ -668,13 +566,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     if (import.meta.env.VITE_SDK_API_URL) {
       const { destroy } = handleAgreementLinks();
-      const { destroy: destroyFn } = handleSavedCardsEvents({ config });
+      const { destroy: destroyFn } = handleSavedCardsEvents.bind({ container })({ config });
       destroyAgreementLinks = destroy;
       destroySavedCardsEvents = destroyFn;
       renderGooglePayButton(config);
     }
 
-    const submitButtons = getContainerElement()?.querySelectorAll('button[data-provider]');
+    const submitButtons = container?.querySelectorAll('button[data-provider]');
 
     if (submitButtons) {
       for (let i = 0; i < submitButtons?.length; i++) {
@@ -684,12 +582,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     formElement?.addEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
+    handleSubscriberIdInputEventListeners.bind({ container })('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
-    const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-    const submitButtons = getContainerElement()?.querySelectorAll('button[data-provider]');
+    const container = getContainerElement() as HTMLElement;
+    const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
+    const submitButtons = container?.querySelectorAll('button[data-provider]');
 
     if (submitButtons) {
       for (let i = 0; i < submitButtons?.length; i++) {
@@ -699,7 +598,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     formElement?.removeEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners('remove', onSubscriberIdEntered);
+    handleSubscriberIdInputEventListeners.bind({ container })('remove', onSubscriberIdEntered);
 
     for (const [key, mask] of Object.entries(maskItems)) {
       mask.destroy();
@@ -734,7 +633,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         cookiePolicy: `<a
           href="${config.general.zotloUrls?.cookiePolicy || '#'}"
           target="_blank"
-          class="!text-white underline"
         >${$t('cookiePopup.word.cookiePolicy')}</a>`,
       })
     });
@@ -747,6 +645,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   function unmount() {
     destroyFormInputs();
+    EventBus.off('configZotloCheckout');
     const container = getContainerElement();
     if (container) container.innerHTML = '';
   }

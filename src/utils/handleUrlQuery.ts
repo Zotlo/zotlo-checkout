@@ -20,7 +20,8 @@ export async function handleUrlQuery(payload: {
   const errorMessage = queryParams?.[UrlQuery.ERROR_MESSAGE] || "";
 
   if (status === PaymentCallbackStatus.SUCCESS) {
-    const paymentDetail = await handlePaymentSuccess({ params });
+    const container = document.getElementById(containerId)
+    const paymentDetail = await handlePaymentSuccess.bind({ container })({ params });
     if (paymentDetail) createPaymentSuccessForm({ containerId, config, paymentDetail });
   }
 

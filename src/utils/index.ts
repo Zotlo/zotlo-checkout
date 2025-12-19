@@ -51,7 +51,6 @@ export function generateAttributes(attrs: Record<string, string | number | boole
   return Object.entries(attrs).map(([key, value]) => value !== undefined && value !== null ? `${key}="${value}"` : '').join(' ')
 }
 
-
 export function preparePaymentMethods(config: FormConfig) {
   return config?.settings?.paymentMethodSetting?.filter((item) => {
     const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
@@ -75,8 +74,18 @@ function disableTabKeyNavigation(formEl: HTMLFormElement, disable:boolean = true
   });
 }
 
-export function setFormLoading(loading: boolean = true) {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+export function awareForContext(context: any, methodName?: string) {
+  if (import.meta.env.DEV) {
+    if (!context?.container) {
+      console.error('This method requires container element. Caller metod:', methodName || 'unknown');
+    }
+  }
+}
+
+export function setFormLoading(this: any, loading: boolean = true) {
+  awareForContext(this, 'setFormLoading');
+  const formElement = this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
+
   if (!formElement) return;
   let loaderEl = formElement.querySelector('.zotlo-checkout__loader') as HTMLDivElement;
   if (loading) {
@@ -128,8 +137,9 @@ export const debounce: any = (func: any, waitFor = 300) => {
   };
 }
 
-export function setFormDisabled(disabled = true) {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+export function setFormDisabled(this: any, disabled = true) {
+  awareForContext(this, 'setFormDisabled');
+  const formElement = this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
   const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox') as NodeListOf<HTMLElement>;
   for (const wrapper of wrappers) {
@@ -148,8 +158,8 @@ export function setFormDisabled(disabled = true) {
   }
 }
 
-export function activateDisabledSubscriberIdInputs() {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+export function activateDisabledSubscriberIdInputs(container: HTMLElement) {
+  const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
   subscriberIdInputs?.forEach(input => {
     input?.removeAttribute('disabled');
@@ -158,8 +168,9 @@ export function activateDisabledSubscriberIdInputs() {
   });
 }
 
-export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' = 'add', triggerFunction: () => void, ) {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+export function handleSubscriberIdInputEventListeners(this: any, action: 'add' | 'remove' = 'add', triggerFunction: () => void) {
+  awareForContext(this, 'handleSubscriberIdInputEventListeners');
+  const formElement = this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
   subscriberIdInputs?.forEach(input => {
     if (action === 'add') {
@@ -170,18 +181,21 @@ export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' =
   });
 }
 
-function selectSavedCard(params: { cardId: number, groupName?: SavedCardsGroupName }) {
+function selectSavedCard(this: any, params: { cardId: number, groupName?: SavedCardsGroupName }) {
+  awareForContext(this, 'selectSavedCard');
   const { cardId, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
   if (!cardId) return;
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const formElement = this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   const cardInput = formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"][value="${cardId}"]`);
   if (cardInput) cardInput.checked = true;
 }
 
-export function handleSavedCardsEvents(params: { config: FormConfig }) {
+export function handleSavedCardsEvents(this: any, params: { config: FormConfig }) {
+  awareForContext(this, 'handleSavedCardsEvents');
   const { config } = params;
   // Select first radio input for saved cards by default
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const container = this.container as HTMLElement;
+  const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   const cardItemRadio = formElement?.querySelectorAll('.zotlo-checkout__card-item input[type="radio"]') as NodeListOf<HTMLInputElement>;
   if (cardItemRadio.length > 0) cardItemRadio[0].checked = true;
   const allCardsButton = formElement?.querySelector('[data-all-cards-button]') as HTMLButtonElement;
@@ -192,7 +206,7 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
 
   function handleCardSelection() {
     const savedCardList = config?.paymentData?.savedCardList || [];
-    const selectedCardId = getActiveSavedCardId({ config, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
+    const selectedCardId = getActiveSavedCardId.bind({ container })({ config, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
     if (!selectedCardId) return closeAllCardsModal();
     const selectedCard = savedCardList.find(card => card.creditCardId === selectedCardId);
     if (!selectedCard) return closeAllCardsModal();
@@ -203,7 +217,7 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
     const existingCardOnForm = formElement.querySelector(`.zotlo-checkout__card-item input[type="radio"][name="${SavedCardsGroupName.ON_PAYMENT_FORM}"]`)?.closest('.zotlo-checkout__card-item');
     existingCardOnForm?.remove();
     allCardsButton.after(selectedCardDOM);
-    selectSavedCard({ cardId: selectedCardId, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
+    selectSavedCard.bind({ container })({ cardId: selectedCardId, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
     closeAllCardsModal();
   }
 
@@ -217,8 +231,8 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
     modalDOM?.querySelector('[data-all-cards-select-button]')?.addEventListener('click', handleCardSelection);
 
     formElement.insertBefore(modalDOM, formElement.firstChild as HTMLElement);
-    const activeCardId = getActiveSavedCardId({ config });
-    selectSavedCard({ cardId: activeCardId, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
+    const activeCardId = getActiveSavedCardId.bind({ container })({ config });
+    selectSavedCard.bind({ container })({ cardId: activeCardId, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
 
     modalDOM = formElement.querySelector(`[data-modal="all-cards"]`) as HTMLElement;
 
@@ -258,7 +272,10 @@ export function getFooterPriceInfo(config: FormConfig) {
 export function getSubmitButtonContent(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
-  const buttonKey = config?.design.button.text?.[packageState];
+  const buttonKey = config.cardUpdate
+    ? $t('form.button.text.cardUpdate.0')
+    : config?.design.button.text?.[packageState];
+
   const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
     ? buttonKey
     : $t(`form.button.text.${packageState}.${buttonKey}`);
@@ -268,9 +285,10 @@ export function getSubmitButtonContent(config: FormConfig) {
   return buttonContent;
 }
 
-export async function handlePriceChangesBySubscriptionStatus(config: FormConfig) {
+export async function handlePriceChangesBySubscriptionStatus(this: any, config: FormConfig) {
+  awareForContext(this, 'handlePriceChangesBySubscriptionStatus');
   const { $t } = useI18n(config?.general?.localization);
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const formElement = this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   if (!formElement) return;
 
   function updateElementsValue<T extends HTMLElement>(
@@ -308,17 +326,25 @@ export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
   }, 0);
 }
 
-export function getActiveSavedCardId(params: { providerKey?: PaymentProvider; config: FormConfig; groupName?: SavedCardsGroupName }): number {
+export function getActiveSavedCardId(this: any, params: { providerKey?: PaymentProvider; config: FormConfig; groupName?: SavedCardsGroupName }): number {
+  awareForContext(this, 'getActiveSavedCardId');
   const { providerKey = PaymentProvider.CREDIT_CARD, config, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
   if (providerKey !== PaymentProvider.CREDIT_CARD || !config.general?.showSavedCards) return 0;
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const formElement = this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   const checkedInput = formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"]:checked`);
   const cardId = +(checkedInput?.value || 0);
   return cardId;
 }
 
-export function getIsSavedCardPayment(params: { providerKey?: PaymentProvider; config: FormConfig }): boolean {
+export function getIsSavedCardPayment(this: any, params: { providerKey?: PaymentProvider; config: FormConfig }): boolean {
+  awareForContext(this, 'getIsSavedCardPayment');
   const { providerKey = PaymentProvider.CREDIT_CARD, config } = params;
-  const cardId = getActiveSavedCardId({ providerKey, config, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
+  const cardId = getActiveSavedCardId.bind({
+    container: this.container
+  })({
+    providerKey,
+    config,
+    groupName: SavedCardsGroupName.ON_PAYMENT_FORM
+  });
   return cardId > 0;
 }

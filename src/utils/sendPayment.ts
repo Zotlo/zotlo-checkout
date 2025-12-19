@@ -1,4 +1,4 @@
-import { setFormLoading } from "./index";
+import { awareForContext, setFormLoading } from "./index";
 import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
 import { API } from "./api";
@@ -105,9 +105,10 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
   }
 }
 
-export async function handlePaymentSuccess(payload: { params: IZotloCheckoutParams; }) {
+export async function handlePaymentSuccess(this: any, payload: { params: IZotloCheckoutParams; }) {
   try {
-    setFormLoading(true);
+    awareForContext(this, 'handlePaymentSuccess');
+    setFormLoading.bind({ container: this.container })(true);
     const { params } = payload;
     const { result, meta } = await API.get("/payment/detail");
 
@@ -123,7 +124,7 @@ export async function handlePaymentSuccess(payload: { params: IZotloCheckoutPara
     Logger.client?.captureException(e);
     return null;
   } finally {
-    setFormLoading(false);
+    setFormLoading.bind({ container: this.container })(false);
   }
 }
 

@@ -14,12 +14,15 @@
 }
 
 .zotlo-checkout__label > span {
-  display: var(--zc-form-input-label-display, block);
   color: var(--zc-form-input-label-color, #000000);
   font-size: var(--zc-form-input-label-fontSize, 14px);
   font-weight: var(--zc-form-input-label-fontWeight, 500);
   font-style: var(--zc-form-input-label-fontStyle, normal);
   text-decoration: var(--zc-form-input-label-textDecoration, none);
+}
+
+.zotlo-checkout__label > span:not(.error) {
+  display: var(--zc-form-input-label-display, block);
 }
 
 .zotlo-checkout__hint {

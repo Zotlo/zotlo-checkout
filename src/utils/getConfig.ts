@@ -64,8 +64,10 @@ export async function getPaymentData(uuid?: string) {
   }
 }
 
-export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
-  const config = { general: {
+export async function getConfig(params: IZotloCheckoutParams & { cardUpdate?: boolean }): Promise<FormConfig> {
+  const config = {
+    cardUpdate: !!params.cardUpdate,
+    general: {
     localization: {
       empty: {
         noMethod: {

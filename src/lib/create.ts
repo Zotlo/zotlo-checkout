@@ -316,16 +316,19 @@ export function createCreditCardForm(params: {
     let fieldContent = '';
     
     switch (key) {
-      case "AGREEMENT_CHECKBOX":
-        fieldContent = config.general.isPolicyRequired
-          ? createCheckbox({
-              ...options,
-              label: $t(`form.${key}.label`, {
-                distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
-                info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
+      case "AGREEMENT_CHECKBOX": {
+        if (!config.cardUpdate) {
+          fieldContent = config.general.isPolicyRequired
+            ? createCheckbox({
+                ...options,
+                label: $t(`form.${key}.label`, {
+                  distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
+                  info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
+                })
               })
-            })
-          : '';
+            : '';
+        }
+      }
         break;
       case "SAVE_CARD_CHECKBOX":
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
