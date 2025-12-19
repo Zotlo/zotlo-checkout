@@ -160,7 +160,9 @@ export async function getConfig(params: IZotloCheckoutParams & { cardUpdate?: bo
       showSavedCards: !!initData?.showSavedCards,
     };
     config.settings = {
-      paymentMethodSetting: initData?.paymentMethodSetting || [],
+      paymentMethodSetting: config.cardUpdate
+        ? [{ providerKey: PaymentProvider.CREDIT_CARD }]
+        : initData?.paymentMethodSetting || [],
       registerType: initData?.registerType,
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
       hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards) ? initData?.registerType !== 'other' : !!+initData?.hideSubscriberIdIfAlreadySet,

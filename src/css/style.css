@@ -188,6 +188,10 @@
   font-style: var(--zc-form-consent-fontStyle);
   text-decoration: var(--zc-form-consent-textDecoration);
 }
+
+.zotlo-checkout__agreement .tw-checkbox-label {
+  align-self: center;
+}
 .zotlo-checkout__agreement .tw-checkbox-label,
 .zotlo-checkout__agreement .tw-checkbox-label a,
 .zotlo-checkout__save-card .tw-checkbox-label,

@@ -50,7 +50,7 @@ export function generateTheme(params: {
   }
 
   if (config.cardUpdate) {
-    footerInfo.FOOTER_DESC = $t('footer.cardUpdate');
+    footerInfo.FOOTER_DESC = $t('footer.cardUpdate', { projectName: config.general.appName || '' });
   } else {
     const footerPriceInfo = getFooterPriceInfo(config);
     const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer

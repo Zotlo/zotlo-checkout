@@ -270,7 +270,7 @@ export function createCreditCardForm(params: {
     FORM_TYPE: formType, 
     ATTRIBUTES: attrs, 
     CLASS_NAME: className || '', 
-    SHOW_PRICE: showPrice,
+    SHOW_PRICE: !config.cardUpdate && showPrice,
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
   });
 

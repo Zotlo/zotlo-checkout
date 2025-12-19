@@ -19,7 +19,7 @@ export function generateThemeDefault(params: {
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
   const { $t } = useI18n(config.general.localization);
-  const isTabTheme = config.design.theme === DesignTheme.HORIZONTAL && paymentMethods.length > 1;
+  const isTabTheme = !config.cardUpdate && config.design.theme === DesignTheme.HORIZONTAL && paymentMethods.length > 1;
   let providerButtons = paymentMethods.map((method, index) => {
     if (method.providerKey !== PaymentProvider.CREDIT_CARD) {
       return createProviderButton({
@@ -113,6 +113,9 @@ export function generateThemeDefault(params: {
     DISCLAIMER: footerInfo.DISCLAIMER,
     ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
     ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
-    ATTRIBUTES: generateAttributes({ autocomplete: 'off' })
+    ATTRIBUTES: generateAttributes({
+      autocomplete: 'off',
+      ...(config.cardUpdate ? {'data-type': 'card'} : {})
+    })
   });
 }
