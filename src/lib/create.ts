@@ -620,6 +620,8 @@ export function createAllCardsModal(params: {
 export function createPaymentHeader(params: {
   config: FormConfig;
 }) {
+  if (params.config.cardUpdate) return '';
+
   const { config } = params;
   const { $t } = useI18n(config.general.localization);
   const showHeader = Object.prototype.hasOwnProperty.call(config.design, 'header') ? !!config.design.header?.show : true;
