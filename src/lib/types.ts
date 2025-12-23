@@ -236,6 +236,11 @@ export type FormDesign = {
     color: string;
     fontSize: number | string;
   };
+  businessPurchase: {
+    enabled: boolean;
+    canUserModify: boolean;
+    defaultSelection: 'checked' | 'unchecked';
+  }
 };
 
 export type FormSetting = {
