@@ -55,7 +55,20 @@ export interface IZotloCheckoutStyle {
     product: Omit<ProductConfigMobileApp, 'discountRate'>;
     footer: Omit<FormDesign['footer'], 'showMerchantDisclaimer'>;
   }>;
-  success?: DeepPartial<FormSuccess>;
+  success?: DeepPartial<Omit<FormSuccess, 'genericButton'>>;
+}
+
+export interface IZotloCardStyle {
+  design?: DeepPartial<Omit<FormDesign, 'theme' | 'footer' | 'product' | 'header' | 'consent' | 'totalPriceColor' | 'button'> & {
+    button: Omit<FormDesign['button'], 'text'>;
+    footer: Omit<FormDesign['footer'], 'showMerchantDisclaimer'>;
+  }>;
+  success?: DeepPartial<Omit<FormSuccess, 'waitTime' | 'autoRedirect' | 'storeButtons' | 'button' | 'genericButton'>> & {
+    button?: Omit<FormSuccess['button'], 'text'>;
+    genericButton: Omit<FormSuccess['genericButton'], 'text' | 'show'> & {
+      url: string;
+    };
+  };
 }
 
 export interface IZotloCheckoutEvents {
@@ -361,6 +374,8 @@ export type FormSuccess = {
      * ```
     */
     text: 0 | 1 | string;
+    /** This is available for ZotloCard  */
+    url?: string;
   };
   /** If there is no url for store button (ex. google), this button cannot visible */
   storeButtons: {
@@ -582,4 +597,7 @@ export interface IFormInvalid {
 export interface IZotloCardParams extends IZotloCheckoutParams {
   /** Default subscriber ID for registration; can be an email, phone number, or UUID v4. */
   subscriberId: string;
+
+  /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
+  style?: IZotloCardStyle;
 }

@@ -1,52 +1,13 @@
-import { mergeDeep } from "./index";
-import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../lib/types";
-import { DesignTheme, PaymentProvider, SuccessTheme } from "../lib/types";
-import { API } from "../utils/api";
-import { setSession } from "./session";
-import { getPackageInfo } from "./getPackageInfo";
-import { Logger } from "../lib/logger";
-
-type InitResult = {
-  uuid: string;
-  subscriberId: string;
-  registerBypass: boolean;
-  language: string;
-  countryCode: string;
-  settings: {
-    design: FormDesign;
-    success: FormSuccess;
-  };
-  paymentMethodSetting: FormSetting["paymentMethodSetting"];
-  registerType: FormSetting["registerType"];
-  allowSubscriberIdEditingOnRegisterPayment: string;
-  hideSubscriberIdIfAlreadySet: string;
-  privacyAndTosUrlStatus: number;
-  privacyUrl: string;
-  tosUrl: string;
-  localization: Record<string, any>;
-  showPaypal: boolean;
-  currency: string;
-  isPolicyRequired: boolean;
-  isZipcodeRequired: boolean;
-  appName?: string;
-  appLogo?: string;
-  productImage?: string;
-  additionalText?: string;
-  packageName?: string;
-  customPrice?: string;
-  customCurrency?: string;
-  zotloUrls: {
-    privacyPolicy?: string;
-    termsOfService?: string;
-    cookiePolicy?: string;
-  };
-  integrations?: FormConfig['integrations'];
-  showSavedCards: boolean;
-};
-
-export const ErrorHandler = {
-  response: null as Record<string, any> | null,
-}
+import { ErrorHandler } from "./index";
+import { mergeDeep } from "../index";
+import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
+import { DesignTheme, PaymentProvider, SuccessTheme } from "../../lib/types";
+import { Logger } from "../../lib/logger";
+import { API } from "../../utils/api";
+import { setSession } from "../session";
+import { getPackageInfo } from "../getPackageInfo";
+import { DefaultThemeConfig } from "../getDefaultThemeConfig";
+import { InitResult } from "./types";
 
 export async function getPaymentData(uuid?: string) {
   try {
@@ -64,19 +25,12 @@ export async function getPaymentData(uuid?: string) {
   }
 }
 
-export async function getConfig(params: IZotloCheckoutParams & { cardUpdate?: boolean }): Promise<FormConfig> {
+export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
   const config = {
-    cardUpdate: !!params.cardUpdate,
-    general: {
-    localization: {
-      empty: {
-        noMethod: {
-          title: 'An error occured',
-          desc: 'Cannot load form, please try again later.',
-        }
-      }
-    } as any
-  }, settings: {}, design: {}, paymentData: {}, packageInfo: {} } as FormConfig;
+    cardUpdate: false,
+    general: DefaultThemeConfig.general,
+    settings: {}, design: {}, paymentData: {}, packageInfo: {}
+  } as FormConfig;
 
   const {
     token,
@@ -110,6 +64,7 @@ export async function getConfig(params: IZotloCheckoutParams & { cardUpdate?: bo
     config.integrations = initData?.integrations || {} as InitResult['integrations'];
 
     config.design = mergeDeep(
+      DefaultThemeConfig.design,
       {
         ...((settings?.design ? settings.design : (settings as any)) || {}),
         theme: settings?.design?.theme || DesignTheme.VERTICAL
@@ -124,6 +79,7 @@ export async function getConfig(params: IZotloCheckoutParams & { cardUpdate?: bo
     ) as FormDesign;
 
     config.success = mergeDeep(
+      DefaultThemeConfig.success,
       {
         ...(settings?.success || {}),
         theme: settings?.success?.theme || SuccessTheme.APP2WEB
@@ -160,12 +116,12 @@ export async function getConfig(params: IZotloCheckoutParams & { cardUpdate?: bo
       showSavedCards: !!initData?.showSavedCards,
     };
     config.settings = {
-      paymentMethodSetting: config.cardUpdate
-        ? [{ providerKey: PaymentProvider.CREDIT_CARD }]
-        : initData?.paymentMethodSetting || [],
+      paymentMethodSetting: initData?.paymentMethodSetting || [],
       registerType: initData?.registerType,
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
-      hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards) ? initData?.registerType !== 'other' : !!+initData?.hideSubscriberIdIfAlreadySet,
+      hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards)
+        ? initData?.registerType !== 'other'
+        : !!+initData?.hideSubscriberIdIfAlreadySet,
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);

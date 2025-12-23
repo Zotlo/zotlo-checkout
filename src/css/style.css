@@ -368,6 +368,10 @@
   gap: 64px;
 }
 
+.zotlo-checkout[data-type="card"] .zotlo-checkout__success {
+  min-height: 300px;
+}
+
 .zotlo-checkout__success__main {
   width: 100%;
 }
@@ -474,6 +478,9 @@
   font-size: 10px;
   line-height: 1.437;
   font-weight: 400;
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
 }
 
 .zotlo-checkout__payment-details__footer a {

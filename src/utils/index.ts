@@ -348,3 +348,38 @@ export function getIsSavedCardPayment(this: any, params: { providerKey?: Payment
   });
   return cardId > 0;
 }
+
+export function prepareFooterInfo(params: { config: FormConfig }) {
+  const { config } = params;
+  const { $t } = useI18n(config.general?.localization);
+  const privacyUrl = config.general.privacyUrl;
+  const tosUrl = config.general.tosUrl;
+  const zotloUrls = config?.general?.zotloUrls || {};
+
+  const footerInfo = {
+    PRICE_INFO: '',
+    FOOTER_DESC: $t('footer.desc'),
+    DISCLAIMER: '',
+    ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
+    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+  }
+
+  if (config.cardUpdate) {
+    footerInfo.FOOTER_DESC = $t('footer.cardUpdate', {
+      projectName: config.general.appName || ''
+    });
+  } else {
+    const footerPriceInfo = getFooterPriceInfo(config);
+    const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
+      ? $t('footer.disclaimer', {
+        termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
+        privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
+      })
+      : '';
+
+    footerInfo.PRICE_INFO = footerPriceInfo;
+    footerInfo.DISCLAIMER = disclaimer && `<div>${disclaimer}</div>`
+  }
+
+  return footerInfo;
+}

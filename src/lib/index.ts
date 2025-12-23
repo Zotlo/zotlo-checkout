@@ -23,7 +23,8 @@ import {
   getActiveSavedCardId,
   getIsSavedCardPayment
 } from "../utils";
-import { getConfig, getPaymentData, ErrorHandler } from "../utils/getConfig";
+import { ErrorHandler } from "../utils/config";
+import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
@@ -42,7 +43,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   if (import.meta.env.VITE_SDK_API_URL) {
     API.setUseCookie(!!params?.useCookie);
-    config = await getConfig({
+    config = await getCheckoutConfig({
       token: params.token,
       packageId: params.packageId,
       language: params.language,

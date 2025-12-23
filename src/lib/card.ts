@@ -1,5 +1,5 @@
 import { API } from "../utils/api";
-import { ErrorHandler, getConfig } from "../utils/getConfig";
+import { ErrorHandler, getCardConfig } from "../utils/config";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, ValidationResult, validatorInstance } from "../utils/validation";
 import { Logger } from './logger';
@@ -32,8 +32,7 @@ async function ZotloCard(params: IZotloCardParams) {
 
   if (!configFromCheckout && import.meta.env.VITE_SDK_API_URL) {
     API.setUseCookie(!!params?.useCookie);
-    config = await getConfig({
-      cardUpdate: true,
+    config = await getCardConfig({
       token: params.token,
       packageId: params.packageId,
       language: params.language,

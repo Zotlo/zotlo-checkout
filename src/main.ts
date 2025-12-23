@@ -124,6 +124,11 @@ import { ZotloCard } from './lib/card'
             label: {
               show: false
             }
+          },
+          success: {
+            genericButton: {
+              url: 'https://myfancy.site/dashboard'
+            }
           }
         }
       });

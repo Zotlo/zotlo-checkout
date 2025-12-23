@@ -1,4 +1,4 @@
-import { preparePaymentMethods, useI18n, getFooterPriceInfo } from "../../utils";
+import { preparePaymentMethods, useI18n, prepareFooterInfo } from "../../utils";
 import { template } from "../../utils/template";
 import { DesignTheme, FormConfig, PaymentProvider } from "../types";
 import { generateThemeDefault } from "./default";
@@ -25,7 +25,6 @@ export function generateTheme(params: {
   config: FormConfig;
 }){
   const { config } = params;
-  const { $t } = useI18n(config.general?.localization);
   const dir = ['he', 'ar'].includes(config?.general.language) ? 'rtl' : 'ltr';
   const themePreference = config?.design?.darkMode ? 'dark' : 'light';
   const paymentMethodSetting = config?.settings?.paymentMethodSetting;
@@ -38,33 +37,9 @@ export function generateTheme(params: {
   }
 
   const paymentMethods = preparePaymentMethods(config);
-  const privacyUrl = config.general.privacyUrl;
-  const tosUrl = config.general.tosUrl;
-  const zotloUrls = config?.general?.zotloUrls || {};
-  const footerInfo = {
-    PRICE_INFO: '',
-    FOOTER_DESC: $t('footer.desc'),
-    DISCLAIMER: '',
-    ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
-  }
+  const footerInfo = prepareFooterInfo({ config });
 
-  if (config.cardUpdate) {
-    footerInfo.FOOTER_DESC = $t('footer.cardUpdate', { projectName: config.general.appName || '' });
-  } else {
-    const footerPriceInfo = getFooterPriceInfo(config);
-    const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
-      ? $t('footer.disclaimer', {
-        termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
-        privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
-      })
-      : '';
-
-    footerInfo.PRICE_INFO = footerPriceInfo;
-    footerInfo.DISCLAIMER = disclaimer && `<div>${disclaimer}</div>`
-  }
-
-  if (params.config.design.theme === DesignTheme.MOBILEAPP) {
+  if (config.design.theme === DesignTheme.MOBILEAPP) {
     return generateThemeMobileApp({
       ...params,
       dir,
