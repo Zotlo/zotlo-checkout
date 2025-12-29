@@ -3,7 +3,7 @@ import { ErrorHandler, getCardConfig } from "../utils/config";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, ValidationResult, validatorInstance } from "../utils/validation";
 import { Logger } from './logger';
-import { DesignTheme, PaymentProvider, type FormConfig, type IZotloCardParams } from './types';
+import { DesignTheme, PaymentProvider, PaymentResultStatus, type FormConfig, type IZotloCardParams } from './types';
 import { getFormValues, loadSelectbox } from "./common";
 import { updateValidationMessages } from "../utils/validation";
 import { loadFontsOnPage } from "../utils/fonts";
@@ -15,7 +15,7 @@ import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { EventBus } from "../utils/eventBus";
 import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
-import { registerPaymentUser } from "../utils/sendPayment";
+import { handlePaymentSuccess, registerPaymentUser } from "../utils/sendPayment";
 import { updateCard } from "../utils/updateCard";
 
 async function ZotloCard(params: IZotloCardParams) {
@@ -247,14 +247,18 @@ async function ZotloCard(params: IZotloCardParams) {
       const result = getFormValues(formElement, config);
       params.events?.onSubmit?.();
 
-      await updateCard({
-        providerKey,
-        formData: result,
-        config,
-        params
-      });
       try {
         setFormLoading.bind({ container })(true);
+        const response = await updateCard({
+          formData: result,
+          config,
+          params
+        });
+
+        if (response?.result?.status === PaymentResultStatus.COMPLETE) {
+          const paymentDetail = await handlePaymentSuccess.bind({ container })({ config, params });
+          if (paymentDetail) createPaymentSuccessForm({ containerId, config, paymentDetail });
+        }
       } catch (e) {
         Logger.client?.captureException(e);
       } finally {

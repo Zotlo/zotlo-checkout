@@ -4,6 +4,7 @@ import { getGooglePayClient } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
 import { deleteSession } from "./session";
 import { Logger } from "../lib/logger";
+import { COOKIE } from "./cookie";
 
 function preparePayload(payload: {
   providerKey: PaymentProvider;
@@ -105,21 +106,37 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
   }
 }
 
-export async function handlePaymentSuccess(this: any, payload: { params: IZotloCheckoutParams; }) {
+export async function handlePaymentSuccess(this: any, payload: { config: FormConfig; params: IZotloCheckoutParams; }) {
   try {
     awareForContext(this, 'handlePaymentSuccess');
     setFormLoading.bind({ container: this.container })(true);
-    const { params } = payload;
-    const { result, meta } = await CheckoutAPI.get("/payment/detail");
+    const { config, params } = payload;
+    let result: PaymentDetail = {} as PaymentDetail;
 
-    if (meta?.errorCode) {
-      params.events?.onFail?.({ message: meta?.message, data: meta });
-      return null
+    if (config.cardUpdate) {
+      result = {
+        application: {
+          links: {
+            customerSupportUrl: config.customerSupportUrl || ''
+          }
+        }
+      } as PaymentDetail
+    } else {
+      const { result: res, meta } = await CheckoutAPI.get("/payment/detail");
+      result = res as PaymentDetail;
+  
+      if (meta?.errorCode) {
+        params.events?.onFail?.({ message: meta?.message, data: meta });
+        return null
+      }
     }
 
-    deleteSession({ useCookie: !!params.useCookie });
-    params.events?.onSuccess?.(result as PaymentDetail);
-    return result as PaymentDetail;
+    deleteSession({
+      useCookie: !!params.useCookie,
+      key: config.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID
+    });
+    params.events?.onSuccess?.(result);
+    return result;
   } catch (e) {
     Logger.client?.captureException(e);
     return null;
@@ -322,7 +339,6 @@ export async function sendPayment(paymentParams: {
     // Send payment
     const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
     handleCheckoutResponse({ checkoutResponse, params, refreshProviderConfigsFunction });
-
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });
     Logger.client?.captureException(err);

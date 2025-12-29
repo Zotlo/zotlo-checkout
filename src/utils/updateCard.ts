@@ -1,34 +1,29 @@
 import { handleResponseRedirection } from "./index";
 import { Logger } from "../lib/logger";
-import { type FormConfig, type IZotloCardParams, PaymentProvider } from "../lib/types";
+import { type FormConfig, type IZotloCardParams } from "../lib/types";
 import { CardAPI } from "./api";
 import { COOKIE } from "./cookie";
 
 function preparePayload(payload: {
-  providerKey: PaymentProvider;
   formData: Record<string, any>;
   params: IZotloCardParams;
 }) {
-  const { providerKey, formData, params } = payload;
+  const { formData, params } = payload;
   const { returnUrl } = params || {};
   const { cardExpiration, cardNumber, cardHolder, cardCVV } = formData || {};
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
 
-  let data = {
-    providerKey,
+  return {
     creditCardDetails: {
       cardHolder,
       cardNumber: cardNumber?.replace(/\s/g, '') || '',
       cardExpirationMonth,
       cardExpirationYear: `20${cardExpirationYear}`,
       cardCVV,
-    }
-  }
-
-  return {
-    ...data,
+    },
     ...(returnUrl && { returnUrl }),
-  };
+    ...(import.meta.env.DEV && { developmentForce3DS: true })
+  }
 }
 
 async function handleCardResponse(payload: {
@@ -41,8 +36,8 @@ async function handleCardResponse(payload: {
     return params.events?.onFail?.({ message: meta?.message, data: meta });
   }
 
-  if (meta.httpStatus === 200) {
-    handleResponseRedirection({
+  if (meta.httpStatus >= 200 && meta.httpStatus < 400) {
+    await handleResponseRedirection({
       response: cardResponse,
       params,
       sessionKey: COOKIE.CARD_UUID
@@ -51,19 +46,16 @@ async function handleCardResponse(payload: {
 }
 
 export async function updateCard(payload: {
-  providerKey: PaymentProvider;
   formData: Record<string, any>;
   config: FormConfig;
   params: IZotloCardParams;
 }) {
-  const { providerKey, formData, config, params } = payload;
+  const { formData, config, params } = payload;
   try {
-    const updatePayload = preparePayload({ providerKey, formData, params });
-  
-    // Update card
+    const updatePayload = preparePayload({ formData, params });
     const reqConfig = { headers: { Language: config.general.language } };
     const cardResponse = await CardAPI.post('/card/update', updatePayload, reqConfig);
-    handleCardResponse({ cardResponse, params });
+    await handleCardResponse({ cardResponse, params });
     return cardResponse;
   } catch (err: any) {
     params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });

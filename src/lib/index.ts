@@ -240,8 +240,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   async function onClickSubmitButton(this: HTMLButtonElement, e: PointerEvent | MouseEvent) {
     const isMouseClick = (e as PointerEvent)?.pointerId !== -1;
     const providerKey = isMouseClick || config.design.theme === DesignTheme.HORIZONTAL
-    ? this.dataset.provider as PaymentProvider // Provider by click
-    : detectAndValidateForm(); // Detect provider where input is focused
+      ? this.dataset.provider as PaymentProvider // Provider by click
+      : detectAndValidateForm(); // Detect provider where input is focused
 
     return handleFormSubmit(providerKey);
   }

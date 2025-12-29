@@ -28,7 +28,8 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
         original: 0,
         total: 0
       }
-    }
+    },
+    customerSupportUrl: '',
   } as FormConfig;
 
   const {
@@ -54,6 +55,8 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
     const initData = initRes?.result as CardInitResult;
     if (!initData || Array.isArray(initData)) return config;
     setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie, key: COOKIE.CARD_UUID });
+
+    config.customerSupportUrl = initData?.customerSupportUrl || '';
 
     config.design = mergeDeep(
       DefaultThemeConfig.design,

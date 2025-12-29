@@ -406,13 +406,13 @@ export function prepareButtonSuccessLink(params: {
   const os = paymentDetail?.client?.selectedOs || '';
 
   if (theme === SuccessTheme.APP2WEB) {
-    const iosLink = paymentDetail?.application.links.deeplinkIos || '';
+    const iosLink = paymentDetail?.application?.links?.deeplinkIos || '';
 
     switch (os) {
       case 'android':
-        return paymentDetail?.application.links.deeplinkAndroid || '';
+        return paymentDetail?.application?.links?.deeplinkAndroid || '';
       case 'desktop':
-        return paymentDetail?.application.links.deeplinkWeb || '';
+        return paymentDetail?.application?.links?.deeplinkWeb || '';
       case 'ios':
         return iosLink;
       default:

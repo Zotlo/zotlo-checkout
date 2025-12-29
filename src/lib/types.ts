@@ -467,6 +467,8 @@ export type FormConfig = {
   providerConfigs?: ProviderConfigs;
   /** This is the flag that indicates whether the form is in card update mode */
   cardUpdate?: boolean;
+  /** This is only available for card update form */
+  customerSupportUrl?: string;
   integrations?: {
     gtmData: {
       isActive: 0 | 1;
