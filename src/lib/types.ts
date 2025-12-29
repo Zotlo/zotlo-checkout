@@ -63,7 +63,7 @@ export interface IZotloCheckoutEvents {
   onLoad?: (params: IFormLoad) => void;
 
   /** Triggers after the form is submitted. */
-  onSubmit?: (data?: Record<string, any>) => void;
+  onSubmit?: () => void;
 
   /** Triggers after a successful payment. */
   onSuccess?: (result: PaymentDetail) => void;

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.8.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.8.0...v1.8.1)
+
+### 💅 Refactors
+
+- Remove form result on onSbmit callback ([d3fdbda](https://github.com/Zotlo/zotlo-checkout/commit/d3fdbda))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.8.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.7.0...v1.8.0)
