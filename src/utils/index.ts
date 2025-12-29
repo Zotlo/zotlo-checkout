@@ -11,6 +11,28 @@ export { useI18n } from './i18n';
 
 type Country = typeof Countries[0];
 
+export const ZOTLO_GLOBAL = {
+  cardUpdate: false,
+  checkout: {
+    containerId: '',
+  },
+  card: {
+    containerId: '',
+  },
+
+  get containerId() {
+    return this.cardUpdate ? this.card.containerId : this.checkout.containerId;
+  },
+
+  set containerId(value: string) {
+    if (this.cardUpdate) {
+      this.card.containerId = value;
+      return;
+    }
+    this.checkout.containerId = value;
+  }
+}
+
 export function getCountryCodeByNumber(phoneNumber: string | number, matchLength = true): string {
   const clearPattern = /[\s-()+]/g
   const cleanPhoneNumber = `${phoneNumber}`.replace(clearPattern, '');
@@ -273,7 +295,7 @@ export function getFooterPriceInfo(config: FormConfig) {
 export function getSubmitButtonContent(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
-  const buttonKey = config.cardUpdate
+  const buttonKey = ZOTLO_GLOBAL.cardUpdate
     ? $t('form.button.text.cardUpdate.0')
     : config?.design.button.text?.[packageState];
 
@@ -365,7 +387,7 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
     ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
   }
 
-  if (config.cardUpdate) {
+  if (ZOTLO_GLOBAL.cardUpdate) {
     footerInfo.FOOTER_DESC = $t('footer.cardUpdate', {
       projectName: config.general.appName || ''
     });

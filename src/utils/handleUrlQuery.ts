@@ -1,3 +1,4 @@
+import { ZOTLO_GLOBAL } from ".";
 import { createPaymentSuccessForm } from "../lib/create";
 import { type FormConfig, type IZotloCheckoutParams, PaymentCallbackStatus } from "../lib/types";
 import { handlePaymentSuccess } from "./sendPayment";
@@ -11,9 +12,8 @@ export enum UrlQuery {
 export async function handleUrlQuery(payload: {
   params: IZotloCheckoutParams;
   config: FormConfig;
-  containerId: string;
 }) {
-  const { params, config, containerId } = payload || {};
+  const { params, config } = payload || {};
   const queryString = globalThis?.location?.search || "";
   const urlParams = new URLSearchParams(queryString);
   const queryParams = Object.fromEntries(urlParams?.entries());
@@ -23,9 +23,9 @@ export async function handleUrlQuery(payload: {
   const errorMessage = queryParams?.[UrlQuery.ERROR_MESSAGE] || "";
 
   if (status === PaymentCallbackStatus.SUCCESS) {
-    const container = document.getElementById(containerId);
+    const container = document.getElementById(ZOTLO_GLOBAL.containerId);
     const paymentDetail = await handlePaymentSuccess.bind({ container })({ config, params });
-    if (paymentDetail) createPaymentSuccessForm({ containerId, config, paymentDetail });
+    if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
   }
 
   if (status === PaymentCallbackStatus.FAIL) {

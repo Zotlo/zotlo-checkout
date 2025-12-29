@@ -1,5 +1,5 @@
 import { ErrorHandler } from "./index";
-import { mergeDeep } from "../index";
+import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import { DesignTheme, PaymentProvider, type FormConfig, type FormDesign, type FormSuccess, type IZotloCheckoutParams } from "../../lib/types";
 import { CardAPI } from "../api";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
@@ -9,8 +9,10 @@ import { Logger } from "../../lib/logger";
 import { COOKIE } from "../cookie";
 
 export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
+  ZOTLO_GLOBAL.cardUpdate = true;
+
   const config = {
-    cardUpdate: true,
+    cardUpdate: ZOTLO_GLOBAL.cardUpdate,
     general: DefaultThemeConfig.general,
     design: DefaultThemeConfig.design,
     success: DefaultThemeConfig.success,

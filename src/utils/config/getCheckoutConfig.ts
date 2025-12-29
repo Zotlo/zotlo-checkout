@@ -1,5 +1,5 @@
 import { ErrorHandler } from "./index";
-import { mergeDeep } from "../index";
+import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
 import { DesignTheme, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
@@ -26,8 +26,10 @@ export async function getPaymentData(uuid?: string) {
 }
 
 export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
+  ZOTLO_GLOBAL.cardUpdate = false;
+
   const config = {
-    cardUpdate: false,
+    cardUpdate: ZOTLO_GLOBAL.cardUpdate,
     general: DefaultThemeConfig.general,
     settings: {}, design: {}, paymentData: {}, packageInfo: {}
   } as FormConfig;

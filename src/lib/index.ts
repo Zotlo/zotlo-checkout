@@ -21,7 +21,8 @@ import {
   syncInputsOnTabs,
   handleSavedCardsEvents,
   getActiveSavedCardId,
-  getIsSavedCardPayment
+  getIsSavedCardPayment,
+  ZOTLO_GLOBAL
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -60,7 +61,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     EventBus.on('configZotloCheckout', () => JSON.parse(JSON.stringify(config)));
   }
 
-  let containerId = '';
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
@@ -142,8 +142,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function getContainerElement() {
-    if (!containerId) return null;
-    return document.getElementById(containerId);
+    if (!ZOTLO_GLOBAL.containerId) return null;
+    return document.getElementById(ZOTLO_GLOBAL.containerId);
   }
 
   async function handleFormSubmit(providerKey: PaymentProvider = PaymentProvider.CREDIT_CARD) {
@@ -158,8 +158,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     
     if (import.meta.env.VITE_SDK_API_URL) {
       const container = getContainerElement();
-      const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
-      const result = getFormValues(formElement, config);
+      const result = getFormValues(config);
       const cardId = getActiveSavedCardId.bind({ container })({ providerKey, config });
       params.events?.onSubmit?.();
       try {
@@ -377,7 +376,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   async function refresh() {
     try {
-      if (!containerId) return;
+      if (!ZOTLO_GLOBAL.containerId) return;
 
       if (import.meta.env.VITE_CONSOLE) {
         if ((globalThis as any)?.getZotloConfig) {
@@ -414,7 +413,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       if (import.meta.env.VITE_CONSOLE) {
         if ((config as any).render === 'after-payment')  {
           createPaymentSuccessForm({
-            containerId,
             config,
             paymentDetail: (config as any).paymentDetail as any
           })
@@ -639,8 +637,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     });
     handleUrlQuery({
       params,
-      config,
-      containerId
+      config
     });
   }
 
@@ -652,9 +649,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function mount(id: string) {
-    if (containerId) return;
+    if (ZOTLO_GLOBAL.containerId) return;
 
-    containerId = id;
+    ZOTLO_GLOBAL.containerId = id;
     refresh();
   }
 

@@ -13,7 +13,7 @@ import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
 import savedCardItemElement from '../html/saved-card-item.html?raw'
 import savedCardsFormElement from '../html/saved-cards-form.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL } from "../utils";
 import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData } from './types'
@@ -485,13 +485,13 @@ export function preparePaymentDetailsSection(params: {
 }
 
 export function createPaymentSuccessForm(params: {
-  containerId: string;
   config: FormConfig;
   paymentDetail: PaymentDetail;
 }) {
   if (!params.config?.success?.show) return false;
   
-  const { containerId, config, paymentDetail } = params;
+  const { config, paymentDetail } = params;
+  const containerId = ZOTLO_GLOBAL.containerId;
   const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
   const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
   const WAIT_TIME = config.success.waitTime; // in seconds

@@ -10,7 +10,7 @@ import { loadFontsOnPage } from "../utils/fonts";
 import { generateEmptyPage, generateTheme } from "./theme";
 import { createStyle } from "../utils/createStyle";
 import { createPaymentSuccessForm } from "./create";
-import { activateDisabledSubscriberIdInputs, debounce, getCDNUrl, getCountryByCode, getIsSavedCardPayment, getMaskByCode, handlePriceChangesBySubscriptionStatus, handleSubscriberIdInputEventListeners, mergeDeep, setFormDisabled, setFormLoading, useI18n } from "../utils";
+import { activateDisabledSubscriberIdInputs, debounce, getCDNUrl, getCountryByCode, getIsSavedCardPayment, getMaskByCode, handlePriceChangesBySubscriptionStatus, handleSubscriberIdInputEventListeners, mergeDeep, setFormDisabled, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { EventBus } from "../utils/eventBus";
 import { getCardMask } from "../utils/getCardMask";
@@ -46,7 +46,6 @@ async function ZotloCard(params: IZotloCardParams) {
     });
   }
 
-  let containerId = '';
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
@@ -85,8 +84,8 @@ async function ZotloCard(params: IZotloCardParams) {
   }
 
   function getContainerElement() {
-    if (!containerId) return null;
-    return document.getElementById(containerId);
+    if (!ZOTLO_GLOBAL.containerId) return null;
+    return document.getElementById(ZOTLO_GLOBAL.containerId);
   }
 
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
@@ -136,8 +135,7 @@ async function ZotloCard(params: IZotloCardParams) {
     });
     handleUrlQuery({
       params,
-      config,
-      containerId
+      config
     });
   }
 
@@ -243,8 +241,7 @@ async function ZotloCard(params: IZotloCardParams) {
     const container = getContainerElement();
     
     if (import.meta.env.VITE_SDK_CARD_API_URL) {
-      const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
-      const result = getFormValues(formElement, config);
+      const result = getFormValues(config);
       params.events?.onSubmit?.();
 
       try {
@@ -257,7 +254,7 @@ async function ZotloCard(params: IZotloCardParams) {
 
         if (response?.result?.status === PaymentResultStatus.COMPLETE) {
           const paymentDetail = await handlePaymentSuccess.bind({ container })({ config, params });
-          if (paymentDetail) createPaymentSuccessForm({ containerId, config, paymentDetail });
+          if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
         }
       } catch (e) {
         Logger.client?.captureException(e);
@@ -439,7 +436,7 @@ async function ZotloCard(params: IZotloCardParams) {
 
   async function refresh() {
     try {
-      if (!containerId) return;
+      if (!ZOTLO_GLOBAL.containerId) return;
 
       if (import.meta.env.VITE_CONSOLE) {
         if ((globalThis as any)?.getZotloConfig) {
@@ -477,7 +474,6 @@ async function ZotloCard(params: IZotloCardParams) {
       if (import.meta.env.VITE_CONSOLE) {
         if ((config as any).render === 'after-payment')  {
           createPaymentSuccessForm({
-            containerId,
             config,
             paymentDetail: (config as any).paymentDetail as any
           })
@@ -495,9 +491,9 @@ async function ZotloCard(params: IZotloCardParams) {
   }
 
   function mount(id: string) {
-    if (containerId) return;
+    if (ZOTLO_GLOBAL.containerId) return;
 
-    containerId = id;
+    ZOTLO_GLOBAL.containerId = id;
     refresh();
   }
 

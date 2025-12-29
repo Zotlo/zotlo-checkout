@@ -1,7 +1,10 @@
+import { ZOTLO_GLOBAL } from "../../utils";
 import { DesignTheme, type FormConfig } from "../types";
 
-export function getFormValues(form: HTMLFormElement, config: FormConfig) {
+export function getFormValues(config: FormConfig) {
   const payload: Partial<Record<string, any>> = {};
+  const container = document.getElementById(ZOTLO_GLOBAL.containerId);
+  const form = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
   const activeForm = config.design.theme === DesignTheme.HORIZONTAL
     ? form.querySelector('[data-tab-active="true"]')?.querySelectorAll('input, select') as NodeListOf<HTMLInputElement>
     : form.elements;
