@@ -1,11 +1,12 @@
 import { ErrorHandler } from "./index";
 import { mergeDeep } from "../index";
 import { DesignTheme, PaymentProvider, type FormConfig, type FormDesign, type FormSuccess, type IZotloCheckoutParams } from "../../lib/types";
-import { API } from "../api";
+import { CardAPI } from "../api";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
 import { setSession } from "../session";
-import { InitResult } from "./types";
+import type { CardInitResult } from "./types";
 import { Logger } from "../../lib/logger";
+import { COOKIE } from "../cookie";
 
 export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
   const config = {
@@ -13,6 +14,7 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
     general: DefaultThemeConfig.general,
     design: DefaultThemeConfig.design,
     success: DefaultThemeConfig.success,
+    integrations: {},
     settings: {},
     paymentData: {
       providers: {
@@ -39,21 +41,19 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
   } = params || {};
 
   const payload = {
-    applicationHash: token,
+    token,
     packageId,
-    ...(subscriberId && { subscriberId }),
+    subscriberId,
     ...(customParameters && typeof customParameters === 'object' && { customParameters: JSON.stringify(customParameters) }),
   };
 
   const reqConfig = { headers: { Language: language } };
 
   try {
-    const initRes = await API.post('/card/init', payload, reqConfig);
-    const initData = initRes?.result as InitResult;
+    const initRes = await CardAPI.post('/card/init', payload, reqConfig);
+    const initData = initRes?.result as CardInitResult;
     if (!initData || Array.isArray(initData)) return config;
-    setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie });
-
-    config.integrations = initData?.integrations || {} as InitResult['integrations'];
+    setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie, key: COOKIE.CARD_UUID });
 
     config.design = mergeDeep(
       DefaultThemeConfig.design,

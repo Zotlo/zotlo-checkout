@@ -1,7 +1,7 @@
-import { awareForContext, setFormLoading } from "./index";
-import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
+import { awareForContext, handleResponseRedirection, setFormLoading } from "./index";
+import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
-import { API } from "./api";
+import { CheckoutAPI } from "./api";
 import { deleteSession } from "./session";
 import { Logger } from "../lib/logger";
 
@@ -85,7 +85,7 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
     if (registerType === 'phoneNumber') {
       subscriberId = subscriberId.replace(/[^0-9]/g, '');
     }
-    const response = await API.post("/payment/register", { subscriberId });
+    const response = await CheckoutAPI.post("/payment/register", { subscriberId });
     if (response?.meta?.errorCode) {
       params.events?.onFail?.({ message: response?.meta?.message, data: response?.meta })
     };
@@ -110,7 +110,7 @@ export async function handlePaymentSuccess(this: any, payload: { params: IZotloC
     awareForContext(this, 'handlePaymentSuccess');
     setFormLoading.bind({ container: this.container })(true);
     const { params } = payload;
-    const { result, meta } = await API.get("/payment/detail");
+    const { result, meta } = await CheckoutAPI.get("/payment/detail");
 
     if (meta?.errorCode) {
       params.events?.onFail?.({ message: meta?.message, data: meta });
@@ -139,7 +139,7 @@ async function handleCheckoutResponse(payload: {
   };
 }) {
   const { checkoutResponse, params, actions, refreshProviderConfigsFunction } = payload;
-  const { meta, result } = checkoutResponse || {};
+  const { meta } = checkoutResponse || {};
   if (meta?.errorCode) {
     if (actions?.errorAction) actions.errorAction();
     await refreshProviderConfigsFunction();
@@ -147,30 +147,10 @@ async function handleCheckoutResponse(payload: {
   }
 
   if (meta.httpStatus === 200) {
-    const { status, redirectUrl, payment } = result || {};
-    const returnUrl = payment?.returnUrl || '';
-    const currentUrl = globalThis?.location?.href || '';
-    const currentUrlBase = globalThis?.location.origin + globalThis?.location.pathname;
-    const returnUrlObj = new URL(params.returnUrl);
-    const returnUrlBase = returnUrlObj.origin + returnUrlObj.pathname;
-    const isSamePage = returnUrlBase === currentUrlBase;
-
-    if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && currentUrl) {
-      if (actions?.redirectAction) return actions.redirectAction();
-      if (!isSamePage) {
-        deleteSession({ useCookie: !!params.useCookie });
-      }
-      globalThis.location.href = redirectUrl;
-    }
-    if (status === PaymentResultStatus.COMPLETE && payment) {
-      if (actions?.completeAction) actions.completeAction();
-      if (returnUrl) {
-        if (!isSamePage) {
-          deleteSession({ useCookie: !!params.useCookie });
-        }
-        globalThis.location.href = returnUrl;
-      }
-    }
+    handleResponseRedirection({
+      response: checkoutResponse,
+      params
+    });
   }
 }
 
@@ -200,7 +180,7 @@ async function handleApplePayPayment(payload: {
 
     session.onvalidatemerchant = async (event: any) => {
       const sessionUrl = event.validationURL;
-      const { result, meta } = await API.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
+      const { result, meta } = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
       if (meta?.errorCode) {
         return params.events?.onFail?.({ message: meta?.message, data: meta });
       }
@@ -220,7 +200,7 @@ async function handleApplePayPayment(payload: {
         applePayToken,
       };
       try {
-        const checkoutResponse = await API.post("/payment/checkout", payload);
+        const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
         await handleCheckoutResponse({
           checkoutResponse,
           params,
@@ -288,7 +268,7 @@ async function handleGooglePayPayment(payload: {
       googlePayToken,
     }
 
-    const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
+    const checkoutResponse = await CheckoutAPI.post("/payment/checkout", checkoutPayload);
     await handleCheckoutResponse({
       checkoutResponse,
       params,
@@ -340,7 +320,7 @@ export async function sendPayment(paymentParams: {
     if (registerResponse?.meta?.errorCode) return;
 
     // Send payment
-    const checkoutResponse = await API.post("/payment/checkout", payload);
+    const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
     handleCheckoutResponse({ checkoutResponse, params, refreshProviderConfigsFunction });
 
   } catch (err:any) {

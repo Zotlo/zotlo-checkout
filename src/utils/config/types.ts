@@ -37,3 +37,20 @@ export type InitResult = {
   integrations?: FormConfig['integrations'];
   showSavedCards: boolean;
 };
+
+export type CardInitResult = {
+  uuid: string;
+  localization: Record<string, any>;
+  language: string;
+  countryCode: string;
+  privacyUrl: string;
+  tosUrl: string;
+  privacyAndTosUrlStatus: 1 | 0;
+  appName?: string;
+  subscriberId: string;
+  zotloUrls: {
+    privacyPolicy?: string;
+    termsOfService?: string;
+    cookiePolicy?: string;
+  };
+};

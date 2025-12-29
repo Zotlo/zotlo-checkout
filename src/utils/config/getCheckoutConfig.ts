@@ -3,7 +3,7 @@ import { mergeDeep } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
 import { DesignTheme, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
-import { API } from "../../utils/api";
+import { CheckoutAPI } from "../../utils/api";
 import { setSession } from "../session";
 import { getPackageInfo } from "../getPackageInfo";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
@@ -15,7 +15,7 @@ export async function getPaymentData(uuid?: string) {
     const config = uuid
       ? { headers: { Uuid: uuid || '' } }
       : undefined;
-    const paymentRes = await API.get('/payment/init', config);
+    const paymentRes = await CheckoutAPI.get('/payment/init', config);
     const paymentInitData = paymentRes?.result || {};
     return paymentInitData as FormPaymentData;
   } catch (e: any) {
@@ -53,7 +53,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
   const reqConfig = { headers: { Language: language } };
 
   try {
-    const initRes = await API.post("/init", payload, reqConfig);
+    const initRes = await CheckoutAPI.post('/init', payload, reqConfig);
     const initData = initRes?.result as InitResult;
     if (!initData || Array.isArray(initData)) return config;
     setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie });
@@ -136,7 +136,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
 
 export async function getProviderConfig(providerKey: PaymentProvider, returnUrl: string) {
   try {
-    const res = await API.post(`/payment/init`, { providerKey, returnUrl });
+    const res = await CheckoutAPI.post('/payment/init', { providerKey, returnUrl });
     const data = res?.result || {};
     return data;
   } catch (e: any) {

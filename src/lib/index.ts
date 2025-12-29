@@ -30,7 +30,7 @@ import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { createAgreementModal, createPaymentSuccessForm } from "./create";
-import { API } from "../utils/api";
+import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
 import { getFormValues, loadSelectbox } from "./common";
 import { EventBus } from "../utils/eventBus";
@@ -42,7 +42,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
   if (import.meta.env.VITE_SDK_API_URL) {
-    API.setUseCookie(!!params?.useCookie);
+    CheckoutAPI.setUseCookie(!!params?.useCookie);
     config = await getCheckoutConfig({
       token: params.token,
       packageId: params.packageId,

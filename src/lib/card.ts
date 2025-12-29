@@ -1,4 +1,4 @@
-import { API } from "../utils/api";
+import { CardAPI } from "../utils/api";
 import { ErrorHandler, getCardConfig } from "../utils/config";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, ValidationResult, validatorInstance } from "../utils/validation";
@@ -16,6 +16,7 @@ import { EventBus } from "../utils/eventBus";
 import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
 import { registerPaymentUser } from "../utils/sendPayment";
+import { updateCard } from "../utils/updateCard";
 
 async function ZotloCard(params: IZotloCardParams) {
   // Load Sentry for error tracking
@@ -30,8 +31,8 @@ async function ZotloCard(params: IZotloCardParams) {
     { ...(params?.style || {}) }
   ) as FormConfig;
 
-  if (!configFromCheckout && import.meta.env.VITE_SDK_API_URL) {
-    API.setUseCookie(!!params?.useCookie);
+  if (!configFromCheckout && import.meta.env.VITE_SDK_CARD_API_URL) {
+    CardAPI.setUseCookie(!!params?.useCookie);
     config = await getCardConfig({
       token: params.token,
       packageId: params.packageId,
@@ -89,7 +90,7 @@ async function ZotloCard(params: IZotloCardParams) {
   }
 
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
-    if (!import.meta.env.VITE_SDK_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
+    if (!import.meta.env.VITE_SDK_CARD_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
     const subscriberInput = event?.target as HTMLInputElement;
     const subscriberId = subscriberInput?.value || '';
     const validationRules = subscriberInput?.dataset?.rules || '';
@@ -241,12 +242,17 @@ async function ZotloCard(params: IZotloCardParams) {
 
     const container = getContainerElement();
     
-    if (import.meta.env.VITE_SDK_API_URL) {
+    if (import.meta.env.VITE_SDK_CARD_API_URL) {
       const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
       const result = getFormValues(formElement, config);
       params.events?.onSubmit?.();
 
-      console.log('Submitting payment with provider:', providerKey, 'and values:', result);
+      await updateCard({
+        providerKey,
+        formData: result,
+        config,
+        params
+      });
       try {
         setFormLoading.bind({ container })(true);
       } catch (e) {
@@ -450,7 +456,7 @@ async function ZotloCard(params: IZotloCardParams) {
       const style = createStyle(config);
       const container = getContainerElement();
 
-      if (import.meta.env.VITE_SDK_API_URL) {
+      if (import.meta.env.VITE_SDK_CARD_API_URL) {
         if (ErrorHandler.response) {
           form = generateEmptyPage({
             config,

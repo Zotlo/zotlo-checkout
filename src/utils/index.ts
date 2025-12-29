@@ -1,9 +1,10 @@
 import Countries from '../countries.json';
-import { type FormConfig, PaymentProvider, SavedCardsGroupName } from '../lib/types';
+import { type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName } from '../lib/types';
 import { createAllCardsModal, createSavedCardItem } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
 import { template } from "./template";
+import { deleteSession } from './session';
 
 export { getCDNUrl } from './getCDNUrl';
 export { useI18n } from './i18n';
@@ -382,4 +383,35 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
   }
 
   return footerInfo;
+}
+
+export async function handleResponseRedirection(payload: {
+  response: Record<string, any>;
+  params: IZotloCardParams | IZotloCheckoutParams;
+  sessionKey?: string;
+}) {
+  const { response, params, sessionKey } = payload;
+  const { result } = response || {};
+  const { status, redirectUrl, payment } = result || {};
+  const returnUrl = payment?.returnUrl || '';
+  const currentUrl = globalThis?.location?.href || '';
+  const currentUrlBase = globalThis?.location.origin + globalThis?.location.pathname;
+  const returnUrlObj = new URL(params.returnUrl);
+  const returnUrlBase = returnUrlObj.origin + returnUrlObj.pathname;
+  const isSamePage = returnUrlBase === currentUrlBase;
+
+  if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && currentUrl) {
+    if (!isSamePage) {
+      deleteSession({ useCookie: !!params.useCookie, key: sessionKey });
+    }
+    globalThis.location.href = redirectUrl;
+  }
+  if (status === PaymentResultStatus.COMPLETE && payment) {
+    if (returnUrl) {
+      if (!isSamePage) {
+        deleteSession({ useCookie: !!params.useCookie, key: sessionKey });
+      }
+      globalThis.location.href = returnUrl;
+    }
+  }
 }
