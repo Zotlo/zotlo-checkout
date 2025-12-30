@@ -283,10 +283,11 @@ const cardUpdate = await ZotloCard({
     myCustomParam: 'OK!'
   },
   style: {
+    design: {
+      backgroundColor: '#f5f7fa'
+    },
     success: {
-      design: {
-        backgroundColor: '#f5f7fa'
-      },
+      show: true,
       genericButton: {
         url: 'https://myfancy.site/dashboard' // This is required
       }
@@ -342,10 +343,11 @@ You can also include Zotlo Card directly in the browser using CDN links:
       myCustomParam: 'OK!'
     },
     style: {
+      design: {
+        backgroundColor: '#f5f7fa'
+      },
       success: {
-        design: {
-          backgroundColor: '#f5f7fa'
-        },
+        show: true,
         genericButton: {
           url: 'https://myfancy.site/dashboard' // This is required
         }
