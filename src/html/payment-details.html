@@ -1,4 +1,5 @@
 <div class="zotlo-checkout__payment-details">
+  <% IF(FORM_TYPE==='CHECKOUT') %>
   <div class="zotlo-checkout__payment-details__main">
     <div class="zotlo-checkout__payment-details__title">{{TITLE}}</div>
     <table>
@@ -22,7 +23,20 @@
       </tbody>
     </table>
   </div>
+  <% ENDIF %>
   <div class="zotlo-checkout__payment-details__footer">
-    {{FOOTER}}
+    <div>{{FOOTER}}</div>
+
+    <% IF(FORM_TYPE==='CARD') %>
+    <div class="zotlo-checkout__footer">
+      {{DISCLAIMER}}
+      <div>
+        {{ZOTLO_LEGALS_DESC}}<br/>
+        <nav>
+          {{ZOTLO_LEGALS_LINKS}}
+        </nav>
+      </div>
+    </div>
+    <% ENDIF %>
   </div>
 </div>

@@ -1,3 +1,4 @@
+import { COOKIE } from "./cookie";
 import { getSession } from "./session";
 
 interface RequestConfig {
@@ -6,7 +7,7 @@ interface RequestConfig {
   responseType?: XMLHttpRequestResponseType;
 }
 
-interface ApiResponse {
+export interface ApiResponse {
   meta: {
     requestId: string;
     httpStatus: number;
@@ -20,37 +21,53 @@ interface ApiResponse {
  * API utility class for making HTTP requests using XMLHttpRequest
  */
 export class API {
-  private static useCookie: boolean = false;
-  private static baseUrl: string = import.meta.env.VITE_SDK_API_URL || "";
-  private static defaultHeaders: Record<string, string> = {
+  baseUrl = import.meta.env.VITE_SDK_API_URL || '';
+  defaultHeaders: Record<string, any> = {
     "Content-Type": "application/json",
   };
-  private static defaultTimeout: number = 30000;
-  public static setUseCookie(value: boolean) {
+  defaultTimeout = 30000;
+  useCookie = false;
+  sessionKey: string | undefined = undefined;
+
+  constructor(payload?: {
+    baseUrl?: string;
+    defaultHeaders?: Record<string, string>;
+    defaultTimeout?: number;
+    useCookie?: boolean;
+    sessionKey?: string;
+  }) {
+    if (payload?.baseUrl) this.baseUrl = payload.baseUrl;
+    if (payload?.defaultHeaders) this.defaultHeaders = payload.defaultHeaders;
+    if (payload?.defaultTimeout) this.defaultTimeout = payload.defaultTimeout;
+    if (payload?.useCookie) this.useCookie = payload.useCookie;
+    if (payload?.sessionKey) this.sessionKey = payload.sessionKey;
+  }
+
+  setUseCookie(value: boolean) {
     this.useCookie = value;
   }
 
-  static get(endpoint: string, config?: RequestConfig): Promise<ApiResponse> { 
+  get(endpoint: string, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("GET", endpoint, null, config);
   }
 
-  static post(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
+  post(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("POST", endpoint, payload, config); 
   }
 
-  static put(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
+  put(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("PUT", endpoint, payload, config); 
   }
 
-  static delete(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
+  delete(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("DELETE", endpoint, payload, config); 
   }
 
-  static patch(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
+  patch(endpoint: string, payload?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("PATCH", endpoint, payload, config); 
   }
 
-  private static request(
+  request(
     method: string,
     endpoint: string,
     data?: any,
@@ -65,7 +82,7 @@ export class API {
 
       const url = this.buildUrl(endpoint);
       const xhr = new XMLHttpRequest();
-      const existingUuid = getSession({ useCookie: this.useCookie })?.id;
+      const existingUuid = getSession({ useCookie: this.useCookie, key: this.sessionKey })?.id;
       const clientDomain = window.location.hostname || window.location.host || "";
 
       // Initialize the request
@@ -126,9 +143,8 @@ export class API {
 
   /**
    * Build the full URL by combining baseUrl and endpoint
-   * @private
    */
-  private static buildUrl(endpoint: string): string {
+  buildUrl(endpoint: string): string {
     if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
       return endpoint; // Absolute URL
     }
@@ -145,9 +161,8 @@ export class API {
 
   /**
    * Prepare data by response type
-   * @private
    */
-  private static getResponseData(xhr: XMLHttpRequest, headers: Record<string, any>): ApiResponse {
+  getResponseData(xhr: XMLHttpRequest, headers: Record<string, any>): ApiResponse {
     let responseData: any;
     if (xhr.responseType) {
       responseData = xhr.response;
@@ -161,3 +176,9 @@ export class API {
     return responseData;
   }
 }
+
+export const CheckoutAPI = new API();
+export const CardAPI = new API({
+  baseUrl: import.meta.env.VITE_SDK_CARD_API_URL || '',
+  sessionKey: COOKIE.CARD_UUID
+});

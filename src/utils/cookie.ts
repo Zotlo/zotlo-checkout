@@ -1,5 +1,6 @@
 export enum COOKIE {
   UUID = "zc_uuid",
+  CARD_UUID = "zc_card_uuid",
 }
 
 export function setCookie(
@@ -51,7 +52,7 @@ export function deleteCookie(name: string, path: string = "/"): void {
   setCookie(name, "", -1, path);
 }
 
-export function deleteUuidCookie(): void {
+export function deleteUuidCookie(key: string = COOKIE.UUID): void {
   const pathName = globalThis?.location?.pathname || "/";
-  deleteCookie(COOKIE.UUID, pathName);
+  deleteCookie(key, pathName);
 }

@@ -13,7 +13,7 @@ import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
 import savedCardItemElement from '../html/saved-card-item.html?raw'
 import savedCardsFormElement from '../html/saved-cards-form.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL } from "../utils";
 import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData } from './types'
@@ -268,7 +268,7 @@ export function createCreditCardForm(params: {
     FORM_TYPE: formType, 
     ATTRIBUTES: attrs, 
     CLASS_NAME: className || '', 
-    SHOW_PRICE: showPrice,
+    SHOW_PRICE: !config.cardUpdate && showPrice,
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
   });
 
@@ -314,16 +314,19 @@ export function createCreditCardForm(params: {
     let fieldContent = '';
     
     switch (key) {
-      case "AGREEMENT_CHECKBOX":
-        fieldContent = config.general.isPolicyRequired
-          ? createCheckbox({
-              ...options,
-              label: $t(`form.${key}.label`, {
-                distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
-                info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
+      case "AGREEMENT_CHECKBOX": {
+        if (!config.cardUpdate) {
+          fieldContent = config.general.isPolicyRequired
+            ? createCheckbox({
+                ...options,
+                label: $t(`form.${key}.label`, {
+                  distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
+                  info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
+                })
               })
-            })
-          : '';
+            : '';
+        }
+      }
         break;
       case "SAVE_CARD_CHECKBOX":
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
@@ -404,13 +407,13 @@ export function prepareButtonSuccessLink(params: {
   const os = paymentDetail?.client?.selectedOs || '';
 
   if (theme === SuccessTheme.APP2WEB) {
-    const iosLink = paymentDetail?.application.links.deeplinkIos || '';
+    const iosLink = paymentDetail?.application?.links?.deeplinkIos || '';
 
     switch (os) {
       case 'android':
-        return paymentDetail?.application.links.deeplinkAndroid || '';
+        return paymentDetail?.application?.links?.deeplinkAndroid || '';
       case 'desktop':
-        return paymentDetail?.application.links.deeplinkWeb || '';
+        return paymentDetail?.application?.links?.deeplinkWeb || '';
       case 'ios':
         return iosLink;
       default:
@@ -418,16 +421,16 @@ export function prepareButtonSuccessLink(params: {
     }
   } else {
     if (config.success?.genericButton?.show) {
-      return paymentDetail.application.links.genericDownloadUrl || '';
+      return paymentDetail?.application?.links?.genericDownloadUrl || '';
     }
 
     switch (os) {
       case 'android':
-        return paymentDetail?.application.links.googlePlayStoreUrl || '';
+        return paymentDetail?.application?.links?.googlePlayStoreUrl || '';
       case 'ios':
-        return paymentDetail?.application.links.appStoreUrl || '';
+        return paymentDetail?.application?.links?.appStoreUrl || '';
       default:
-        return paymentDetail?.application.links.genericDownloadUrl || '';
+        return paymentDetail?.application?.links?.genericDownloadUrl || '';
     }
   }
 }
@@ -437,6 +440,8 @@ export function preparePaymentDetailsSection(params: {
   paymentDetail: PaymentDetail;
 }) {
   const { config, paymentDetail } = params;
+  if (!paymentDetail) return '';
+
   const { $t } = useI18n(config.general.localization);
   const productName = paymentDetail?.application?.name || '-';
   const { 
@@ -449,12 +454,19 @@ export function preparePaymentDetailsSection(params: {
   const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
   const zotloAccountUrl = "https://account.zotlo.com/";
 
-  const paymentDetailsFooterElement = template($t('paymentSuccess.paymentDetails.footer'), {
+  const paymentDetailsFooterElement = template(
+    config.cardUpdate
+      ? $t('paymentSuccess.paymentDetails.footerCard')
+      : $t('paymentSuccess.paymentDetails.footer')
+    , {
     CUSTOMER_SUPPORT_LINK: `<a href="${customerSupportUrl}" target="_blank">${$t('common.customerService')}</a>`,
     ACCOUNT_LINK: `<a href="${zotloAccountUrl}" target="_blank">${$t('common.here')}</a>`
   });
 
+  const footerInfo = prepareFooterInfo({ config });
+
   return template(paymentDetailsElement, {
+    FORM_TYPE: config.cardUpdate ? 'CARD' : 'CHECKOUT',
     TITLE: $t('paymentSuccess.paymentDetails.title'),
     PRODUCT_TITLE: $t('common.product'),
     PRODUCT_TEXT: productName,
@@ -464,24 +476,26 @@ export function preparePaymentDetailsSection(params: {
     PAYMENT_METHOD_TEXT: paymentMethod,
     PAYMENT_AMOUNT_TITLE: $t('common.paymentAmount'),
     PAYMENT_AMOUNT_TEXT: paymentAmountText,
-    FOOTER: paymentDetailsFooterElement
+    FOOTER: paymentDetailsFooterElement,
+    DISCLAIMER: footerInfo.DISCLAIMER,
+    ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
+    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
   });
 }
 
 export function createPaymentSuccessForm(params: {
-  containerId: string;
   config: FormConfig;
   paymentDetail: PaymentDetail;
 }) {
   if (!params.config?.success?.show) return false;
   
-  const { containerId, config, paymentDetail } = params;
+  const { config, paymentDetail } = params;
   const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
   const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
   const WAIT_TIME = config.success.waitTime; // in seconds
   const delay = WAIT_TIME > MAX_WAIT_TIME ? MAX_WAIT_TIME : (WAIT_TIME < MIN_WAIT_TIME ? MIN_WAIT_TIME : WAIT_TIME);
   const successTheme = config.success.theme;
-  const container = document.getElementById(containerId);
+  const container = ZOTLO_GLOBAL.container;
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
   const buttonText = successTheme === SuccessTheme.APP2WEB
@@ -509,7 +523,7 @@ export function createPaymentSuccessForm(params: {
 
   const paymentDetailsSection = preparePaymentDetailsSection({ config, paymentDetail });
 
-  const htmlText = template(paymentSuccessElement, {
+  const payload = {
     THEME: successTheme,
     TITLE: $t('paymentSuccess.title'),
     BUTTON_TEXT: typeof buttonText === 'number'
@@ -522,7 +536,17 @@ export function createPaymentSuccessForm(params: {
     WEB2APP_DESC: $t('paymentSuccess.desc2'),
     SHOW_BUTTON: successTheme === SuccessTheme.APP2WEB || (successTheme === SuccessTheme.WEB2APP && config.success?.genericButton?.show),
     PAYMENT_DETAILS: paymentDetailsSection,
-  });
+  }
+
+  if (config.cardUpdate) {
+    payload.TITLE = $t('paymentSuccess.titleCard');
+    payload.THEME = 'web2app';
+    payload.WEB2APP_DESC = $t('paymentSuccess.descCard');
+    payload.BUTTON_TEXT = $t('paymentSuccess.button.backToDashboard');
+    payload.BUTTON_LINK = config.success.genericButton?.url || '#';
+  }
+
+  const htmlText = template(paymentSuccessElement, payload);
 
   function startTimer(timeInSeconds: number) {
     let seconds = timeInSeconds;
@@ -618,6 +642,8 @@ export function createAllCardsModal(params: {
 export function createPaymentHeader(params: {
   config: FormConfig;
 }) {
+  if (params.config.cardUpdate) return '';
+
   const { config } = params;
   const { $t } = useI18n(config.general.localization);
   const showHeader = Object.prototype.hasOwnProperty.call(config.design, 'header') ? !!config.design.header?.show : true;

@@ -1,5 +1,5 @@
 import { type FormPaymentData, PaymentProvider, type FormConfig, type ProviderConfigs, DesignTheme } from "../lib/types";
-import { getProvidersConfig } from "../utils/getConfig";
+import { getProvidersConfig } from "../utils/config/getCheckoutConfig";
 import { template } from "./template";
 import { Logger } from "../lib/logger";
 

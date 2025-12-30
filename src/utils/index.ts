@@ -1,14 +1,46 @@
 import Countries from '../countries.json';
-import { type FormConfig, PaymentProvider, SavedCardsGroupName } from '../lib/types';
+import { type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName } from '../lib/types';
 import { createAllCardsModal, createSavedCardItem } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
 import { template } from "./template";
+import { deleteSession } from './session';
 
 export { getCDNUrl } from './getCDNUrl';
 export { useI18n } from './i18n';
 
 type Country = typeof Countries[0];
+
+export const ZOTLO_GLOBAL = {
+  cardUpdate: false,
+  checkout: {
+    containerId: '',
+  },
+  card: {
+    containerId: '',
+  },
+
+  get containerId() {
+    return this.cardUpdate ? this.card.containerId : this.checkout.containerId;
+  },
+
+  set containerId(value: string) {
+    if (this.cardUpdate) {
+      this.card.containerId = value;
+      return;
+    }
+    this.checkout.containerId = value;
+  },
+
+  get container() {
+    return document.getElementById(this.containerId);
+  },
+
+  get formElement() {
+    if (!this.container) return null;
+    return this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement
+  }
+}
 
 export function getCountryCodeByNumber(phoneNumber: string | number, matchLength = true): string {
   const clearPattern = /[\s-()+]/g
@@ -51,7 +83,6 @@ export function generateAttributes(attrs: Record<string, string | number | boole
   return Object.entries(attrs).map(([key, value]) => value !== undefined && value !== null ? `${key}="${value}"` : '').join(' ')
 }
 
-
 export function preparePaymentMethods(config: FormConfig) {
   return config?.settings?.paymentMethodSetting?.filter((item) => {
     const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
@@ -76,7 +107,8 @@ function disableTabKeyNavigation(formEl: HTMLFormElement, disable:boolean = true
 }
 
 export function setFormLoading(loading: boolean = true) {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const formElement = ZOTLO_GLOBAL.formElement;
+
   if (!formElement) return;
   let loaderEl = formElement.querySelector('.zotlo-checkout__loader') as HTMLDivElement;
   if (loading) {
@@ -129,7 +161,7 @@ export const debounce: any = (func: any, waitFor = 300) => {
 }
 
 export function setFormDisabled(disabled = true) {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const formElement = ZOTLO_GLOBAL.formElement;
   const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
   const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox, .zotlo-checkout__payment-provider') as NodeListOf<HTMLElement>;
   for (const wrapper of wrappers) {
@@ -149,8 +181,7 @@ export function setFormDisabled(disabled = true) {
 }
 
 export function activateDisabledSubscriberIdInputs() {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-  const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
+  const subscriberIdInputs = ZOTLO_GLOBAL.formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
   subscriberIdInputs?.forEach(input => {
     input?.removeAttribute('disabled');
     const wrapper = input?.closest('.zotlo-checkout__input');
@@ -158,9 +189,8 @@ export function activateDisabledSubscriberIdInputs() {
   });
 }
 
-export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' = 'add', triggerFunction: () => void, ) {
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-  const subscriberIdInputs = formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
+export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' = 'add', triggerFunction: () => void) {
+  const subscriberIdInputs = ZOTLO_GLOBAL.formElement?.querySelectorAll('input[name="subscriberId"]') as NodeListOf<HTMLInputElement>;
   subscriberIdInputs?.forEach(input => {
     if (action === 'add') {
       input.addEventListener('input', triggerFunction);
@@ -173,21 +203,20 @@ export function handleSubscriberIdInputEventListeners(action: 'add' | 'remove' =
 function selectSavedCard(params: { cardId: number, groupName?: SavedCardsGroupName }) {
   const { cardId, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
   if (!cardId) return;
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-  const cardInput = formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"][value="${cardId}"]`);
+  const cardInput = ZOTLO_GLOBAL.formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"][value="${cardId}"]`);
   if (cardInput) cardInput.checked = true;
 }
 
 export function handleSavedCardsEvents(params: { config: FormConfig }) {
   const { config } = params;
   // Select first radio input for saved cards by default
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
+  const formElement = ZOTLO_GLOBAL.formElement;
   const cardItemRadio = formElement?.querySelectorAll('.zotlo-checkout__card-item input[type="radio"]') as NodeListOf<HTMLInputElement>;
   if (cardItemRadio.length > 0) cardItemRadio[0].checked = true;
   const allCardsButton = formElement?.querySelector('[data-all-cards-button]') as HTMLButtonElement;
 
   function closeAllCardsModal() {
-    formElement.querySelector('[data-modal="all-cards"]')?.remove();
+    formElement?.querySelector('[data-modal="all-cards"]')?.remove();
   }
 
   function handleCardSelection() {
@@ -200,7 +229,7 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
     const selectedCardHtml = createSavedCardItem({ card: selectedCard, groupName: SavedCardsGroupName.ON_PAYMENT_FORM, config });
     const parser = new DOMParser();
     const selectedCardDOM = parser.parseFromString(selectedCardHtml, 'text/html')?.body.firstChild as HTMLElement;
-    const existingCardOnForm = formElement.querySelector(`.zotlo-checkout__card-item input[type="radio"][name="${SavedCardsGroupName.ON_PAYMENT_FORM}"]`)?.closest('.zotlo-checkout__card-item');
+    const existingCardOnForm = formElement?.querySelector(`.zotlo-checkout__card-item input[type="radio"][name="${SavedCardsGroupName.ON_PAYMENT_FORM}"]`)?.closest('.zotlo-checkout__card-item');
     existingCardOnForm?.remove();
     allCardsButton.after(selectedCardDOM);
     selectSavedCard({ cardId: selectedCardId, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
@@ -216,11 +245,11 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
     modalDOM?.querySelector('[data-all-cards-cancel-button]')?.addEventListener('click', handleClose);
     modalDOM?.querySelector('[data-all-cards-select-button]')?.addEventListener('click', handleCardSelection);
 
-    formElement.insertBefore(modalDOM, formElement.firstChild as HTMLElement);
+    formElement?.insertBefore(modalDOM, formElement?.firstChild as HTMLElement);
     const activeCardId = getActiveSavedCardId({ config });
     selectSavedCard({ cardId: activeCardId, groupName: SavedCardsGroupName.ON_ALL_CARDS_MODAL });
 
-    modalDOM = formElement.querySelector(`[data-modal="all-cards"]`) as HTMLElement;
+    modalDOM = formElement?.querySelector(`[data-modal="all-cards"]`) as HTMLElement;
 
     setTimeout(() => {
       modalDOM?.classList.remove('zotlo-checkout__modal-enter-from');
@@ -258,7 +287,10 @@ export function getFooterPriceInfo(config: FormConfig) {
 export function getSubmitButtonContent(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageState = config?.packageInfo?.state || 'subscriptionActivationState';
-  const buttonKey = config?.design.button.text?.[packageState];
+  const buttonKey = ZOTLO_GLOBAL.cardUpdate
+    ? $t('form.button.text.cardUpdate.0')
+    : config?.design.button.text?.[packageState];
+
   const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
     ? buttonKey
     : $t(`form.button.text.${packageState}.${buttonKey}`);
@@ -270,14 +302,13 @@ export function getSubmitButtonContent(config: FormConfig) {
 
 export async function handlePriceChangesBySubscriptionStatus(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-  if (!formElement) return;
+  if (!ZOTLO_GLOBAL.formElement) return;
 
   function updateElementsValue<T extends HTMLElement>(
     selector: string,
     value: string | undefined
   ) {
-    formElement.querySelectorAll(selector).forEach((el) => {
+    ZOTLO_GLOBAL.formElement?.querySelectorAll(selector).forEach((el) => {
       (el as T).innerHTML = value || "";
     });
   }
@@ -311,14 +342,83 @@ export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
 export function getActiveSavedCardId(params: { providerKey?: PaymentProvider; config: FormConfig; groupName?: SavedCardsGroupName }): number {
   const { providerKey = PaymentProvider.CREDIT_CARD, config, groupName = SavedCardsGroupName.ON_PAYMENT_FORM } = params;
   if (providerKey !== PaymentProvider.CREDIT_CARD || !config.general?.showSavedCards) return 0;
-  const formElement = document.getElementById('zotlo-checkout-form') as HTMLFormElement;
-  const checkedInput = formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"]:checked`);
+  const checkedInput = ZOTLO_GLOBAL.formElement?.querySelector<HTMLInputElement>(`input[type="radio"][name="${groupName}"]:checked`);
   const cardId = +(checkedInput?.value || 0);
   return cardId;
 }
 
 export function getIsSavedCardPayment(params: { providerKey?: PaymentProvider; config: FormConfig }): boolean {
   const { providerKey = PaymentProvider.CREDIT_CARD, config } = params;
-  const cardId = getActiveSavedCardId({ providerKey, config, groupName: SavedCardsGroupName.ON_PAYMENT_FORM });
+  const cardId = getActiveSavedCardId({
+    providerKey,
+    config,
+    groupName: SavedCardsGroupName.ON_PAYMENT_FORM
+  });
   return cardId > 0;
+}
+
+export function prepareFooterInfo(params: { config: FormConfig }) {
+  const { config } = params;
+  const { $t } = useI18n(config.general?.localization);
+  const privacyUrl = config.general.privacyUrl;
+  const tosUrl = config.general.tosUrl;
+  const zotloUrls = config?.general?.zotloUrls || {};
+
+  const footerInfo = {
+    PRICE_INFO: '',
+    FOOTER_DESC: $t('footer.desc'),
+    DISCLAIMER: '',
+    ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
+    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+  }
+
+  if (ZOTLO_GLOBAL.cardUpdate) {
+    footerInfo.FOOTER_DESC = $t('footer.cardUpdate', {
+      projectName: config.general.appName || ''
+    });
+  } else {
+    const footerPriceInfo = getFooterPriceInfo(config);
+    const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
+      ? $t('footer.disclaimer', {
+        termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
+        privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
+      })
+      : '';
+
+    footerInfo.PRICE_INFO = footerPriceInfo;
+    footerInfo.DISCLAIMER = disclaimer && `<div>${disclaimer}</div>`
+  }
+
+  return footerInfo;
+}
+
+export async function handleResponseRedirection(payload: {
+  response: Record<string, any>;
+  params: IZotloCardParams | IZotloCheckoutParams;
+  sessionKey?: string;
+}) {
+  const { response, params, sessionKey } = payload;
+  const { result } = response || {};
+  const { status, redirectUrl, payment } = result || {};
+  const returnUrl = payment?.returnUrl || '';
+  const currentUrl = globalThis?.location?.href || '';
+  const currentUrlBase = globalThis?.location.origin + globalThis?.location.pathname;
+  const returnUrlObj = new URL(params.returnUrl);
+  const returnUrlBase = returnUrlObj.origin + returnUrlObj.pathname;
+  const isSamePage = returnUrlBase === currentUrlBase;
+
+  if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && currentUrl) {
+    if (!isSamePage) {
+      deleteSession({ useCookie: !!params.useCookie, key: sessionKey });
+    }
+    globalThis.location.href = redirectUrl;
+  }
+  if (status === PaymentResultStatus.COMPLETE && payment) {
+    if (returnUrl) {
+      if (!isSamePage) {
+        deleteSession({ useCookie: !!params.useCookie, key: sessionKey });
+      }
+      globalThis.location.href = returnUrl;
+    }
+  }
 }

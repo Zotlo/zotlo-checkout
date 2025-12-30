@@ -55,7 +55,20 @@ export interface IZotloCheckoutStyle {
     product: Omit<ProductConfigMobileApp, 'discountRate'>;
     footer: Omit<FormDesign['footer'], 'showMerchantDisclaimer'>;
   }>;
-  success?: DeepPartial<FormSuccess>;
+  success?: DeepPartial<Omit<FormSuccess, 'genericButton'>>;
+}
+
+export interface IZotloCardStyle {
+  design?: DeepPartial<Omit<FormDesign, 'theme' | 'footer' | 'product' | 'header' | 'consent' | 'totalPriceColor' | 'button'> & {
+    button: Omit<FormDesign['button'], 'text'>;
+    footer: Omit<FormDesign['footer'], 'showMerchantDisclaimer'>;
+  }>;
+  success?: DeepPartial<Omit<FormSuccess, 'waitTime' | 'autoRedirect' | 'storeButtons' | 'button' | 'genericButton'>> & {
+    button?: Omit<FormSuccess['button'], 'text'>;
+    genericButton: Omit<FormSuccess['genericButton'], 'text' | 'show'> & {
+      url: string;
+    };
+  };
 }
 
 export interface IZotloCheckoutEvents {
@@ -223,6 +236,11 @@ export type FormDesign = {
     color: string;
     fontSize: number | string;
   };
+  businessPurchase: {
+    enabled: boolean;
+    canUserModify: boolean;
+    defaultSelection: 'checked' | 'unchecked';
+  }
 };
 
 export type FormSetting = {
@@ -362,6 +380,8 @@ export type FormSuccess = {
      * ```
     */
     text: 0 | 1 | string;
+    /** This is available for ZotloCard  */
+    url?: string;
   };
   /** If there is no url for store button (ex. google), this button cannot visible */
   storeButtons: {
@@ -453,6 +473,10 @@ export type FormConfig = {
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
   providerConfigs?: ProviderConfigs;
+  /** This is the flag that indicates whether the form is in card update mode */
+  cardUpdate?: boolean;
+  /** This is only available for card update form */
+  customerSupportUrl?: string;
   integrations?: {
     gtmData: {
       isActive: 0 | 1;
@@ -517,6 +541,7 @@ export type TransactionDetail = {
 }
 
 export type PaymentDetail = {
+  cardUpdate?: boolean;
   isSandbox: boolean;
   application: {
     id: number;
@@ -583,4 +608,12 @@ export interface IFormLoad {
 export interface IFormInvalid {
   name: string;
   result: ValidationResult;
+}
+
+export interface IZotloCardParams extends IZotloCheckoutParams {
+  /** Default subscriber ID for registration; can be an email, phone number, or UUID v4. */
+  subscriberId: string;
+
+  /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
+  style?: IZotloCardStyle;
 }
