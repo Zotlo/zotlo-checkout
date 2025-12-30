@@ -82,7 +82,7 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
       (params.style?.success || {} as FormSuccess),
       {
         waitTime: DefaultThemeConfig.success.waitTime,
-        autoRedirect: DefaultThemeConfig.success.autoRedirect,
+        autoRedirect: false,
         theme: DefaultThemeConfig.success.theme,
         storeButtons: {},
         genericButton: {
