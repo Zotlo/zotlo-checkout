@@ -119,9 +119,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
       FORM_ITEMS.ZIP_CODE.input.name
     ];
-    const isSavedCardPayment = getIsSavedCardPayment.bind({
-      container: getContainerElement()
-    })({ providerKey, config });
+    const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
 
     for (const validation of Object.values(validations)) {
       const name = validation.name;
@@ -141,11 +139,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
-  function getContainerElement() {
-    if (!ZOTLO_GLOBAL.containerId) return null;
-    return document.getElementById(ZOTLO_GLOBAL.containerId);
-  }
-
   async function handleFormSubmit(providerKey: PaymentProvider = PaymentProvider.CREDIT_CARD) {
     // Reset form validations
     for (const validation of Object.values(validations)) {
@@ -157,12 +150,11 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (!validation.isValid) return;
     
     if (import.meta.env.VITE_SDK_API_URL) {
-      const container = getContainerElement();
       const result = getFormValues(config);
-      const cardId = getActiveSavedCardId.bind({ container })({ providerKey, config });
+      const cardId = getActiveSavedCardId({ providerKey, config });
       params.events?.onSubmit?.();
       try {
-        setFormLoading.bind({ container })(true);
+        setFormLoading(true);
         await sendPayment({
           providerKey,
           formData: {
@@ -177,14 +169,14 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       } catch (e) {
         Logger.client?.captureException(e);
       } finally {
-        setFormLoading.bind({ container })(false);
+        setFormLoading(false);
       }
     }
   }
 
   function detectAndValidateForm() {
     const el = document.activeElement as HTMLInputElement;
-    const container = getContainerElement();
+    const container = ZOTLO_GLOBAL.container;
 
     // Detect which form if active element is an input
     if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
@@ -250,7 +242,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function handleAgreementLinks() {
-    const container = getContainerElement()?.querySelector('form');
+    const container = ZOTLO_GLOBAL.container?.querySelector('form');
     const buttons = container?.querySelectorAll('[data-agreement]') as NodeListOf<HTMLButtonElement>;    
 
     function closeAgreement() {
@@ -394,7 +386,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
       let form = generateTheme({ config });
       const style = createStyle(config);
-      const container = getContainerElement();
+      const container = ZOTLO_GLOBAL.container;
 
       if (import.meta.env.VITE_SDK_API_URL) {
         if (ErrorHandler.response) {
@@ -430,28 +422,27 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const validationRules = subscriberInput?.dataset?.rules || '';
     const isValidSubscriberId = validatorInstance?.validate(subscriberId, validationRules)?.isValid;
     if (!isValidSubscriberId) return;
-    const container = getContainerElement() as HTMLElement;
     try {
-      setFormDisabled.bind({ container })();
+      setFormDisabled();
       const response = await registerPaymentUser(subscriberId, config, params);
       if (response?.meta?.errorCode) {
-        activateDisabledSubscriberIdInputs(container);
+        activateDisabledSubscriberIdInputs();
         subscriberInput.focus();
         return;
       }
       await Promise.all([refreshPaymentInitData(), refreshProviderConfigs()]);
-      handlePriceChangesBySubscriptionStatus.bind({ container })(config);
-      setFormDisabled.bind({ container })(false);
+      handlePriceChangesBySubscriptionStatus(config);
+      setFormDisabled(false);
       subscriberInput.focus();
     } catch {
-      setFormDisabled.bind({ container })(false);
+      setFormDisabled(false);
     }
   }, 500)
 
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
-    const container = getContainerElement() as HTMLElement;
-    const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
+    const container = ZOTLO_GLOBAL.container;
+    const formElement = ZOTLO_GLOBAL.formElement;
     const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');
     const selectboxes = container?.querySelectorAll(wrapper + '[data-select]');
@@ -565,7 +556,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     if (import.meta.env.VITE_SDK_API_URL) {
       const { destroy } = handleAgreementLinks();
-      const { destroy: destroyFn } = handleSavedCardsEvents.bind({ container })({ config });
+      const { destroy: destroyFn } = handleSavedCardsEvents({ config });
       destroyAgreementLinks = destroy;
       destroySavedCardsEvents = destroyFn;
       renderGooglePayButton(config);
@@ -581,12 +572,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     formElement?.addEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners.bind({ container })('add', onSubscriberIdEntered);
+    handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
-    const container = getContainerElement() as HTMLElement;
-    const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
+    const container = ZOTLO_GLOBAL.container;
+    const formElement = ZOTLO_GLOBAL.formElement;
     const submitButtons = container?.querySelectorAll('button[data-provider]');
 
     if (submitButtons) {
@@ -597,7 +588,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     formElement?.removeEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners.bind({ container })('remove', onSubscriberIdEntered);
+    handleSubscriberIdInputEventListeners('remove', onSubscriberIdEntered);
 
     for (const [key, mask] of Object.entries(maskItems)) {
       mask.destroy();
@@ -644,7 +635,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   function unmount() {
     destroyFormInputs();
     EventBus.off('configZotloCheckout');
-    const container = getContainerElement();
+    const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
   }
 

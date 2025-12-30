@@ -533,6 +533,7 @@ export type TransactionDetail = {
 }
 
 export type PaymentDetail = {
+  cardUpdate?: boolean;
   isSandbox: boolean;
   application: {
     id: number;

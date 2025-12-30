@@ -491,13 +491,12 @@ export function createPaymentSuccessForm(params: {
   if (!params.config?.success?.show) return false;
   
   const { config, paymentDetail } = params;
-  const containerId = ZOTLO_GLOBAL.containerId;
   const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
   const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
   const WAIT_TIME = config.success.waitTime; // in seconds
   const delay = WAIT_TIME > MAX_WAIT_TIME ? MAX_WAIT_TIME : (WAIT_TIME < MIN_WAIT_TIME ? MIN_WAIT_TIME : WAIT_TIME);
   const successTheme = config.success.theme;
-  const container = document.getElementById(containerId);
+  const container = ZOTLO_GLOBAL.container;
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
   const buttonText = successTheme === SuccessTheme.APP2WEB

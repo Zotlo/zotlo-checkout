@@ -127,6 +127,11 @@ export const DefaultThemeConfig: {
           en: "Bonus +5%"
         }
       }
+    },
+    businessPurchase: {
+      enabled: false,
+      canUserModify: false,
+      defaultSelection: 'unchecked'
     }
   }
 }

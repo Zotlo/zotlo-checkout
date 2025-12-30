@@ -7,7 +7,7 @@ interface RequestConfig {
   responseType?: XMLHttpRequestResponseType;
 }
 
-interface ApiResponse {
+export interface ApiResponse {
   meta: {
     requestId: string;
     httpStatus: number;

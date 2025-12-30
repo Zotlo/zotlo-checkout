@@ -83,11 +83,6 @@ async function ZotloCard(params: IZotloCardParams) {
     }
   }
 
-  function getContainerElement() {
-    if (!ZOTLO_GLOBAL.containerId) return null;
-    return document.getElementById(ZOTLO_GLOBAL.containerId);
-  }
-
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
     if (!import.meta.env.VITE_SDK_CARD_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
     const subscriberInput = event?.target as HTMLInputElement;
@@ -95,21 +90,20 @@ async function ZotloCard(params: IZotloCardParams) {
     const validationRules = subscriberInput?.dataset?.rules || '';
     const isValidSubscriberId = validatorInstance?.validate(subscriberId, validationRules)?.isValid;
     if (!isValidSubscriberId) return;
-    const container = getContainerElement() as HTMLElement;
 
     try {
-      setFormDisabled.bind({ container })();
+      setFormDisabled();
       const response = await registerPaymentUser(subscriberId, config, params);
       if (response?.meta?.errorCode) {
-        activateDisabledSubscriberIdInputs(container);
+        activateDisabledSubscriberIdInputs();
         subscriberInput.focus();
         return;
       }
-      handlePriceChangesBySubscriptionStatus.bind({ container }) (config);
-      setFormDisabled.bind({ container })(false);
+      handlePriceChangesBySubscriptionStatus(config);
+      setFormDisabled(false);
       subscriberInput.focus();
     } catch {
-      setFormDisabled.bind({ container })(false);
+      setFormDisabled(false);
     }
   }, 500);
 
@@ -152,9 +146,7 @@ async function ZotloCard(params: IZotloCardParams) {
       FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
       FORM_ITEMS.ZIP_CODE.input.name
     ];
-    const isSavedCardPayment = getIsSavedCardPayment.bind({
-      container: getContainerElement()
-    })({ providerKey, config });
+    const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
 
     for (const validation of Object.values(validations)) {
       const name = validation.name;
@@ -176,7 +168,7 @@ async function ZotloCard(params: IZotloCardParams) {
 
   function detectAndValidateForm() {
     const el = document.activeElement as HTMLInputElement;
-    const container = getContainerElement();
+    const container = ZOTLO_GLOBAL.container;
 
     // Detect which form if active element is an input
     if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
@@ -237,15 +229,13 @@ async function ZotloCard(params: IZotloCardParams) {
     const validation = validateForm(providerKey);
     
     if (!validation.isValid) return;
-
-    const container = getContainerElement();
     
     if (import.meta.env.VITE_SDK_CARD_API_URL) {
       const result = getFormValues(config);
       params.events?.onSubmit?.();
 
       try {
-        setFormLoading.bind({ container })(true);
+        setFormLoading(true);
         const response = await updateCard({
           formData: result,
           config,
@@ -253,13 +243,13 @@ async function ZotloCard(params: IZotloCardParams) {
         });
 
         if (response?.result?.status === PaymentResultStatus.COMPLETE) {
-          const paymentDetail = await handlePaymentSuccess.bind({ container })({ config, params });
+          const paymentDetail = await handlePaymentSuccess({ config, params });
           if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
         }
       } catch (e) {
         Logger.client?.captureException(e);
       } finally {
-        setFormLoading.bind({ container })(false);
+        setFormLoading(false);
       }
     }
   }
@@ -275,8 +265,8 @@ async function ZotloCard(params: IZotloCardParams) {
 
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
-    const container = getContainerElement() as HTMLElement;
-    const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
+    const container = ZOTLO_GLOBAL.container;
+    const formElement = ZOTLO_GLOBAL.formElement;
     const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');
     const selectboxes = container?.querySelectorAll(wrapper + '[data-select]');
@@ -398,12 +388,12 @@ async function ZotloCard(params: IZotloCardParams) {
     }
     
     formElement?.addEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners.bind({ container })('add', onSubscriberIdEntered);
+    handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
-    const container = getContainerElement() as HTMLElement;
-    const formElement = container?.querySelector('form.zotlo-checkout') as HTMLFormElement;
+    const container = ZOTLO_GLOBAL.container as HTMLElement;
+    const formElement = ZOTLO_GLOBAL.formElement;
     const submitButtons = container?.querySelectorAll('button[data-provider]');
 
     if (submitButtons) {
@@ -414,7 +404,7 @@ async function ZotloCard(params: IZotloCardParams) {
     }
 
     formElement?.removeEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners.bind({ container })('remove', onSubscriberIdEntered);
+    handleSubscriberIdInputEventListeners('remove', onSubscriberIdEntered);
 
     for (const [key, mask] of Object.entries(maskItems)) {
       mask.destroy();
@@ -455,7 +445,7 @@ async function ZotloCard(params: IZotloCardParams) {
 
       let form = generateTheme({ config });
       const style = createStyle(config);
-      const container = getContainerElement();
+      const container = ZOTLO_GLOBAL.container;
 
       if (import.meta.env.VITE_SDK_CARD_API_URL) {
         if (ErrorHandler.response) {
@@ -486,7 +476,7 @@ async function ZotloCard(params: IZotloCardParams) {
 
   function unmount() {
     destroyFormInputs();
-    const container = getContainerElement();
+    const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
   }
 
@@ -494,6 +484,7 @@ async function ZotloCard(params: IZotloCardParams) {
     if (ZOTLO_GLOBAL.containerId) return;
 
     ZOTLO_GLOBAL.containerId = id;
+    ZOTLO_GLOBAL.cardUpdate = true;
     refresh();
   }
 

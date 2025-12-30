@@ -1,4 +1,4 @@
-import { awareForContext, handleResponseRedirection, setFormLoading } from "./index";
+import { handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
@@ -106,10 +106,9 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
   }
 }
 
-export async function handlePaymentSuccess(this: any, payload: { config: FormConfig; params: IZotloCheckoutParams; }) {
+export async function handlePaymentSuccess(payload: { config: FormConfig; params: IZotloCheckoutParams; }) {
   try {
-    awareForContext(this, 'handlePaymentSuccess');
-    setFormLoading.bind({ container: this.container })(true);
+    setFormLoading(true);
     const { config, params } = payload;
     let result: PaymentDetail = {} as PaymentDetail;
 
@@ -135,13 +134,16 @@ export async function handlePaymentSuccess(this: any, payload: { config: FormCon
       useCookie: !!params.useCookie,
       key: config.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID
     });
-    params.events?.onSuccess?.(result);
+    params.events?.onSuccess?.({
+      ...result,
+      cardUpdate: ZOTLO_GLOBAL.cardUpdate
+    });
     return result;
   } catch (e) {
     Logger.client?.captureException(e);
     return null;
   } finally {
-    setFormLoading.bind({ container: this.container })(false);
+    setFormLoading(false);
   }
 }
 

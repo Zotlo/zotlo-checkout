@@ -1,4 +1,3 @@
-import { ZOTLO_GLOBAL } from ".";
 import { createPaymentSuccessForm } from "../lib/create";
 import { type FormConfig, type IZotloCheckoutParams, PaymentCallbackStatus } from "../lib/types";
 import { handlePaymentSuccess } from "./sendPayment";
@@ -23,8 +22,7 @@ export async function handleUrlQuery(payload: {
   const errorMessage = queryParams?.[UrlQuery.ERROR_MESSAGE] || "";
 
   if (status === PaymentCallbackStatus.SUCCESS) {
-    const container = document.getElementById(ZOTLO_GLOBAL.containerId);
-    const paymentDetail = await handlePaymentSuccess.bind({ container })({ config, params });
+    const paymentDetail = await handlePaymentSuccess({ config, params });
     if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
   }
 
