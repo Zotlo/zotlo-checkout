@@ -476,8 +476,6 @@ export function preparePaymentDetailsSection(params: {
     PAYMENT_AMOUNT_TITLE: $t('common.paymentAmount'),
     PAYMENT_AMOUNT_TEXT: paymentAmountText,
     FOOTER: paymentDetailsFooterElement,
-    PRICE_INFO: footerInfo.PRICE_INFO,
-    FOOTER_DESC: footerInfo.FOOTER_DESC,
     DISCLAIMER: footerInfo.DISCLAIMER,
     ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
     ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
@@ -525,7 +523,6 @@ export function createPaymentSuccessForm(params: {
   const paymentDetailsSection = preparePaymentDetailsSection({ config, paymentDetail });
 
   const payload = {
-    FORM_TYPE: 'CHECKOUT',
     THEME: successTheme,
     TITLE: $t('paymentSuccess.title'),
     BUTTON_TEXT: typeof buttonText === 'number'
@@ -541,7 +538,6 @@ export function createPaymentSuccessForm(params: {
   }
 
   if (config.cardUpdate) {
-    payload.FORM_TYPE = 'CARD';
     payload.TITLE = $t('paymentSuccess.titleCard');
     payload.THEME = 'web2app';
     payload.WEB2APP_DESC = $t('paymentSuccess.descCard');
