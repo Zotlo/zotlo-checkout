@@ -1,7 +1,7 @@
 import { CardAPI } from "../utils/api";
 import { ErrorHandler, getCardConfig } from "../utils/config";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
-import { validateInput, ValidationResult, validatorInstance } from "../utils/validation";
+import { checkboxValidation, detectAndValidateForm, inputValidation, validateForm, validateInput, validatorInstance } from "../utils/validation";
 import { Logger } from './logger';
 import { DesignTheme, PaymentProvider, PaymentResultStatus, type FormConfig, type IZotloCardParams } from './types';
 import { getFormValues, loadSelectbox } from "./common";
@@ -10,28 +10,24 @@ import { loadFontsOnPage } from "../utils/fonts";
 import { generateEmptyPage, generateTheme } from "./theme";
 import { createStyle } from "../utils/createStyle";
 import { createPaymentSuccessForm } from "./create";
-import { activateDisabledSubscriberIdInputs, debounce, getCDNUrl, getCountryByCode, getIsSavedCardPayment, getMaskByCode, handlePriceChangesBySubscriptionStatus, handleSubscriberIdInputEventListeners, mergeDeep, setFormDisabled, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
+import { getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
-import { EventBus } from "../utils/eventBus";
 import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
-import { handlePaymentSuccess, registerPaymentUser } from "../utils/sendPayment";
+import { handlePaymentSuccess } from "../utils/sendPayment";
 import { updateCard } from "../utils/updateCard";
 
 async function ZotloCard(params: IZotloCardParams) {
   // Load Sentry for error tracking
   await Logger.loadSentry();
 
-  // Get configuration from ZotloCheckout if available
-  const [configFromCheckout] = EventBus.emit('configZotloCheckout') as [FormConfig | undefined];
-
   let config = mergeDeep(
     { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig,
-    {...(configFromCheckout || {}), cardUpdate: true } as FormConfig,
+    { cardUpdate: true } as FormConfig,
     { ...(params?.style || {}) }
   ) as FormConfig;
 
-  if (!configFromCheckout && import.meta.env.VITE_SDK_CARD_API_URL) {
+  if (import.meta.env.VITE_SDK_CARD_API_URL) {
     CardAPI.setUseCookie(!!params?.useCookie);
     config = await getCardConfig({
       token: params.token,
@@ -53,59 +49,6 @@ async function ZotloCard(params: IZotloCardParams) {
   function hasAnyConfig() {
     return Object.keys(config.settings).length > 0;
   }
-
-  function checkboxValidation(input: HTMLInputElement, result: ValidationResult) {
-    const parent = input.parentElement as HTMLElement;
-    const checkmark = parent.querySelector('[data-checkmark]') as HTMLElement;
-
-    if (!result.isValid) {
-      parent.classList.add('error');
-      if (checkmark) checkmark.classList.add('error');
-    } else {
-      parent.classList.remove('error');
-      if (checkmark) checkmark.classList.remove('error');
-    }
-  }
-
-  function inputValidation(input: HTMLInputElement, result: ValidationResult) {
-    const parent = input.parentElement as HTMLElement;
-    const errorElement = parent.parentElement?.querySelector('[data-error]') as HTMLElement;
-    const messageElement = parent.parentElement?.querySelector('[data-message]') as HTMLElement;
-
-    if (!result.isValid) {
-      parent.classList.add('error');
-      if (errorElement) errorElement.innerHTML = result.errors[0];
-      if (messageElement) messageElement.style.display = 'none';
-    } else {
-      parent.classList.remove('error');
-      if (errorElement) errorElement.innerHTML = '';
-      if (messageElement) messageElement.style.display = '';
-    }
-  }
-
-  const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
-    if (!import.meta.env.VITE_SDK_CARD_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
-    const subscriberInput = event?.target as HTMLInputElement;
-    const subscriberId = subscriberInput?.value || '';
-    const validationRules = subscriberInput?.dataset?.rules || '';
-    const isValidSubscriberId = validatorInstance?.validate(subscriberId, validationRules)?.isValid;
-    if (!isValidSubscriberId) return;
-
-    try {
-      setFormDisabled();
-      const response = await registerPaymentUser(subscriberId, config, params);
-      if (response?.meta?.errorCode) {
-        activateDisabledSubscriberIdInputs();
-        subscriberInput.focus();
-        return;
-      }
-      handlePriceChangesBySubscriptionStatus(config);
-      setFormDisabled(false);
-      subscriberInput.focus();
-    } catch {
-      setFormDisabled(false);
-    }
-  }, 500);
 
   function handleTabView() {
     if (!hasAnyConfig()) return;
@@ -133,89 +76,6 @@ async function ZotloCard(params: IZotloCardParams) {
     });
   }
 
-  function validateForm(providerKey: PaymentProvider) {
-    const errors = [];
-    const creditCardFields = [
-      FORM_ITEMS.CARD_NUMBER.input.name,
-      FORM_ITEMS.CARD_HOLDER.input.name,
-      FORM_ITEMS.SECURITY_CODE.input.name,
-      FORM_ITEMS.EXPIRATION_DATE.input.name
-    ];
-    const sharedFields = [
-      FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
-      FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
-      FORM_ITEMS.ZIP_CODE.input.name
-    ];
-    const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
-
-    for (const validation of Object.values(validations)) {
-      const name = validation.name;
-      const shouldSkipValidation = isSavedCardPayment 
-        ? creditCardFields.includes(name) && providerKey === PaymentProvider.CREDIT_CARD
-        : !sharedFields.includes(name) && providerKey !== PaymentProvider.CREDIT_CARD;
-
-      const result = validation.validate(shouldSkipValidation);
-      if (!result.isValid) {
-        errors.push({ name, result });
-      }
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    }
-  }
-
-  function detectAndValidateForm() {
-    const el = document.activeElement as HTMLInputElement;
-    const container = ZOTLO_GLOBAL.container;
-
-    // Detect which form if active element is an input
-    if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
-      if (!container?.contains(el)) return PaymentProvider.CREDIT_CARD;
-
-      // Reset form validations
-      for (const validation of Object.values(validations)) {
-        validation.validate(true);
-      }
-
-      // Reset button types
-      container?.querySelectorAll('button[data-provider]').forEach(btn => {
-        btn.setAttribute('type', 'button');
-      });
-
-      if (el.nodeName === 'BUTTON') {
-        const providerKey = el.dataset.provider as PaymentProvider;
-        validateForm(providerKey);
-        container?.querySelector('button[data-provider="' + providerKey + '"]')?.setAttribute('type', 'submit');
-        return providerKey;
-      }
-
-      const name = el.name;
-
-      // Credit card validation
-      if (name.startsWith('card')) {
-        validateForm(PaymentProvider.CREDIT_CARD);
-        container?.querySelector('button[data-provider="creditCard"]')?.setAttribute('type', 'submit');
-        return PaymentProvider.CREDIT_CARD;
-      }
-      
-      const wrapper = el.closest('[data-form-type]');
-      if (wrapper?.getAttribute('data-form-type') === 'subscriberId') {
-        const button = wrapper.nextElementSibling?.querySelector('button[data-provider]') as HTMLButtonElement;
-
-        if (button) {
-          const providerKey = button.dataset.provider as PaymentProvider;
-          validateForm(providerKey);
-          button.setAttribute('type', 'submit');
-          return providerKey;
-        }
-      }
-    }
-
-    return PaymentProvider.CREDIT_CARD;
-  }
-
   async function handleForm(e: SubmitEvent) {
     e.preventDefault();
   }
@@ -226,7 +86,11 @@ async function ZotloCard(params: IZotloCardParams) {
       validation.validate(true);
     }
 
-    const validation = validateForm(providerKey);
+    const validation = validateForm({
+      providerKey,
+      config,
+      validations
+    });
     
     if (!validation.isValid) return;
     
@@ -258,7 +122,10 @@ async function ZotloCard(params: IZotloCardParams) {
     const isMouseClick = (e as PointerEvent)?.pointerId !== -1;
     const providerKey = isMouseClick || config.design.theme === DesignTheme.HORIZONTAL
       ? this.dataset.provider as PaymentProvider // Provider by click
-      : detectAndValidateForm(); // Detect provider where input is focused
+      : detectAndValidateForm({
+          config,
+          validations
+        }); // Detect provider where input is focused
 
     return handleFormSubmit(providerKey);
   }
@@ -388,7 +255,6 @@ async function ZotloCard(params: IZotloCardParams) {
     }
     
     formElement?.addEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
@@ -404,7 +270,6 @@ async function ZotloCard(params: IZotloCardParams) {
     }
 
     formElement?.removeEventListener('submit', handleForm);
-    handleSubscriberIdInputEventListeners('remove', onSubscriberIdEntered);
 
     for (const [key, mask] of Object.entries(maskItems)) {
       mask.destroy();
