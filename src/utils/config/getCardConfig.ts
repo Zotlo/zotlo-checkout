@@ -55,6 +55,8 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
   try {
     const initRes = await CardAPI.post('/card/init', payload, reqConfig);
     const initData = initRes?.result as CardInitResult;
+    if (initRes.meta.errorCode) throw initRes;
+
     if (!initData || Array.isArray(initData)) return config;
     setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie, key: COOKIE.CARD_UUID });
 

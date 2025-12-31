@@ -300,9 +300,10 @@ async function ZotloCard(params: IZotloCardParams) {
         }
       }
 
+      loadFontsOnPage([config.design.fontFamily]);
+
       if (hasAnyConfig()) {
         updateValidationMessages(config.general.localization.form.validation.rule);
-        loadFontsOnPage([config.design.fontFamily]);
       }
 
       // Destroy everything before re-rendering
