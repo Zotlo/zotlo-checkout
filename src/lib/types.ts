@@ -252,6 +252,13 @@ export type FormSetting = {
   registerType: 'email' | 'phoneNumber' | 'other';
   hideSubscriberIdIfAlreadySet: boolean;
   allowSubscriberIdEditing: boolean;
+  quantitySetting: {
+    quantity: string | number;
+    allowUserModify: boolean;
+    min: string | number;
+    max: string | number;
+    stepSize: string | number;
+  };
 };
 
 export type PackageData = {
