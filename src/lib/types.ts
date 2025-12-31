@@ -116,6 +116,11 @@ export interface IZotloCheckoutParams {
   /** Show saved credit cards if the user has any saved cards. Default is `false`. (To use this feature contact with support, a permission must be granted.) */
   showSavedCards?: boolean;
 
+  /** You can set a default quantity for the purchase */
+  quantitySetting?: {
+    quantity: number;
+  };
+
   useCookie?: boolean;
 }
 
@@ -252,6 +257,13 @@ export type FormSetting = {
   registerType: 'email' | 'phoneNumber' | 'other';
   hideSubscriberIdIfAlreadySet: boolean;
   allowSubscriberIdEditing: boolean;
+  quantitySetting?: {
+    quantity: string | number;
+    allowUserModify: boolean;
+    min: string | number;
+    max: string | number;
+    stepSize: string | number;
+  };
 };
 
 export type PackageData = {

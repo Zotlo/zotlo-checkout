@@ -126,6 +126,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards)
         ? initData?.registerType !== 'other'
         : !!+initData?.hideSubscriberIdIfAlreadySet,
+      quantitySetting: initData?.quantitySetting || {} as InitResult['quantitySetting'],
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);
