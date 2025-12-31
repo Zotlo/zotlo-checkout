@@ -410,6 +410,14 @@
   margin-top: 4px;
 }
 
+.zotlo-checkout[data-type="card"] .zotlo-checkout__success .zotlo-checkout__success__desc {
+  margin-top: 15px;
+}
+
+.zotlo-checkout[data-type="card"] .zotlo-checkout__success .zotlo-checkout__cardSubmit {
+  margin-top: 31px;
+}
+
 .zotlo-checkout__success__timer {
   font-weight: 500;
   font-size: 14px;
