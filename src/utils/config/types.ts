@@ -36,6 +36,7 @@ export type InitResult = {
   };
   integrations?: FormConfig['integrations'];
   showSavedCards: boolean;
+  quantitySetting: FormSetting["quantitySetting"];
 };
 
 export type CardInitResult = {
