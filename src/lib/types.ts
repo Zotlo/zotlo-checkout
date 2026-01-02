@@ -602,9 +602,12 @@ export interface IFormInvalid {
   result: ValidationResult;
 }
 
-export interface IZotloCardParams extends IZotloCheckoutParams {
+export interface IZotloCardParams extends Omit<IZotloCheckoutParams, 'returnUrl'> {
   /** Default subscriber ID for registration; can be an email, phone number, or UUID v4. */
   subscriberId: string;
+
+  /** The URL to redirect the user after card update completion.  */
+  returnUrl?: string;
 
   /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
   style?: IZotloCardStyle;

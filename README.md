@@ -374,8 +374,8 @@ These parameters specify the parameters and descriptions used in the Zotlo Card.
 |-------------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
 | `token`                 | **yes**  | The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. |
 | `packageId`             | **yes**  | The ID of the package you want to use.                                                                                       |
-| `returnUrl`             | **yes**  | The URL to redirect the user after card update completion.                                                                   |
 | `subscriberId`          | **yes**  | Default subscriber ID for card update; can be an email, phone number, or UUID v4.                                            |
+| `returnUrl`             | no.      | The URL to redirect the user after card update completion.                                                                   |
 | `style`                 | no       | Custom styling on config                                                                                                     |
 | `customParameters`      | no       | Send custom parameters to webhooks                                                                                           |
 | `events`                | no       | Event listeners that can be used during the update process.                                                                  |

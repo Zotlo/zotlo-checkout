@@ -403,7 +403,7 @@ export async function handleResponseRedirection(payload: {
   const returnUrl = payment?.returnUrl || '';
   const currentUrl = globalThis?.location?.href || '';
   const currentUrlBase = globalThis?.location.origin + globalThis?.location.pathname;
-  const returnUrlObj = new URL(params.returnUrl);
+  const returnUrlObj = new URL(params?.returnUrl || '');
   const returnUrlBase = returnUrlObj.origin + returnUrlObj.pathname;
   const isSamePage = returnUrlBase === currentUrlBase;
 

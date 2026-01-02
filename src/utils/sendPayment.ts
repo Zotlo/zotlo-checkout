@@ -1,5 +1,5 @@
 import { handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
-import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
+import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
 import { deleteSession } from "./session";
@@ -106,7 +106,7 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
   }
 }
 
-export async function handlePaymentSuccess(payload: { config: FormConfig; params: IZotloCheckoutParams; }) {
+export async function handlePaymentSuccess(payload: { config: FormConfig; params: IZotloCheckoutParams | IZotloCardParams; }) {
   try {
     setFormLoading(true);
     const { config, params } = payload;
