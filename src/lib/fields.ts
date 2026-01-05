@@ -74,6 +74,49 @@ export const FORM_ITEMS = {
       'data-mask': /^[\d-]*$/,
     }
   },
+  BILLING_ACTIVATE: {
+    label: "I'm purchasing as a business",
+    className: 'zotlo-checkout__agreement',
+    input: {
+      name: 'billingAsBusiness'
+    }
+  },
+  BILLING_BUSINESS_NAME: {
+    label: 'Business Name',
+    input: {
+      name: 'billingBusinessName',
+      type: 'text',
+      placeholder: 'Business name',
+      'data-rules': 'required',
+    }
+  },
+  BILLING_ADDRESS_LINE: {
+    label: 'Address Line',
+    input: {
+      name: 'billingAddressLine',
+      type: 'text',
+      placeholder: 'Address line',
+      'data-rules': 'required',
+    }
+  },
+  BILLING_CITY_TOWN: {
+    label: 'City/Town',
+    input: {
+      name: 'billingCityTown',
+      type: 'text',
+      placeholder: 'City/Town',
+      'data-rules': 'required',
+    }
+  },
+  BILLING_TAX_ID: {
+    label: 'Tax ID',
+    input: {
+      name: 'billingTaxId',
+      type: 'text',
+      placeholder: 'Tax ID',
+      'data-rules': 'required',
+    }
+  },
   AGREEMENT_CHECKBOX: {
     label: 'I read and agree to <a target="_blank" href="#">distance sales agreement</a> and <a href="#" target="_blank">information form</a>',
     className: 'zotlo-checkout__agreement',

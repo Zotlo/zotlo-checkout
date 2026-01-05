@@ -97,6 +97,9 @@ export function createInput(payload: {
   className?: string;
   attrs?: Record<string, string | number | boolean>;
   defaultCountryCode?: string;
+  slot?: {
+    left: string;
+  },
   input: {
     name: string;
     type?: string;
@@ -161,7 +164,8 @@ export function createInput(payload: {
     INPUT_ATTRIBUTES: inputAttrs,
     MESSAGE: payload.message || '',
     HINT: inputHint,
-    TAG: tag
+    TAG: tag,
+    SLOT_LEFT: payload?.slot?.left || '',
   }).replace(/data-left>/gm, `>${select}`);
 }
 
@@ -258,19 +262,27 @@ export function createCreditCardForm(params: {
   showPrice: boolean;
 }) {
   const { config, seperator, formType = 'both', className, showPrice } = params;
+  const businessPurchase = config.design?.businessPurchase;
   const subscriberId = config.settings.registerType === 'other' ? '' : (config.general.subscriberId || '');
   const attrs = generateAttributes({
     ...(params.attrs || {}),
     ...({ 'data-form-type': formType })
   });
   const { $t } = useI18n(config.general.localization);
-
+  const showBillingForm = businessPurchase?.enabled;
+  const showBillingFields = showBillingForm && businessPurchase?.canUserModify
+    ? businessPurchase?.defaultSelection === 'checked'
+    : showBillingForm;
 
   let newForm = template(formElement, { 
     FORM_TYPE: formType, 
     ATTRIBUTES: attrs, 
     CLASS_NAME: className || '', 
     SHOW_PRICE: !config.cardUpdate && showPrice,
+    SHOW_BILLING_FORM: showBillingForm,
+    BILLING_ATTRIBUTES: generateAttributes({
+      'data-billing-form': showBillingFields ? 'true' : 'false',
+    }),
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
   });
 
@@ -279,7 +291,6 @@ export function createCreditCardForm(params: {
   const seperatorText = `<div class="zotlo-checkout__seperator"><span>${$t('common.or')}</span></div>`;
   const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
   const isPhoneRegister = registerType === 'phoneNumber';
-  const isZipcodeRequired = config.general.isZipcodeRequired;
   const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
@@ -293,7 +304,7 @@ export function createCreditCardForm(params: {
     if (
       isPhoneRegister && key === 'SUBSCRIBER_ID_EMAIL' ||
       !isPhoneRegister && key === 'SUBSCRIBER_ID_PHONE' ||
-      !isZipcodeRequired && key === 'ZIP_CODE'
+      /^BILLING_/.test(key) && !showBillingForm
     ) {
       newForm = template(newForm, { [key]: '' });
       continue;
@@ -330,8 +341,40 @@ export function createCreditCardForm(params: {
         }
       }
         break;
+      case "BILLING_ACTIVATE": {
+        if (showBillingForm && businessPurchase?.canUserModify) {
+          fieldContent = createCheckbox({
+            ...options,
+            input: {
+              ...options.input,
+              placeholder: '',
+              checked: businessPurchase?.defaultSelection === 'checked' || undefined
+            },
+            label: $t(`form.${key}.label`)
+          });
+        }
+      }
+        break;
       case "SAVE_CARD_CHECKBOX":
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
+        break;
+      case "ZIP_CODE": {
+        const zipCodeInput = createInput(options);
+        const countryInput = createInput({
+          label: 'Country',
+          input: {
+            name: 'country',
+            disabled: true,
+            value: config.general.countryCode
+          },
+          slot: {
+            left: `<img class="zotlo-checkout__input__country" src="${
+              getCDNUrl(`flags/${config.general.countryCode}.svg`)
+            }" role="graphic" />`
+          }
+        });
+        fieldContent = `<div class="zotlo-checkout__form__col2">${countryInput}${zipCodeInput}</div>`;
+      }
         break;
       default:
         fieldContent = createInput(options);

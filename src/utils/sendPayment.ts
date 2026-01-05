@@ -5,6 +5,25 @@ import { CheckoutAPI } from "./api";
 import { deleteSession } from "./session";
 import { Logger } from "../lib/logger";
 import { COOKIE } from "./cookie";
+import { FORM_ITEMS } from "../lib/fields";
+
+function prepareBillingInfo(formData: Record<string, any>) {
+  const [city = '', country = ''] = (formData[FORM_ITEMS.BILLING_CITY_TOWN.input.name] || '').split('/');
+
+  const data = {
+    businessName: formData[FORM_ITEMS.BILLING_BUSINESS_NAME.input.name] || '',
+    addressLine: formData[FORM_ITEMS.BILLING_ADDRESS_LINE.input.name] || '',
+    taxNumber: formData[FORM_ITEMS.BILLING_TAX_ID.input.name] || '',
+    country,
+    city,
+  };
+
+  const hasAnyValue = Object.values(data).some(value => value && value.trim() !== '');
+
+  if (!hasAnyValue) return undefined;
+
+  return data;
+}
 
 function preparePayload(payload: {
   providerKey: PaymentProvider;
@@ -63,6 +82,16 @@ function preparePayload(payload: {
       break;
     default:
       break;
+  }
+
+  if (config.design?.businessPurchase?.enabled) {
+    const businessInfo = prepareBillingInfo(formData);
+    if (businessInfo) {
+      data = {
+        ...data,
+        businessInfo,
+      }
+    }
   }
   
   return {

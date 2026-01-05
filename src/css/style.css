@@ -200,6 +200,12 @@
   font-weight: var(--zc-form-consent-fontWeight);
 }
 
+.zotlo-checkout__agreement .tw-checkbox-label a,
+.zotlo-checkout__save-card .tw-checkbox-label a {
+  color: currentColor;
+  text-decoration: underline;
+}
+
 .zotlo-checkout__total {
   display: flex;
   justify-content: space-between;

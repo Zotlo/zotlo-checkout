@@ -243,9 +243,10 @@ export function inputValidation(input: HTMLInputElement, result: ValidationResul
 export function validateForm(params: {
   providerKey: PaymentProvider;
   config: FormConfig;
+  skipBillingFields?: boolean;
   validations: Record<string, ReturnType<typeof validateInput>>;
 }) {
-  const { providerKey, config, validations } = params;
+  const { providerKey, config, skipBillingFields, validations } = params;
   const errors = [];
   const creditCardFields = [
     FORM_ITEMS.CARD_NUMBER.input.name,
@@ -256,15 +257,28 @@ export function validateForm(params: {
   const sharedFields = [
     FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
     FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
-    FORM_ITEMS.ZIP_CODE.input.name
+
+    // Zip code for US
+    ...(config.general.countryCode === 'US'
+      ? [FORM_ITEMS.ZIP_CODE.input.name]
+      : []),
+
+    // Billing fields
+    ...(config.design?.businessPurchase?.enabled ? [
+      FORM_ITEMS.BILLING_BUSINESS_NAME.input.name,
+      FORM_ITEMS.BILLING_ADDRESS_LINE.input.name,
+      FORM_ITEMS.BILLING_CITY_TOWN.input.name,
+      FORM_ITEMS.BILLING_TAX_ID.input.name,
+    ] : [])
   ];
   const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
 
   for (const validation of Object.values(validations)) {
     const name = validation.name;
+    const skipField = skipBillingFields && /^billing/.test(name);
     const shouldSkipValidation = isSavedCardPayment 
       ? creditCardFields.includes(name) && providerKey === PaymentProvider.CREDIT_CARD
-      : !sharedFields.includes(name) && providerKey !== PaymentProvider.CREDIT_CARD;
+      : skipField || (!sharedFields.includes(name) && providerKey !== PaymentProvider.CREDIT_CARD);
 
     const result = validation.validate(shouldSkipValidation);
     if (!result.isValid) {
@@ -302,10 +316,15 @@ export function detectAndValidateForm(params: {
 
     if (el.nodeName === 'BUTTON') {
       const providerKey = el.dataset.provider as PaymentProvider;
+      const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
+      const billingToggleCheckbox = ZOTLO_GLOBAL?.formElement?.querySelector(`input[name="${toggleName}"]`) as HTMLInputElement;
+      const skipBillingFields = !!billingToggleCheckbox && !billingToggleCheckbox?.checked;
+
       validateForm({
         providerKey,
         config,
-        validations
+        validations,
+        skipBillingFields
       });
       container?.querySelector('button[data-provider="' + providerKey + '"]')?.setAttribute('type', 'submit');
       return providerKey;
