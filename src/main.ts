@@ -63,7 +63,6 @@ import { ZotloCard } from './lib/card'
   const settings = {
     token: '123ASDASsqasdas=',
     packageId: 'zotlo-123',
-    returnUrl: 'https://example.com/return-url',
     language: 'en',
     subscriberId: '',
     events
@@ -105,7 +104,10 @@ import { ZotloCard } from './lib/card'
     if (loading.checkout || forms.checkout) return;
     try {
       setLoading('checkout', true);
-      forms.checkout = await ZotloCheckout(settings);
+      forms.checkout = await ZotloCheckout({
+        ...settings,
+        returnUrl: 'https://example.com/return-url',
+      });
       forms.checkout.mount('zotlo-checkout');
     } finally {
       setLoading('checkout', false);
@@ -120,11 +122,6 @@ import { ZotloCard } from './lib/card'
         ...settings,
         subscriberId: 'test@example.com',
         style: {
-          design: {
-            label: {
-              show: false
-            }
-          },
           success: {
             genericButton: {
               url: 'https://myfancy.site/dashboard'

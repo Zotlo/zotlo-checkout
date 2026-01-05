@@ -21,6 +21,8 @@ async function ZotloCard(params: IZotloCardParams) {
   // Load Sentry for error tracking
   await Logger.loadSentry();
 
+  params.returnUrl = params.returnUrl || globalThis?.location?.href;
+
   let config = mergeDeep(
     { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig,
     { cardUpdate: true } as FormConfig,

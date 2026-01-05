@@ -1,5 +1,5 @@
 import { createPaymentSuccessForm } from "../lib/create";
-import { type FormConfig, type IZotloCheckoutParams, PaymentCallbackStatus } from "../lib/types";
+import { type FormConfig, type IZotloCheckoutParams, type IZotloCardParams, PaymentCallbackStatus } from "../lib/types";
 import { handlePaymentSuccess } from "./sendPayment";
 
 export enum UrlQuery {
@@ -9,7 +9,7 @@ export enum UrlQuery {
 }
 
 export async function handleUrlQuery(payload: {
-  params: IZotloCheckoutParams;
+  params: IZotloCheckoutParams | IZotloCardParams;
   config: FormConfig;
 }) {
   const { params, config } = payload || {};
