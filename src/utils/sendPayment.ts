@@ -12,7 +12,7 @@ function prepareBillingInfo(formData: Record<string, any>, config: FormConfig) {
     businessName: formData[FORM_ITEMS.BILLING_BUSINESS_NAME.input.name] || '',
     addressLine: formData[FORM_ITEMS.BILLING_ADDRESS_LINE.input.name] || '',
     taxNumber: formData[FORM_ITEMS.BILLING_TAX_ID.input.name] || '',
-    country: config.general.countryCode,
+    country: config.general.countryCode || '',
     city: formData[FORM_ITEMS.BILLING_CITY_TOWN.input.name],
   };
 

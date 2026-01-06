@@ -358,6 +358,7 @@ export function createCreditCardForm(params: {
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
         break;
       case "ZIP_CODE": {
+        if (ZOTLO_GLOBAL.cardUpdate) break;
         const countryCode = config.general.countryCode;
         const isRequired = countryCode === 'US';
         const zipCodeInput = createInput({
@@ -372,16 +373,17 @@ export function createCreditCardForm(params: {
           }
         });
         const countryInput = createInput({
-          label: 'Country',
+          label: $t('form.COUNTRY_CODE.label'),
           input: {
             name: 'country',
             disabled: true,
-            value: countryCode
+            value: countryCode,
+            placeholder: $t('form.COUNTRY_CODE.label')
           },
           slot: {
             left: `<img class="zotlo-checkout__input__country" src="${
               getCDNUrl(`flags/${countryCode}.svg`)
-            }" role="graphic" />`
+            }" role="graphic" alt="${countryCode} flag" />`
           }
         });
         fieldContent = `<div class="zotlo-checkout__form__col2">${countryInput}${zipCodeInput}</div>`;

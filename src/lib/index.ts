@@ -344,7 +344,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     function onChangeCheckbox(e: Event) {
       const isChecked = (e.target as HTMLInputElement).checked;
-      billingForm.setAttribute('data-billing-form', isChecked ? 'true' : 'false');
+      billingForm?.setAttribute('data-billing-form', isChecked ? 'true' : 'false');
     }
 
     function destroy() {
@@ -353,7 +353,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     billingCheckbox?.addEventListener('change', onChangeCheckbox);
 
-    return destroy
+    return destroy;
   }
 
   function initFormInputs() {

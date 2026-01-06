@@ -264,12 +264,10 @@ export function validateForm(params: {
       : []),
 
     // Billing fields
-    ...(config.design?.businessPurchase?.enabled ? [
-      FORM_ITEMS.BILLING_BUSINESS_NAME.input.name,
-      FORM_ITEMS.BILLING_ADDRESS_LINE.input.name,
-      FORM_ITEMS.BILLING_CITY_TOWN.input.name,
-      FORM_ITEMS.BILLING_TAX_ID.input.name,
-    ] : [])
+    FORM_ITEMS.BILLING_BUSINESS_NAME.input.name,
+    FORM_ITEMS.BILLING_ADDRESS_LINE.input.name,
+    FORM_ITEMS.BILLING_CITY_TOWN.input.name,
+    FORM_ITEMS.BILLING_TAX_ID.input.name,
   ];
   const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
 
@@ -302,6 +300,10 @@ export function detectAndValidateForm(params: {
 
   // Detect which form if active element is an input
   if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
+    const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
+    const billingToggleCheckbox = ZOTLO_GLOBAL?.formElement?.querySelector(`input[name="${toggleName}"]`) as HTMLInputElement;
+    const skipBillingFields = !!billingToggleCheckbox && !billingToggleCheckbox?.checked;
+
     if (!container?.contains(el)) return PaymentProvider.CREDIT_CARD;
 
     // Reset form validations
@@ -316,9 +318,6 @@ export function detectAndValidateForm(params: {
 
     if (el.nodeName === 'BUTTON') {
       const providerKey = el.dataset.provider as PaymentProvider;
-      const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
-      const billingToggleCheckbox = ZOTLO_GLOBAL?.formElement?.querySelector(`input[name="${toggleName}"]`) as HTMLInputElement;
-      const skipBillingFields = !!billingToggleCheckbox && !billingToggleCheckbox?.checked;
 
       validateForm({
         providerKey,
@@ -337,7 +336,8 @@ export function detectAndValidateForm(params: {
       validateForm({
         providerKey: PaymentProvider.CREDIT_CARD,
         config,
-        validations
+        validations,
+        skipBillingFields
       });
       container?.querySelector('button[data-provider="creditCard"]')?.setAttribute('type', 'submit');
       return PaymentProvider.CREDIT_CARD;
@@ -352,7 +352,8 @@ export function detectAndValidateForm(params: {
         validateForm({
           providerKey,
           config,
-          validations
+          validations,
+          skipBillingFields
         });
         button.setAttribute('type', 'submit');
         return providerKey;
