@@ -349,8 +349,7 @@ export function createCreditCardForm(params: {
               ...options.input,
               placeholder: '',
               checked: businessPurchase?.defaultSelection === 'checked' || undefined
-            },
-            label: $t(`form.${key}.label`)
+            }
           });
         }
       }
@@ -359,17 +358,29 @@ export function createCreditCardForm(params: {
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
         break;
       case "ZIP_CODE": {
-        const zipCodeInput = createInput(options);
+        const countryCode = config.general.countryCode;
+        const isRequired = countryCode === 'US';
+        const zipCodeInput = createInput({
+          ...options,
+          label: isRequired ? options.label : $t(`form.POSTAL_CODE.label`),
+          input: {
+            ...options.input,
+            ...(!isRequired ? {
+              placeholder: $t(`form.POSTAL_CODE.placeholder`),
+              'data-rules': undefined,  
+            } : {}),
+          }
+        });
         const countryInput = createInput({
           label: 'Country',
           input: {
             name: 'country',
             disabled: true,
-            value: config.general.countryCode
+            value: countryCode
           },
           slot: {
             left: `<img class="zotlo-checkout__input__country" src="${
-              getCDNUrl(`flags/${config.general.countryCode}.svg`)
+              getCDNUrl(`flags/${countryCode}.svg`)
             }" role="graphic" />`
           }
         });
