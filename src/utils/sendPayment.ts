@@ -7,15 +7,13 @@ import { Logger } from "../lib/logger";
 import { COOKIE } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
 
-function prepareBillingInfo(formData: Record<string, any>) {
-  const [city = '', country = ''] = (formData[FORM_ITEMS.BILLING_CITY_TOWN.input.name] || '').split('/');
-
+function prepareBillingInfo(formData: Record<string, any>, config: FormConfig) {
   const data = {
     businessName: formData[FORM_ITEMS.BILLING_BUSINESS_NAME.input.name] || '',
     addressLine: formData[FORM_ITEMS.BILLING_ADDRESS_LINE.input.name] || '',
     taxNumber: formData[FORM_ITEMS.BILLING_TAX_ID.input.name] || '',
-    country,
-    city,
+    country: config.general.countryCode,
+    city: formData[FORM_ITEMS.BILLING_CITY_TOWN.input.name],
   };
 
   const hasAnyValue = Object.values(data).some(value => value && value.trim() !== '');
@@ -85,7 +83,7 @@ function preparePayload(payload: {
   }
 
   if (config.design?.businessPurchase?.enabled) {
-    const businessInfo = prepareBillingInfo(formData);
+    const businessInfo = prepareBillingInfo(formData, config);
     if (businessInfo) {
       data = {
         ...data,
