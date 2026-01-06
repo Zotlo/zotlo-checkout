@@ -114,7 +114,7 @@ export const FORM_ITEMS = {
       name: 'billingTaxId',
       type: 'text',
       placeholder: 'Tax ID',
-      'data-rules': 'required',
+      'data-rules': '', // This will validate next phase on utils/validation.ts#97
     }
   },
   AGREEMENT_CHECKBOX: {
