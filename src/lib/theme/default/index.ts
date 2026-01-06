@@ -2,7 +2,7 @@ import mainHTML from './html/main.html?raw'
 import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme } from '../../types'
 import { useI18n, getCDNUrl, generateAttributes } from '../../../utils'
 import { template } from "../../../utils/template";
-import { createButton, createCreditCardForm, createProviderButton, createPaymentHeader } from '../../create'
+import { createButton, createCreditCardForm, createProviderButton, createPaymentHeader, createFooter } from '../../create'
 
 export function generateThemeDefault(params: {
   config: FormConfig;
@@ -14,7 +14,8 @@ export function generateThemeDefault(params: {
     FOOTER_DESC: string;
     DISCLAIMER: string;
     ZOTLO_LEGALS_DESC: string;
-    ZOTLO_LEGALS_LINKS: string
+    ZOTLO_LEGALS_LINKS: string;
+    PAYMENT_AGGREGATOR: string;
   };
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
@@ -98,6 +99,7 @@ export function generateThemeDefault(params: {
   }
 
   const paymentHeader = createPaymentHeader({ config });
+  const footer = createFooter(footerInfo) || '';
 
   return template(mainHTML, {
     DIR: dir,
@@ -108,11 +110,7 @@ export function generateThemeDefault(params: {
     HEADER: paymentHeader || '',
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
-    PRICE_INFO: footerInfo.PRICE_INFO,
-    FOOTER_DESC: footerInfo.FOOTER_DESC,
-    DISCLAIMER: footerInfo.DISCLAIMER,
-    ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
-    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    FOOTER: footer,
     ATTRIBUTES: generateAttributes({
       autocomplete: 'off',
       ...(config.cardUpdate ? {'data-type': 'card'} : {})

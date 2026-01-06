@@ -363,13 +363,20 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
   const privacyUrl = config.general.privacyUrl;
   const tosUrl = config.general.tosUrl;
   const zotloUrls = config?.general?.zotloUrls || {};
+  const PaymentAggregator = 'https://3p-assets.cdnztl.com/docs/2025/09/10/jigle-payment-terms-ru.pdf'
 
   const footerInfo = {
+    SHOW_FOOTER_DESC: true,
     PRICE_INFO: '',
     FOOTER_DESC: $t('footer.desc'),
     DISCLAIMER: '',
     ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`,
+    PAYMENT_AGGREGATOR: config.general.countryCode === 'RU'
+      ? $t('footer.zotlo.aggregator', {
+        here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`
+      }) 
+      : ''
   }
 
   if (ZOTLO_GLOBAL.cardUpdate) {

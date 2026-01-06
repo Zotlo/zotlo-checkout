@@ -2,7 +2,7 @@ import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
-import { createButton, createCreditCardForm, createPaymentHeader } from '../../create'
+import { createButton, createCreditCardForm, createFooter, createPaymentHeader } from '../../create'
 import { getPackageName } from '../../../utils/getPackageInfo';
 import { prepareProvider } from './utils';
 
@@ -16,7 +16,8 @@ export function generateThemeMobileApp(params: {
     FOOTER_DESC: string;
     DISCLAIMER: string;
     ZOTLO_LEGALS_DESC: string;
-    ZOTLO_LEGALS_LINKS: string
+    ZOTLO_LEGALS_LINKS: string;
+    PAYMENT_AGGREGATOR: string;
   };
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
@@ -103,6 +104,7 @@ export function generateThemeMobileApp(params: {
     : '';
 
   const paymentHeader = createPaymentHeader({ config });
+  const footer = createFooter(footerInfo) || '';
 
   return template(mainHTML, {
     DIR: dir,
@@ -125,10 +127,6 @@ export function generateThemeMobileApp(params: {
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
-    PRICE_INFO: footerInfo.PRICE_INFO,
-    FOOTER_DESC: footerInfo.FOOTER_DESC,
-    DISCLAIMER: footerInfo.DISCLAIMER,
-    ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
-    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    FOOTER: footer
   })
 }
