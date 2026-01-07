@@ -360,7 +360,7 @@ export function createCreditCardForm(params: {
       case "ZIP_CODE": {
         if (ZOTLO_GLOBAL.cardUpdate) break;
         const countryCode = config.general.countryCode;
-        const isRequired = countryCode === 'US';
+        const isRequired = config.general.isZipcodeRequired;
         const zipCodeInput = createInput({
           ...options,
           label: isRequired ? options.label : $t(`form.POSTAL_CODE.label`),

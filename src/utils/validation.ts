@@ -259,7 +259,7 @@ export function validateForm(params: {
     FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
 
     // Zip code for US
-    ...(config.general.countryCode === 'US'
+    ...(config.general.isZipcodeRequired
       ? [FORM_ITEMS.ZIP_CODE.input.name]
       : []),
 
