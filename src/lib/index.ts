@@ -21,7 +21,8 @@ import {
   syncInputsOnTabs,
   handleSavedCardsEvents,
   getActiveSavedCardId,
-  ZOTLO_GLOBAL
+  ZOTLO_GLOBAL,
+  shouldSkipBillingFields
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -79,10 +80,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       validation.validate(true);
     }
 
-    const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
-    const billingToggleCheckbox = ZOTLO_GLOBAL?.formElement?.querySelector(`input[name="${toggleName}"]`) as HTMLInputElement;
-    const skipBillingFields = !!billingToggleCheckbox && !billingToggleCheckbox?.checked;
-
+    const skipBillingFields = shouldSkipBillingFields(config);
     const validation = validateForm({
       providerKey,
       config,
@@ -339,19 +337,37 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   function handleBillingForm() {
     const formElement = ZOTLO_GLOBAL.formElement;
     const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
-    const billingCheckbox = formElement?.querySelector(`input[name="${toggleName}"]`);
-    const billingForm = formElement?.querySelector('[data-billing-form]') as HTMLElement;
+    const tabContents = config.design.theme === DesignTheme.MOBILEAPP
+      ? [formElement]
+      : formElement?.querySelectorAll('[data-tab-content]');
 
-    function onChangeCheckbox(e: Event) {
-      const isChecked = (e.target as HTMLInputElement).checked;
-      billingForm?.setAttribute('data-billing-form', isChecked ? 'true' : 'false');
+    const destroyList: (() => void)[] = [];
+
+    function handleOnTab(tabContent: HTMLElement) {
+      const checkbox = tabContent?.querySelector(`input[name="${toggleName}"]`);
+      const billingForm = tabContent?.querySelector('[data-billing-form]') as HTMLElement;
+
+      function onChangeCheckbox(e: Event) {
+        const isChecked = (e.target as HTMLInputElement).checked;
+        billingForm?.setAttribute('data-billing-form', isChecked ? 'true' : 'false');
+      }
+
+      function destroyEvents() {
+        checkbox?.removeEventListener('change', onChangeCheckbox);
+      }
+
+      checkbox?.addEventListener('change', onChangeCheckbox);
+
+      return destroyEvents;
     }
+
+    tabContents?.forEach((tabContent) => {
+      destroyList.push(handleOnTab(tabContent as HTMLElement));
+    });
 
     function destroy() {
-      billingCheckbox?.removeEventListener('change', onChangeCheckbox);
+      destroyList?.forEach((destroyFn) => destroyFn());
     }
-
-    billingCheckbox?.addEventListener('change', onChangeCheckbox);
 
     return destroy;
   }

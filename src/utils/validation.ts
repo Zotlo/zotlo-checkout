@@ -1,6 +1,6 @@
-import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, ZOTLO_GLOBAL } from "./index";
+import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
 import { getCardMask } from "./getCardMask";
-import { FormConfig, PaymentProvider } from "../lib/types";
+import { type FormConfig, PaymentProvider } from "../lib/types";
 import { FORM_ITEMS } from "../lib/fields";
 
 type ValidationRule = (value: any, params: any[]) => true | string;
@@ -300,9 +300,7 @@ export function detectAndValidateForm(params: {
 
   // Detect which form if active element is an input
   if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
-    const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
-    const billingToggleCheckbox = ZOTLO_GLOBAL?.formElement?.querySelector(`input[name="${toggleName}"]`) as HTMLInputElement;
-    const skipBillingFields = !!billingToggleCheckbox && !billingToggleCheckbox?.checked;
+    const skipBillingFields = shouldSkipBillingFields(config);
 
     if (!container?.contains(el)) return PaymentProvider.CREDIT_CARD;
 
