@@ -2,6 +2,7 @@ name: Publish Package to npm
 
 env:
   VITE_SDK_API_URL: ${{ vars.VITE_SDK_API_URL }}
+  VITE_SDK_CARD_API_URL: ${{ vars.VITE_SDK_CARD_API_URL }}
   VITE_GOOGLE_PAY_ENVIRONMENT: ${{ vars.VITE_GOOGLE_PAY_ENVIRONMENT }}
 
 on: 
@@ -28,6 +29,7 @@ jobs:
       - name: Show ENVs
         run: |
           echo "VITE_SDK_API_URL: $VITE_SDK_API_URL"
+          echo "VITE_SDK_CARD_API_URL: $VITE_SDK_CARD_API_URL"
           echo "VITE_GOOGLE_PAY_ENVIRONMENT: $VITE_GOOGLE_PAY_ENVIRONMENT"
       - name: Build project
         run: npm run build
