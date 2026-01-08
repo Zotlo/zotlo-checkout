@@ -62,8 +62,8 @@ You can also include Zotlo Checkout SDK directly in the browser using CDN links:
 
 **jsdelivr**
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zotlo-checkout/dist/zotlo-checkout.css" />
-<script src="https://cdn.jsdelivr.net/npm/zotlo-checkout/dist/zotlo-checkout.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zotlo-checkout@latest/dist/zotlo-checkout.css" />
+<script src="https://cdn.jsdelivr.net/npm/zotlo-checkout@latest/dist/zotlo-checkout.min.js"></script>
 ```
 
 #### Usage example
@@ -323,8 +323,8 @@ You can also include Zotlo Card directly in the browser using CDN links:
 
 **jsdelivr**
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zotlo-checkout/dist/zotlo-checkout.css" />
-<script src="https://cdn.jsdelivr.net/npm/zotlo-checkout/dist/zotlo-card.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zotlo-checkout@latest/dist/zotlo-checkout.css" />
+<script src="https://cdn.jsdelivr.net/npm/zotlo-checkout@latest/dist/zotlo-card.min.js"></script>
 ```
 
 #### Usage example
