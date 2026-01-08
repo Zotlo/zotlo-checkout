@@ -10,7 +10,7 @@ export function createStyle(config: FormConfig) {
   const opacity = config.design.darkMode ? '4A' : '1A';
 
   return design ? `
-.zotlo-checkout {
+.zotlo-checkout${config.cardUpdate ? '[data-type="card"]' : ''} {
   --zc-color: ${config.design.darkMode ? '#FFFFFF' : '#000000'};
   --zc-fontFamily: ${fontFamily || 'inherit'};
   --zc-form-backgroundColor: ${backgroundColor || '#FFFFFF'};

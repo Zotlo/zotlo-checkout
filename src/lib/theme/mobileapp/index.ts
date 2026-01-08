@@ -2,51 +2,9 @@ import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
-import { createProviderButton, createButton, createCreditCardForm, createPaymentHeader } from '../../create'
+import { createButton, createCreditCardForm, createPaymentHeader } from '../../create'
 import { getPackageName } from '../../../utils/getPackageInfo';
-
-function prepareProvider(params: {
-  config: FormConfig;
-  paymentMethods: FormSetting['paymentMethodSetting'];
-  method: FormSetting['paymentMethodSetting'][number];
-  index: number;
-  tabAvailable?: boolean;
-}) {
-  const { config, paymentMethods, method, index, tabAvailable } = params;
-
-  if (method?.providerKey !== PaymentProvider.CREDIT_CARD) {
-    return createProviderButton({
-      provider: method?.providerKey,
-      config,
-      tabAvailable: !!index
-    });
-  }
-
-  if (method?.providerKey === PaymentProvider.CREDIT_CARD) {
-    const isFirstItem = index === 0;
-    const isLastItem = index === paymentMethods.length - 1;
-    const isOnlyItem = paymentMethods.length === 1;
-    const isMiddleItem = !isFirstItem && !isLastItem;
-    let seperator = undefined as undefined | 'top' | 'bottom' | 'both';
-
-    if (!isOnlyItem && !isFirstItem && isMiddleItem) {
-      seperator = 'both';
-    } else if (!isOnlyItem && isFirstItem) {
-      seperator = 'bottom';
-    } else if (!isOnlyItem && isLastItem) {
-      seperator = 'top';
-    }
-
-    return createCreditCardForm({
-      ...params,
-      formType: index === 0 ? 'both' : 'creditCard',
-      seperator,
-      className: 'zotlo-checkout__payment-provider',
-      attrs: tabAvailable ?  { 'data-tab-content': PaymentProvider.CREDIT_CARD, 'data-tab-active': 'true' } : {},
-      showPrice: false
-    });
-  }
-}
+import { prepareProvider } from './utils';
 
 export function generateThemeMobileApp(params: {
   config: FormConfig;
@@ -62,20 +20,20 @@ export function generateThemeMobileApp(params: {
   };
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
+
   const { $t } = useI18n(config.general.localization);
   const providerGroups = paymentMethods.filter((_, index) => index > 0);
   const firstProvider = paymentMethods?.[0];
-
-  const theme = {
-    [PaymentProvider.CREDIT_CARD]: { dark: '.png', light: '_black.png' },
-    [PaymentProvider.PAYPAL]: { dark: '_disabled.png', light: '.png' },
-    [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
-    [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' }
-  }
-
   let tabButtons = '';
-
+  
   if (providerGroups.length > 1) {
+    const theme = {
+      [PaymentProvider.CREDIT_CARD]: { dark: '.png', light: '_black.png' },
+      [PaymentProvider.PAYPAL]: { dark: '_disabled.png', light: '.png' },
+      [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
+      [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' }
+    };
+
     tabButtons = providerGroups.reduce((acc, item, index) => {
       const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
       const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
@@ -149,24 +107,28 @@ export function generateThemeMobileApp(params: {
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
+    ATTRIBUTES: generateAttributes({
+      autocomplete: 'off',
+      ...(config.cardUpdate ? {'data-type': 'card'} : {})
+    }),
     HEADER: paymentHeader || '',
-    PACKAGE_NAME: packageName,
+    PACKAGE_SUMMARY: !config.cardUpdate,
     PACKAGE_IMAGE: productImage,
-    PRIMARY_PROVIDER: primaryProvider,
-    TAB_BUTTONS: tabButtons,
-    PROVIDERS: providerButtons,
-    TOTAL_PRICE: totalPrice,
+    PACKAGE_NAME: packageName,
     PACKAGE_PRICE: packagePrice,
-    ADDITIONAL_TEXT: additionalText,
-    ADDITIONAL_PRICE: additionalPrice,
     SHOW_SUBTOTAL: !!packageName && showSubtotal,
     STATIC_SUBTOTAL: $t('common.subtotal'),
     STATIC_TOTAL: $t('common.totalDue'),
+    ADDITIONAL_TEXT: additionalText,
+    ADDITIONAL_PRICE: additionalPrice,
+    TOTAL_PRICE: totalPrice,
+    PRIMARY_PROVIDER: primaryProvider,
+    TAB_BUTTONS: tabButtons,
+    PROVIDERS: providerButtons,
     PRICE_INFO: footerInfo.PRICE_INFO,
     FOOTER_DESC: footerInfo.FOOTER_DESC,
     DISCLAIMER: footerInfo.DISCLAIMER,
     ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
     ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
-    ATTRIBUTES: generateAttributes({ autocomplete: 'off' }),
   })
 }

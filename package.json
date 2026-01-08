@@ -1,11 +1,11 @@
 {
   "name": "zotlo-checkout",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:rc": "tsc && vite build --mode rc",
+    "build": "tsc && node --loader ts-node/esm builder.ts",
+    "build:rc": "tsc && node --loader ts-node/esm builder.ts --mode rc",
     "preview": "vite preview"
   },
   "files": [
@@ -16,8 +16,14 @@
   "types": "./dist/zotlo-checkout.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/zotlo-checkout.d.ts",
       "import": "./dist/zotlo-checkout.js",
       "require": "./dist/zotlo-checkout.umd.cjs"
+    },
+    "./card": {
+      "types": "./dist/zotlo-card.d.ts",
+      "import": "./dist/zotlo-card.js",
+      "require": "./dist/zotlo-card.umd.cjs"
     },
     "./dist/zotlo-checkout.css": "./dist/zotlo-checkout.css"
   },
@@ -25,6 +31,7 @@
     "@sentry/browser": "^10.20.0",
     "autoprefixer": "^10.4.21",
     "terser": "^5.43.1",
+    "ts-node": "^10.9.2",
     "typescript": "~5.7.2",
     "vite": "^7.1.12",
     "vite-plugin-dts": "^4.5.4"

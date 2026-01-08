@@ -1,4 +1,5 @@
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { minify } from 'terser';
 import { copyFileSync, mkdirSync, readdirSync, statSync, readFileSync, writeFileSync } from 'fs';
 
@@ -7,6 +8,10 @@ export function minifyPublicJsPlugin(options?: {
   public?: string;
   dist?: string;
 }) {
+
+  const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+  const __dirname = dirname(__filename);
+
   return {
     name: 'minify-public-js',
     writeBundle() {

@@ -100,6 +100,8 @@ window.EventActions = {
     complete(result) {
       EventActions.success.loadClickEvents();
 
+      if (result.cardUpdate) return;
+
       const app = result.application || {};
       const packageData = result.payment.package || {};
       const utmSource = (window.getCookie('utmInfo') || {})?.utm_source || '';

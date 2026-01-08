@@ -1,52 +1,13 @@
-import { mergeDeep } from "./index";
-import type { FormConfig, FormSetting, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../lib/types";
-import { DesignTheme, PaymentProvider, SuccessTheme } from "../lib/types";
-import { API } from "../utils/api";
-import { setSession } from "./session";
-import { getPackageInfo } from "./getPackageInfo";
-import { Logger } from "../lib/logger";
-
-type InitResult = {
-  uuid: string;
-  subscriberId: string;
-  registerBypass: boolean;
-  language: string;
-  countryCode: string;
-  settings: {
-    design: FormDesign;
-    success: FormSuccess;
-  };
-  paymentMethodSetting: FormSetting["paymentMethodSetting"];
-  registerType: FormSetting["registerType"];
-  allowSubscriberIdEditingOnRegisterPayment: string;
-  hideSubscriberIdIfAlreadySet: string;
-  privacyAndTosUrlStatus: number;
-  privacyUrl: string;
-  tosUrl: string;
-  localization: Record<string, any>;
-  showPaypal: boolean;
-  currency: string;
-  isPolicyRequired: boolean;
-  isZipcodeRequired: boolean;
-  appName?: string;
-  appLogo?: string;
-  productImage?: string;
-  additionalText?: string;
-  packageName?: string;
-  customPrice?: string;
-  customCurrency?: string;
-  zotloUrls: {
-    privacyPolicy?: string;
-    termsOfService?: string;
-    cookiePolicy?: string;
-  };
-  integrations?: FormConfig['integrations'];
-  showSavedCards: boolean;
-};
-
-export const ErrorHandler = {
-  response: null as Record<string, any> | null,
-}
+import { ErrorHandler } from "./index";
+import { mergeDeep, ZOTLO_GLOBAL } from "../index";
+import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
+import { DesignTheme, PaymentProvider, SuccessTheme } from "../../lib/types";
+import { Logger } from "../../lib/logger";
+import { CheckoutAPI } from "../../utils/api";
+import { setSession } from "../session";
+import { getPackageInfo } from "../getPackageInfo";
+import { DefaultThemeConfig } from "../getDefaultThemeConfig";
+import { InitResult } from "./types";
 
 export async function getPaymentData(uuid?: string) {
   try {
@@ -54,7 +15,7 @@ export async function getPaymentData(uuid?: string) {
     const config = uuid
       ? { headers: { Uuid: uuid || '' } }
       : undefined;
-    const paymentRes = await API.get('/payment/init', config);
+    const paymentRes = await CheckoutAPI.get('/payment/init', config);
     const paymentInitData = paymentRes?.result || {};
     return paymentInitData as FormPaymentData;
   } catch (e: any) {
@@ -64,17 +25,14 @@ export async function getPaymentData(uuid?: string) {
   }
 }
 
-export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
-  const config = { general: {
-    localization: {
-      empty: {
-        noMethod: {
-          title: 'An error occured',
-          desc: 'Cannot load form, please try again later.',
-        }
-      }
-    } as any
-  }, settings: {}, design: {}, paymentData: {}, packageInfo: {} } as FormConfig;
+export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
+  ZOTLO_GLOBAL.cardUpdate = false;
+
+  const config = {
+    cardUpdate: ZOTLO_GLOBAL.cardUpdate,
+    general: DefaultThemeConfig.general,
+    settings: {}, design: {}, paymentData: {}, packageInfo: {}
+  } as FormConfig;
 
   const {
     token,
@@ -97,7 +55,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
   const reqConfig = { headers: { Language: language } };
 
   try {
-    const initRes = await API.post("/init", payload, reqConfig);
+    const initRes = await CheckoutAPI.post('/init', payload, reqConfig);
     const initData = initRes?.result as InitResult;
     if (!initData || Array.isArray(initData)) return config;
     setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie });
@@ -108,6 +66,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     config.integrations = initData?.integrations || {} as InitResult['integrations'];
 
     config.design = mergeDeep(
+      DefaultThemeConfig.design,
       {
         ...((settings?.design ? settings.design : (settings as any)) || {}),
         theme: settings?.design?.theme || DesignTheme.VERTICAL
@@ -122,6 +81,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
     ) as FormDesign;
 
     config.success = mergeDeep(
+      DefaultThemeConfig.success,
       {
         ...(settings?.success || {}),
         theme: settings?.success?.theme || SuccessTheme.APP2WEB
@@ -161,7 +121,9 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
       paymentMethodSetting: initData?.paymentMethodSetting || [],
       registerType: initData?.registerType,
       allowSubscriberIdEditing: !!+initData?.allowSubscriberIdEditingOnRegisterPayment,
-      hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards) ? initData?.registerType !== 'other' : !!+initData?.hideSubscriberIdIfAlreadySet,
+      hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards)
+        ? initData?.registerType !== 'other'
+        : !!+initData?.hideSubscriberIdIfAlreadySet,
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);
@@ -176,7 +138,7 @@ export async function getConfig(params: IZotloCheckoutParams): Promise<FormConfi
 
 export async function getProviderConfig(providerKey: PaymentProvider, returnUrl: string) {
   try {
-    const res = await API.post(`/payment/init`, { providerKey, returnUrl });
+    const res = await CheckoutAPI.post('/payment/init', { providerKey, returnUrl });
     const data = res?.result || {};
     return data;
   } catch (e: any) {

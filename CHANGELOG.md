@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.9.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.8.1...v1.9.0)
+
+### 🚀 Enhancements
+
+- Add ZotloCard method to update user card ([8cbea63](https://github.com/Zotlo/zotlo-checkout/commit/8cbea63))
+- Update themes for zotlo-card form ([d1860fc](https://github.com/Zotlo/zotlo-checkout/commit/d1860fc))
+- Hide header if the form is card update ([8ecb201](https://github.com/Zotlo/zotlo-checkout/commit/8ecb201))
+- Prepare success page for card upate form ([68134ec](https://github.com/Zotlo/zotlo-checkout/commit/68134ec))
+- Add business-purchase type in design model ([4122e1b](https://github.com/Zotlo/zotlo-checkout/commit/4122e1b))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.8.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.8.0...v1.8.1)

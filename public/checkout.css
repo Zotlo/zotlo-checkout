@@ -103,6 +103,7 @@ body {
 
 .zotlo-checkout__cookie a {
   color: white;
+  text-decoration: underline;
 }
 
 .zotlo-checkout__cookie__text {

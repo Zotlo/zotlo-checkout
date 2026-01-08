@@ -1,9 +1,10 @@
-import { setFormLoading } from "./index";
-import { type FormConfig, PaymentProvider, PaymentResultStatus, type IZotloCheckoutParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
+import { handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
+import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
-import { API } from "./api";
+import { CheckoutAPI } from "./api";
 import { deleteSession } from "./session";
 import { Logger } from "../lib/logger";
+import { COOKIE } from "./cookie";
 
 function preparePayload(payload: {
   providerKey: PaymentProvider;
@@ -85,7 +86,7 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
     if (registerType === 'phoneNumber') {
       subscriberId = subscriberId.replace(/[^0-9]/g, '');
     }
-    const response = await API.post("/payment/register", { subscriberId });
+    const response = await CheckoutAPI.post("/payment/register", { subscriberId });
     if (response?.meta?.errorCode) {
       params.events?.onFail?.({ message: response?.meta?.message, data: response?.meta })
     };
@@ -105,20 +106,39 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
   }
 }
 
-export async function handlePaymentSuccess(payload: { params: IZotloCheckoutParams; }) {
+export async function handlePaymentSuccess(payload: { config: FormConfig; params: IZotloCheckoutParams | IZotloCardParams; }) {
   try {
     setFormLoading(true);
-    const { params } = payload;
-    const { result, meta } = await API.get("/payment/detail");
+    const { config, params } = payload;
+    let result: PaymentDetail = {} as PaymentDetail;
 
-    if (meta?.errorCode) {
-      params.events?.onFail?.({ message: meta?.message, data: meta });
-      return null
+    if (config.cardUpdate) {
+      result = {
+        application: {
+          links: {
+            customerSupportUrl: config.customerSupportUrl || ''
+          }
+        }
+      } as PaymentDetail
+    } else {
+      const { result: res, meta } = await CheckoutAPI.get("/payment/detail");
+      result = res as PaymentDetail;
+  
+      if (meta?.errorCode) {
+        params.events?.onFail?.({ message: meta?.message, data: meta });
+        return null
+      }
     }
 
-    deleteSession({ useCookie: !!params.useCookie });
-    params.events?.onSuccess?.(result as PaymentDetail);
-    return result as PaymentDetail;
+    deleteSession({
+      useCookie: !!params.useCookie,
+      key: config.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID
+    });
+    params.events?.onSuccess?.({
+      ...result,
+      cardUpdate: ZOTLO_GLOBAL.cardUpdate
+    });
+    return result;
   } catch (e) {
     Logger.client?.captureException(e);
     return null;
@@ -138,7 +158,7 @@ async function handleCheckoutResponse(payload: {
   };
 }) {
   const { checkoutResponse, params, actions, refreshProviderConfigsFunction } = payload;
-  const { meta, result } = checkoutResponse || {};
+  const { meta } = checkoutResponse || {};
   if (meta?.errorCode) {
     if (actions?.errorAction) actions.errorAction();
     await refreshProviderConfigsFunction();
@@ -146,30 +166,10 @@ async function handleCheckoutResponse(payload: {
   }
 
   if (meta.httpStatus === 200) {
-    const { status, redirectUrl, payment } = result || {};
-    const returnUrl = payment?.returnUrl || '';
-    const currentUrl = globalThis?.location?.href || '';
-    const currentUrlBase = globalThis?.location.origin + globalThis?.location.pathname;
-    const returnUrlObj = new URL(params.returnUrl);
-    const returnUrlBase = returnUrlObj.origin + returnUrlObj.pathname;
-    const isSamePage = returnUrlBase === currentUrlBase;
-
-    if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && currentUrl) {
-      if (actions?.redirectAction) return actions.redirectAction();
-      if (!isSamePage) {
-        deleteSession({ useCookie: !!params.useCookie });
-      }
-      globalThis.location.href = redirectUrl;
-    }
-    if (status === PaymentResultStatus.COMPLETE && payment) {
-      if (actions?.completeAction) actions.completeAction();
-      if (returnUrl) {
-        if (!isSamePage) {
-          deleteSession({ useCookie: !!params.useCookie });
-        }
-        globalThis.location.href = returnUrl;
-      }
-    }
+    handleResponseRedirection({
+      response: checkoutResponse,
+      params
+    });
   }
 }
 
@@ -199,7 +199,7 @@ async function handleApplePayPayment(payload: {
 
     session.onvalidatemerchant = async (event: any) => {
       const sessionUrl = event.validationURL;
-      const { result, meta } = await API.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
+      const { result, meta } = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
       if (meta?.errorCode) {
         return params.events?.onFail?.({ message: meta?.message, data: meta });
       }
@@ -219,7 +219,7 @@ async function handleApplePayPayment(payload: {
         applePayToken,
       };
       try {
-        const checkoutResponse = await API.post("/payment/checkout", payload);
+        const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
         await handleCheckoutResponse({
           checkoutResponse,
           params,
@@ -287,7 +287,7 @@ async function handleGooglePayPayment(payload: {
       googlePayToken,
     }
 
-    const checkoutResponse = await API.post("/payment/checkout", checkoutPayload);
+    const checkoutResponse = await CheckoutAPI.post("/payment/checkout", checkoutPayload);
     await handleCheckoutResponse({
       checkoutResponse,
       params,
@@ -339,9 +339,8 @@ export async function sendPayment(paymentParams: {
     if (registerResponse?.meta?.errorCode) return;
 
     // Send payment
-    const checkoutResponse = await API.post("/payment/checkout", payload);
+    const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
     handleCheckoutResponse({ checkoutResponse, params, refreshProviderConfigsFunction });
-
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });
     Logger.client?.captureException(err);
