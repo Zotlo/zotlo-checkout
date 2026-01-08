@@ -70,7 +70,6 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
         consent: DefaultThemeConfig.design.consent,
         totalPriceColor: DefaultThemeConfig.design.totalPriceColor,
         button: {
-          ...DefaultThemeConfig.design.button,
           text: {}
         },
         footer: {
