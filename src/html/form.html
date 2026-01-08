@@ -10,6 +10,19 @@
     {{SUBSCRIBER_ID_EMAIL}}
     {{SUBSCRIBER_ID_PHONE}}
     {{ZIP_CODE}}
+    <% IF(SHOW_BILLING_FORM===true) %>
+    <div class="zotlo-checkout__billing">
+      {{BILLING_ACTIVATE}}
+      <div class="zotlo-checkout__billing__fields" {{BILLING_ATTRIBUTES}}>
+        {{BILLING_BUSINESS_NAME}}
+        {{BILLING_ADDRESS_LINE}}
+        <div class="zotlo-checkout__form__col2">
+          {{BILLING_CITY_TOWN}}
+          {{BILLING_TAX_ID}}
+        </div>
+      </div>
+    </div>
+    <% ENDIF %>
     {{AGREEMENT_CHECKBOX}}
     <% ENDIF %>
 
