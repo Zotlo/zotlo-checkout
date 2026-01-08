@@ -26,17 +26,8 @@
   <% ENDIF %>
   <div class="zotlo-checkout__payment-details__footer">
     <div>{{FOOTER}}</div>
-
     <% IF(FORM_TYPE==='CARD') %>
-    <div class="zotlo-checkout__footer">
-      {{DISCLAIMER}}
-      <div>
-        {{ZOTLO_LEGALS_DESC}}<br/>
-        <nav>
-          {{ZOTLO_LEGALS_LINKS}}
-        </nav>
-      </div>
-    </div>
+    {{FOOTER_COMMON}}
     <% ENDIF %>
   </div>
 </div>

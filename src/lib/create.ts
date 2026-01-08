@@ -12,6 +12,7 @@ import modalElement from '../html/modal.html?raw'
 import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
 import savedCardItemElement from '../html/saved-card-item.html?raw'
 import savedCardsFormElement from '../html/saved-cards-form.html?raw'
+import footerHTML from '../html/footer.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL } from "../utils";
 import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
@@ -520,6 +521,11 @@ export function preparePaymentDetailsSection(params: {
   });
 
   const footerInfo = prepareFooterInfo({ config });
+  const footerCommon = createFooter({
+    ...footerInfo,
+    SHOW_FOOTER_DESC: false,
+    PAYMENT_AGGREGATOR: '',
+  }) || '';
 
   return template(paymentDetailsElement, {
     FORM_TYPE: config.cardUpdate ? 'CARD' : 'CHECKOUT',
@@ -533,9 +539,7 @@ export function preparePaymentDetailsSection(params: {
     PAYMENT_AMOUNT_TITLE: $t('common.paymentAmount'),
     PAYMENT_AMOUNT_TEXT: paymentAmountText,
     FOOTER: paymentDetailsFooterElement,
-    DISCLAIMER: footerInfo.DISCLAIMER,
-    ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
-    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    FOOTER_COMMON: footerCommon,
   });
 }
 
@@ -712,5 +716,25 @@ export function createPaymentHeader(params: {
     SHOW_CLOSE_BUTTON: !!config.design.header?.close?.show && !!closeButtonUrl,
     CLOSE_BUTTON_URL: closeButtonUrl,
     CLOSE_BUTTON_TEXT: $t('common.close'),
+  })
+}
+
+export function createFooter(footerInfo: {
+  SHOW_FOOTER_DESC?: boolean;
+  PRICE_INFO: string;
+  FOOTER_DESC: string;
+  DISCLAIMER: string;
+  ZOTLO_LEGALS_DESC: string;
+  ZOTLO_LEGALS_LINKS: string;
+  PAYMENT_AGGREGATOR: string;
+}) {
+  return template(footerHTML, {
+    SHOW_FOOTER_DESC: !!footerInfo.SHOW_FOOTER_DESC,
+    PRICE_INFO: footerInfo.PRICE_INFO,
+    FOOTER_DESC: footerInfo.FOOTER_DESC,
+    DISCLAIMER: footerInfo.DISCLAIMER,
+    ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
+    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    PAYMENT_AGGREGATOR: footerInfo.PAYMENT_AGGREGATOR,
   })
 }
