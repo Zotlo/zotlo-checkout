@@ -146,7 +146,9 @@ export const ValidationRules = {
     }
     return true;
   },
-  zipCode(value: string) {
+  zipCode(value: string, params: any[]) {
+    const countryCode = params[0];
+    if (countryCode !== 'US') return true;
     const pattern = /^[\d-]*$/;
     const isValid = pattern.test(value);
     if (!isValid) return getValidationMessage('zipCode');
