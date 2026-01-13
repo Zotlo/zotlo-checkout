@@ -368,8 +368,11 @@ export function createCreditCardForm(params: {
             ...options.input,
             ...(!isRequired ? {
               placeholder: $t(`form.POSTAL_CODE.placeholder`),
-              'data-rules': undefined,  
-            } : {}),
+              'data-mask': undefined,
+              'data-rules': `zipCode:${countryCode}`,
+            } : {
+              'data-rules': `required|zipCode:${countryCode}`,
+            }),
           }
         });
         const countryInput = createInput({
