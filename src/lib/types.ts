@@ -280,6 +280,9 @@ export type PackageData = {
 export type SelectedPriceData = {
   type: string;
   currency: string;
+  quantity: number;
+  basePrice: string;
+  baseTrialPrice: string;
   price: string;
   trialPrice: string;
   dailyPrice: string;
@@ -331,6 +334,7 @@ export type PackageInfoType = {
   period: number;
   periodType: string;
   totalPayableAmount: string;
+  totalPayableBaseAmount: string;
   currency: string;
   condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
   state: keyof FormConfig['design']['button']['text'];

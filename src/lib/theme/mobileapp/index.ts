@@ -3,7 +3,7 @@ import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
 import { createButton, createCreditCardForm, createPaymentHeader } from '../../create'
-import { getPackageName } from '../../../utils/getPackageInfo';
+import { getPackageName, getQuantityInfo } from '../../../utils/getPackageInfo';
 import { prepareProvider } from './utils';
 
 export function generateThemeMobileApp(params: {
@@ -122,6 +122,7 @@ export function generateThemeMobileApp(params: {
     ADDITIONAL_TEXT: additionalText,
     ADDITIONAL_PRICE: additionalPrice,
     TOTAL_PRICE: totalPrice,
+    QUANTITY_INFO: getQuantityInfo(config),
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,

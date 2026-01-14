@@ -14,7 +14,7 @@ import savedCardItemElement from '../html/saved-card-item.html?raw'
 import savedCardsFormElement from '../html/saved-cards-form.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL } from "../utils";
-import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
+import { getPackagePaymentAmountText, getQuantityInfo } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData } from './types'
 import { FORM_ITEMS } from './fields'
@@ -426,7 +426,8 @@ export function createCreditCardForm(params: {
     CARD_SUBMIT: cardSubmit,
     CDN_URL: getCDNUrl(''),
     TOTAL_LABEL: $t('form.total.label'),
-    TOTAL_PRICE: `${totalPrice}`
+    TOTAL_PRICE: `${totalPrice}`,
+    QUANTITY_INFO: getQuantityInfo(config),
   })
 }
 
