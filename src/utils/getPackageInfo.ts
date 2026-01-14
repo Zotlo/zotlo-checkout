@@ -119,7 +119,7 @@ export function getPackagePeriodsInfo(config?: FormConfig) {
 
 export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUsed?: boolean, useBasePrices?: boolean }): string {
   const { paymentData } = config || {};
-  if (!paymentData?.package?.packageId) return '';
+  if (!paymentData?.package?.packageId) return '0.00 USD';
   const { isTrialUsed = false, useBasePrices = false } = options || {};
   const {
     packageType,
