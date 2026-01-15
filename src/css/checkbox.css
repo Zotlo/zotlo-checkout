@@ -1,5 +1,5 @@
 /* CHECKMARK */
-.zotlo-checkout .tw-checkmark {
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark {
   display: inline-block;
   height: 20px;
   width: 20px;
@@ -15,149 +15,149 @@
 }
 
 /* ERROR STATE */
-.zotlo-checkout .tw-checkmark.error:not(.disabled) {
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark.error:not(.disabled) {
   border-color: #E13023;
 }
 
 /* HOVER STATE */
-.zotlo-checkout *:not(:disabled):hover + .tw-checkmark:not(.error),
-.zotlo-checkout *:not(:disabled):hover > .byWrapper.tw-checkmark:not(.error),
-.zotlo-checkout .tw-checkmark:not(.disabled):hover:not(.error) {
+.zotlo-checkout *:not(:disabled):hover + .zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout *:not(:disabled):hover > .byWrapper.zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled):hover:not(.error) {
   border-color: #4329CC;
   background-color: #EFECFF;
   color: #1F0B88;
 }
 
 /* HOVER STATE (ON ERROR) */
-.zotlo-checkout *:not(:disabled):hover + .tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):hover > .byWrapper.tw-checkmark.error,
-.zotlo-checkout .tw-checkmark:not(.disabled):hover.error {
+.zotlo-checkout *:not(:disabled):hover + .zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):hover > .byWrapper.zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled):hover.error {
   border-color: #E13023;
   background-color: #FFF1F0;
   color: #9D1006;
 }
 
 /* FOCUS STATE */
-.zotlo-checkout *:not(:disabled):focus + .tw-checkmark,
-.zotlo-checkout *:not(:disabled):focus > .byWrapper.tw-checkmark,
-.zotlo-checkout .tw-checkmark:not(.disabled):focus {
+.zotlo-checkout *:not(:disabled):focus + .zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout *:not(:disabled):focus > .byWrapper.zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled):focus {
   --zc-ring-color: currentColor;
   background-color: white;
   background-repeat: no-repeat;
   box-shadow: 0 0 0 4px var(--zc-ring-color, currentColor);
 }
 
-.zotlo-checkout *:not(:disabled):focus + .tw-checkmark:not(.error),
-.zotlo-checkout *:not(:disabled):focus > .byWrapper.tw-checkmark:not(.error),
-.zotlo-checkout .tw-checkmark:not(.disabled):focus:not(.error) {
+.zotlo-checkout *:not(:disabled):focus + .zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout *:not(:disabled):focus > .byWrapper.zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled):focus:not(.error) {
   --zc-ring-color: #EFECFF;
   border-color: #4329CC;
   color: #4329CC;
 }
 
 /* FOCUS STATE (ON ERROR) */
-.zotlo-checkout *:not(:disabled):focus + .tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):focus > .byWrapper.tw-checkmark.error,
-.zotlo-checkout .tw-checkmark:not(.disabled):focus.error {
+.zotlo-checkout *:not(:disabled):focus + .zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):focus > .byWrapper.zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled):focus.error {
   --zc-ring-color: #FFF1F0;
   border-color: #E13023;
   color: #E13023;
 }
 
 /* FOCUS STATE WITH HOVER */
-.zotlo-checkout *:not(:disabled):focus:hover + .tw-checkmark:not(.error),
-.zotlo-checkout *:not(:disabled):focus:hover > .byWrapper.tw-checkmark:not(.error),
-.zotlo-checkout .tw-checkmark:not(.disabled):focus:hover:not(.error) {
+.zotlo-checkout *:not(:disabled):focus:hover + .zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout *:not(:disabled):focus:hover > .byWrapper.zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled):focus:hover:not(.error) {
   background-color: #EFECFF;
 }
 
 /* FOCUS STATE WITH HOVER (ON ERROR) */
-.zotlo-checkout *:not(:disabled):focus:hover + .tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):focus:hover > .byWrapper.tw-checkmark.error,
-.zotlo-checkout .tw-checkmark:not(.disabled):focus:hover.error {
+.zotlo-checkout *:not(:disabled):focus:hover + .zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):focus:hover > .byWrapper.zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled):focus:hover.error {
   background-color: #FFF1F0;
 }
 
 /* CHECKED STATE */
-.zotlo-checkout *:not(:disabled):checked + .tw-checkmark,
-.zotlo-checkout *:not(:disabled):checked > .byWrapper.tw-checkmark,
-.zotlo-checkout *:not(:disabled) > .byWrapper.tw-checkmark.checked,
-.zotlo-checkout .tw-checkmark:not(.disabled).checked,
-.zotlo-checkout .byWrapper.tw-checkmark:not(.disabled).checked {
+.zotlo-checkout *:not(:disabled):checked + .zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout *:not(:disabled):checked > .byWrapper.zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout *:not(:disabled) > .byWrapper.zotlo-checkout__checkbox-checkmark.checked,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked,
+.zotlo-checkout .byWrapper.zotlo-checkout__checkbox-checkmark:not(.disabled).checked {
   background-size: 12px;
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%23FFFFFF' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
 }
 
-.zotlo-checkout *:not(:disabled):checked + .tw-checkmark:not(.error),
-.zotlo-checkout *:not(:disabled):checked > .byWrapper.tw-checkmark:not(.error),
-.zotlo-checkout *:not(:disabled) > .byWrapper.tw-checkmark.checked:not(.error),
-.zotlo-checkout .tw-checkmark:not(.disabled).checked:not(.error),
-.zotlo-checkout .byWrapper.tw-checkmark:not(.disabled).checked:not(.error) {
+.zotlo-checkout *:not(:disabled):checked + .zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout *:not(:disabled):checked > .byWrapper.zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout *:not(:disabled) > .byWrapper.zotlo-checkout__checkbox-checkmark.checked:not(.error),
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked:not(.error),
+.zotlo-checkout .byWrapper.zotlo-checkout__checkbox-checkmark:not(.disabled).checked:not(.error) {
   border-color: #4329CC;
   background-color: #4329CC;
 }
 
 /* CHECKED STATE (ON ERROR) */
-.zotlo-checkout *:not(:disabled):checked + .tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):checked > .byWrapper.tw-checkmark.error,
-.zotlo-checkout *:not(:disabled) > .byWrapper.tw-checkmark.checked.error,
-.zotlo-checkout .tw-checkmark:not(.disabled).checked.error,
-.zotlo-checkout .byWrapper.tw-checkmark:not(.disabled).checked.error {
+.zotlo-checkout *:not(:disabled):checked + .zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):checked > .byWrapper.zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled) > .byWrapper.zotlo-checkout__checkbox-checkmark.checked.error,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked.error,
+.zotlo-checkout .byWrapper.zotlo-checkout__checkbox-checkmark:not(.disabled).checked.error {
   border-color: #E13023;
   background-color: #E13023;
 }
 
 /* CHECKED STATE WITH HOVER */
-.zotlo-checkout *:not(:disabled):checked:hover + .tw-checkmark,
-.zotlo-checkout *:not(:disabled):checked:hover > .byWrapper.tw-checkmark,
-.zotlo-checkout *:not(:disabled):hover > .byWrapper.tw-checkmark.checked,
-.zotlo-checkout .byWrapper.tw-checkmark:not(.disabled).checked:hover,
-.zotlo-checkout .tw-checkmark:not(.disabled).checked:hover {
+.zotlo-checkout *:not(:disabled):checked:hover + .zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout *:not(:disabled):checked:hover > .byWrapper.zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout *:not(:disabled):hover > .byWrapper.zotlo-checkout__checkbox-checkmark.checked,
+.zotlo-checkout .byWrapper.zotlo-checkout__checkbox-checkmark:not(.disabled).checked:hover,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked:hover {
   border-color: #1F0B88;
   background-color: #1F0B88;
 }
 
 /* CHECKED STATE WITH HOVER (ON ERROR) */
-.zotlo-checkout *:not(:disabled):checked:hover + .tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):checked:hover > .byWrapper.tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):hover > .byWrapper.tw-checkmark.checked.error,
-.zotlo-checkout .byWrapper.tw-checkmark:not(.disabled).checked:hover.error,
-.zotlo-checkout .tw-checkmark:not(.disabled).checked:hover.error {
+.zotlo-checkout *:not(:disabled):checked:hover + .zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):checked:hover > .byWrapper.zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):hover > .byWrapper.zotlo-checkout__checkbox-checkmark.checked.error,
+.zotlo-checkout .byWrapper.zotlo-checkout__checkbox-checkmark:not(.disabled).checked:hover.error,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked:hover.error {
   border-color: #9D1006;
   background-color: #9D1006;
 }
 
 /* CHECKED STATE WITH FOCUS */
-.zotlo-checkout *:not(:disabled):checked:focus + .tw-checkmark:not(.error),
-.zotlo-checkout *:not(:disabled):checked:focus > .byWrapper.tw-checkmark:not(.error),
-.zotlo-checkout *:not(:disabled):focus > .byWrapper.tw-checkmark.checked:not(.error),
-.zotlo-checkout .tw-checkmark:not(.disabled).checked:focus:not(.error) {
+.zotlo-checkout *:not(:disabled):checked:focus + .zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout *:not(:disabled):checked:focus > .byWrapper.zotlo-checkout__checkbox-checkmark:not(.error),
+.zotlo-checkout *:not(:disabled):focus > .byWrapper.zotlo-checkout__checkbox-checkmark.checked:not(.error),
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked:focus:not(.error) {
   background-color: #EFECFF;
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%234329CC' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
 }
 
 /* CHECKED STATE WITH FOCUS (ON ERROR) */
-.zotlo-checkout *:not(:disabled):checked:focus + .tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):checked:focus > .byWrapper.tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):focus > .byWrapper.tw-checkmark.checked.error,
-.zotlo-checkout .tw-checkmark:not(.disabled).checked:focus.error {
+.zotlo-checkout *:not(:disabled):checked:focus + .zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):checked:focus > .byWrapper.zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):focus > .byWrapper.zotlo-checkout__checkbox-checkmark.checked.error,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked:focus.error {
   background-color: #FFF1F0;
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%23E13023' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
 }
 
 /* CHECKED STATE WITH FOCUS AND HOVER (ON ERROR) */
-.zotlo-checkout *:not(:disabled):checked:focus:hover + .tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):checked:focus:hover > .byWrapper.tw-checkmark.error,
-.zotlo-checkout *:not(:disabled):focus:hover > .byWrapper.tw-checkmark.checked.error,
-.zotlo-checkout .tw-checkmark:not(.disabled).checked:focus:hover.error {
+.zotlo-checkout *:not(:disabled):checked:focus:hover + .zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):checked:focus:hover > .byWrapper.zotlo-checkout__checkbox-checkmark.error,
+.zotlo-checkout *:not(:disabled):focus:hover > .byWrapper.zotlo-checkout__checkbox-checkmark.checked.error,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark:not(.disabled).checked:focus:hover.error {
   border-color: #E13023;
 }
 
 /* CHECKED STATE WITH DISABLED */
-.zotlo-checkout *:checked:disabled + .tw-checkmark,
-.zotlo-checkout *:checked:disabled > .byWrapper.tw-checkmark,
-.zotlo-checkout *:disabled > .byWrapper.tw-checkmark.checked,
-.zotlo-checkout .tw-checkmark.checked.disabled {
+.zotlo-checkout *:checked:disabled + .zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout *:checked:disabled > .byWrapper.zotlo-checkout__checkbox-checkmark,
+.zotlo-checkout *:disabled > .byWrapper.zotlo-checkout__checkbox-checkmark.checked,
+.zotlo-checkout .zotlo-checkout__checkbox-checkmark.checked.disabled {
   background-color: #F6F7F9;
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='%23C3C9D5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.36642 7.71666C4.27753 7.71666 4.1942 7.70266 4.11642 7.67466C4.03865 7.64711 3.96642 7.6 3.89976 7.53333L1.03309 4.66666C0.910867 4.54444 0.852423 4.386 0.857756 4.19133C0.863534 3.99711 0.927534 3.83888 1.04976 3.71666C1.17198 3.59444 1.32753 3.53333 1.51642 3.53333C1.70531 3.53333 1.86087 3.59444 1.98309 3.71666L4.36642 6.1L10.0164 0.449996C10.1386 0.327774 10.2971 0.266663 10.4918 0.266663C10.686 0.266663 10.8442 0.327774 10.9664 0.449996C11.0886 0.572218 11.1498 0.73044 11.1498 0.924663C11.1498 1.11933 11.0886 1.27777 10.9664 1.4L4.83309 7.53333C4.76642 7.6 4.6942 7.64711 4.61642 7.67466C4.53865 7.70266 4.45531 7.71666 4.36642 7.71666Z' /%3E%3C/svg%3E%0A");
 }
@@ -191,13 +191,13 @@
   text-decoration: underline;
 }
 
-.zotlo-checkout__checkbox.disabled .tw-checkmark {
+.zotlo-checkout__checkbox.disabled .zotlo-checkout__checkbox-checkmark {
   background-color: #F6F7F9;
   pointer-events: none;
 }
 
-.zotlo-checkout__checkbox.error .tw-checkbox-label,
-.zotlo-checkout__checkbox.error .tw-checkbox-label a,
+.zotlo-checkout__checkbox.error .zotlo-checkout__checkbox-label,
+.zotlo-checkout__checkbox.error .zotlo-checkout__checkbox-label a,
 .zotlo-checkout__checkbox.error .tw-checkbox-hint,
 .zotlo-checkout__checkbox.error .tw-checkbox-hint a {
   color: #E13023 !important;
