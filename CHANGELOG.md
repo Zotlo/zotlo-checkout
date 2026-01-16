@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.10.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.10.0...v1.10.1)
+
+### 🩹 Fixes
+
+- Replace unmount with destroyFormInputs for proper cleanup in ZotloCard and ZotloCheckout ([c29ea88](https://github.com/Zotlo/zotlo-checkout/commit/c29ea88))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.10.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.9.1-1...v1.10.0)
