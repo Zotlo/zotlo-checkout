@@ -296,7 +296,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       }
 
       // Destroy everything before re-rendering
-      unmount();
+      destroyFormInputs();
 
       let form = generateTheme({ config });
       const style = createStyle(config);
@@ -592,6 +592,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
+    ZOTLO_GLOBAL.containerId = '';
   }
 
   function mount(id: string) {
