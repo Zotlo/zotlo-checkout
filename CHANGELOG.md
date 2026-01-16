@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.10.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.9.1-1...v1.10.0)
+
+### 🚀 Enhancements
+
+- Refactor to send all google data for payrails request ([b52b37d](https://github.com/Zotlo/zotlo-checkout/commit/b52b37d))
+- **Z3-5862:** Implemente billing form for checkout ([d521876](https://github.com/Zotlo/zotlo-checkout/commit/d521876))
+- **Z3-5862:** Make zipcode input as optional if user is not in US ([889e947](https://github.com/Zotlo/zotlo-checkout/commit/889e947))
+- **Z3-5862:** Send detected country code in billing info ([7c5583c](https://github.com/Zotlo/zotlo-checkout/commit/7c5583c))
+- **Z3-5862:** Update checkbox styles and HTML structure for consistency ([327c92a](https://github.com/Zotlo/zotlo-checkout/commit/327c92a))
+- **Z3-5862:** Make taxId as optional ([0123a4f](https://github.com/Zotlo/zotlo-checkout/commit/0123a4f))
+- **Z3-5862:** Add translation for country field ([77896dc](https://github.com/Zotlo/zotlo-checkout/commit/77896dc))
+- **Z3-5862:** Refactor billing field handling and validation logic ([a2a8b95](https://github.com/Zotlo/zotlo-checkout/commit/a2a8b95))
+- **Z3-5862:** Update zip code requirement logic based on configuration ([d1fe344](https://github.com/Zotlo/zotlo-checkout/commit/d1fe344))
+- **Z3-5862:** Remove validation and mask on zipcode input except US ([c06283a](https://github.com/Zotlo/zotlo-checkout/commit/c06283a))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.9.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.8.1...v1.9.0)
@@ -55,7 +77,7 @@
 ### ❤️ Contributors
 
 - Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
-- Yiğit Şahin
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
 
 ## v1.7.0
 
