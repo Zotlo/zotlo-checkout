@@ -1,10 +1,11 @@
 import Countries from '../countries.json';
-import { type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName } from '../lib/types';
+import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName } from '../lib/types';
 import { createAllCardsModal, createSavedCardItem } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
 import { template } from "./template";
 import { deleteSession } from './session';
+import { FORM_ITEMS } from '../lib/fields';
 
 export { getCDNUrl } from './getCDNUrl';
 export { useI18n } from './i18n';
@@ -40,6 +41,15 @@ export const ZOTLO_GLOBAL = {
     if (!this.container) return null;
     return this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement
   }
+}
+
+export function shouldSkipBillingFields(config: FormConfig) {
+  const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
+  const parentSelector = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
+  const billingToggleCheckbox = ZOTLO_GLOBAL?.formElement?.querySelector(`${parentSelector} input[name="${toggleName}"]`) as HTMLInputElement;
+  const skipBillingFields = !!billingToggleCheckbox && !billingToggleCheckbox?.checked;
+
+  return skipBillingFields;
 }
 
 export function getCountryCodeByNumber(phoneNumber: string | number, matchLength = true): string {

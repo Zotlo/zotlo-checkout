@@ -21,7 +21,8 @@ import {
   syncInputsOnTabs,
   handleSavedCardsEvents,
   getActiveSavedCardId,
-  ZOTLO_GLOBAL
+  ZOTLO_GLOBAL,
+  shouldSkipBillingFields
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -61,6 +62,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
   let destroyAgreementLinks = null as (() => void) | null;
   let destroySavedCardsEvents = null as (() => void) | null;
+  let destroyBillingFormEvents = null as (() => void) | null;
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
@@ -78,10 +80,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       validation.validate(true);
     }
 
+    const skipBillingFields = shouldSkipBillingFields(config);
     const validation = validateForm({
       providerKey,
       config,
-      validations
+      validations,
+      skipBillingFields
     });
     
     if (!validation.isValid) return;
@@ -97,7 +101,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
           formData: {
             packageId: params.packageId, 
             ...result, 
-            ...(cardId && { cardId }) 
+            ...(cardId && { cardId }),
           },
           params,
           config,
@@ -328,7 +332,45 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     } catch {
       setFormDisabled(false);
     }
-  }, 500)
+  }, 500);
+
+  function handleBillingForm() {
+    const formElement = ZOTLO_GLOBAL.formElement;
+    const toggleName = FORM_ITEMS.BILLING_ACTIVATE.input.name;
+    const tabContents = config.design.theme === DesignTheme.MOBILEAPP
+      ? [formElement]
+      : formElement?.querySelectorAll('[data-tab-content]');
+
+    const destroyList: (() => void)[] = [];
+
+    function handleOnTab(tabContent: HTMLElement) {
+      const checkbox = tabContent?.querySelector(`input[name="${toggleName}"]`);
+      const billingForm = tabContent?.querySelector('[data-billing-form]') as HTMLElement;
+
+      function onChangeCheckbox(e: Event) {
+        const isChecked = (e.target as HTMLInputElement).checked;
+        billingForm?.setAttribute('data-billing-form', isChecked ? 'true' : 'false');
+      }
+
+      function destroyEvents() {
+        checkbox?.removeEventListener('change', onChangeCheckbox);
+      }
+
+      checkbox?.addEventListener('change', onChangeCheckbox);
+
+      return destroyEvents;
+    }
+
+    tabContents?.forEach((tabContent) => {
+      destroyList.push(handleOnTab(tabContent as HTMLElement));
+    });
+
+    function destroy() {
+      destroyList?.forEach((destroyFn) => destroyFn());
+    }
+
+    return destroy;
+  }
 
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
@@ -462,6 +504,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       }
     }
 
+    destroyBillingFormEvents = handleBillingForm();
+
     formElement?.addEventListener('submit', handleForm);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
@@ -499,6 +543,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     validatorInstance?.clearRules();
     destroyAgreementLinks?.();
     destroySavedCardsEvents?.();
+    destroyBillingFormEvents?.();
   }
 
   function init() {

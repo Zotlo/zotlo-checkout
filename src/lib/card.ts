@@ -91,7 +91,8 @@ async function ZotloCard(params: IZotloCardParams) {
     const validation = validateForm({
       providerKey,
       config,
-      validations
+      validations,
+      skipBillingFields: false
     });
     
     if (!validation.isValid) return;

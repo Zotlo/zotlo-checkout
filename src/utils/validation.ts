@@ -1,6 +1,6 @@
-import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, ZOTLO_GLOBAL } from "./index";
+import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
 import { getCardMask } from "./getCardMask";
-import { FormConfig, PaymentProvider } from "../lib/types";
+import { type FormConfig, PaymentProvider } from "../lib/types";
 import { FORM_ITEMS } from "../lib/fields";
 
 type ValidationRule = (value: any, params: any[]) => true | string;
@@ -146,7 +146,9 @@ export const ValidationRules = {
     }
     return true;
   },
-  zipCode(value: string) {
+  zipCode(value: string, params: any[]) {
+    const countryCode = params[0];
+    if (countryCode !== 'US') return true;
     const pattern = /^[\d-]*$/;
     const isValid = pattern.test(value);
     if (!isValid) return getValidationMessage('zipCode');
@@ -243,9 +245,10 @@ export function inputValidation(input: HTMLInputElement, result: ValidationResul
 export function validateForm(params: {
   providerKey: PaymentProvider;
   config: FormConfig;
+  skipBillingFields?: boolean;
   validations: Record<string, ReturnType<typeof validateInput>>;
 }) {
-  const { providerKey, config, validations } = params;
+  const { providerKey, config, skipBillingFields, validations } = params;
   const errors = [];
   const creditCardFields = [
     FORM_ITEMS.CARD_NUMBER.input.name,
@@ -256,15 +259,26 @@ export function validateForm(params: {
   const sharedFields = [
     FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
     FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
-    FORM_ITEMS.ZIP_CODE.input.name
+
+    // Zip code for US
+    ...(config.general.isZipcodeRequired
+      ? [FORM_ITEMS.ZIP_CODE.input.name]
+      : []),
+
+    // Billing fields
+    FORM_ITEMS.BILLING_BUSINESS_NAME.input.name,
+    FORM_ITEMS.BILLING_ADDRESS_LINE.input.name,
+    FORM_ITEMS.BILLING_CITY_TOWN.input.name,
+    FORM_ITEMS.BILLING_TAX_ID.input.name,
   ];
   const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
 
   for (const validation of Object.values(validations)) {
     const name = validation.name;
+    const skipField = skipBillingFields && /^billing/.test(name);
     const shouldSkipValidation = isSavedCardPayment 
       ? creditCardFields.includes(name) && providerKey === PaymentProvider.CREDIT_CARD
-      : !sharedFields.includes(name) && providerKey !== PaymentProvider.CREDIT_CARD;
+      : skipField || (!sharedFields.includes(name) && providerKey !== PaymentProvider.CREDIT_CARD);
 
     const result = validation.validate(shouldSkipValidation);
     if (!result.isValid) {
@@ -288,6 +302,8 @@ export function detectAndValidateForm(params: {
 
   // Detect which form if active element is an input
   if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
+    const skipBillingFields = shouldSkipBillingFields(config);
+
     if (!container?.contains(el)) return PaymentProvider.CREDIT_CARD;
 
     // Reset form validations
@@ -302,10 +318,12 @@ export function detectAndValidateForm(params: {
 
     if (el.nodeName === 'BUTTON') {
       const providerKey = el.dataset.provider as PaymentProvider;
+
       validateForm({
         providerKey,
         config,
-        validations
+        validations,
+        skipBillingFields
       });
       container?.querySelector('button[data-provider="' + providerKey + '"]')?.setAttribute('type', 'submit');
       return providerKey;
@@ -318,7 +336,8 @@ export function detectAndValidateForm(params: {
       validateForm({
         providerKey: PaymentProvider.CREDIT_CARD,
         config,
-        validations
+        validations,
+        skipBillingFields
       });
       container?.querySelector('button[data-provider="creditCard"]')?.setAttribute('type', 'submit');
       return PaymentProvider.CREDIT_CARD;
@@ -333,7 +352,8 @@ export function detectAndValidateForm(params: {
         validateForm({
           providerKey,
           config,
-          validations
+          validations,
+          skipBillingFields
         });
         button.setAttribute('type', 'submit');
         return providerKey;
