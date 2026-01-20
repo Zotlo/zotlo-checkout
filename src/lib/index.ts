@@ -498,6 +498,18 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
                   result
                 });
               }
+
+              // Set state for subscriber ID and zip code
+              if ([
+                FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
+                FORM_ITEMS.SUBSCRIBER_ID_PHONE.input.name
+              ].includes(item.name)) {
+                ZOTLO_GLOBAL.data.subscriberId = item.value;
+              }
+
+              if (item.name === FORM_ITEMS.ZIP_CODE.input.name) {
+                ZOTLO_GLOBAL.data.zipCode = item.value;
+              }
             }
           });
         }
@@ -592,7 +604,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
-    ZOTLO_GLOBAL.containerId = '';
+    ZOTLO_GLOBAL.reset();
   }
 
   function mount(id: string) {

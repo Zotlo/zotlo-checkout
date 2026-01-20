@@ -347,7 +347,7 @@ async function ZotloCard(params: IZotloCardParams) {
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
-    ZOTLO_GLOBAL.containerId = '';
+    ZOTLO_GLOBAL.reset();
   }
 
   function mount(id: string) {
