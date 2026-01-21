@@ -326,20 +326,6 @@ export function createCreditCardForm(params: {
     let fieldContent = '';
     
     switch (key) {
-      case "AGREEMENT_CHECKBOX": {
-        if (!config.cardUpdate) {
-          fieldContent = config.general.isPolicyRequired
-            ? createCheckbox({
-                ...options,
-                label: $t(`form.${key}.label`, {
-                  distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
-                  info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
-                })
-              })
-            : '';
-        }
-      }
-        break;
       case "BILLING_ACTIVATE": {
         if (showBillingForm && businessPurchase?.canUserModify) {
           fieldContent = createCheckbox({
@@ -648,23 +634,6 @@ export function createPaymentSuccessForm(params: {
   }
 }
 
-export function createAgreementModal(params: {
-  key: 'distanceSalesAgreement' | 'informationForm';
-  config: FormConfig;
-}) {
-  const { key, config } = params;
-  const { $t } = useI18n(config.general.localization);
-
-  const bodyContent = `<iframe src="${config.general.documents[key]}" frameborder="0" width="100%" height="100%"></iframe>`;
-
-  return template(modalElement, {
-    MODAL_NAME: 'agreement',
-    TITLE: $t(`agreement.title.${key}`),
-    BODY_CONTENT: bodyContent,
-    SHOW_CLOSE_BUTTON: true,
-  })
-}
-
 export function createAllCardsModal(params: {
   config: FormConfig;
 }) {
@@ -727,8 +696,7 @@ export function createFooter(footerInfo: {
   PRICE_INFO: string;
   FOOTER_DESC: string;
   DISCLAIMER: string;
-  ZOTLO_LEGALS_DESC: string;
-  ZOTLO_LEGALS_LINKS: string;
+  ZOTLO_LEGALS_TEXT: string;
   PAYMENT_AGGREGATOR: string;
 }) {
   return template(footerHTML, {
@@ -736,8 +704,7 @@ export function createFooter(footerInfo: {
     PRICE_INFO: footerInfo.PRICE_INFO,
     FOOTER_DESC: footerInfo.FOOTER_DESC,
     DISCLAIMER: footerInfo.DISCLAIMER,
-    ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
-    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    ZOTLO_LEGALS_TEXT: footerInfo.ZOTLO_LEGALS_TEXT,
     PAYMENT_AGGREGATOR: footerInfo.PAYMENT_AGGREGATOR,
   })
 }
