@@ -370,8 +370,12 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
     PRICE_INFO: '',
     FOOTER_DESC: $t('footer.desc'),
     DISCLAIMER: '',
-    ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`,
+    ZOTLO_LEGALS_TEXT: $t('footer.zotlo.legals.alltext', {
+      termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
+      privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
+      zotloTerms: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a>`,
+      zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+    }),
     PAYMENT_AGGREGATOR: config.general.countryCode === 'RU'
       ? $t('footer.zotlo.aggregator', {
         here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`
@@ -385,15 +389,7 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
     });
   } else {
     const footerPriceInfo = getFooterPriceInfo(config);
-    const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
-      ? $t('footer.disclaimer', {
-        termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
-        privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
-      })
-      : '';
-
     footerInfo.PRICE_INFO = footerPriceInfo;
-    footerInfo.DISCLAIMER = disclaimer && `<div>${disclaimer}</div>`
   }
 
   return footerInfo;

@@ -15,8 +15,7 @@ export function generateThemeMobileApp(params: {
     PRICE_INFO: string;
     FOOTER_DESC: string;
     DISCLAIMER: string;
-    ZOTLO_LEGALS_DESC: string;
-    ZOTLO_LEGALS_LINKS: string;
+    ZOTLO_LEGALS_TEXT: string;
     PAYMENT_AGGREGATOR: string;
   };
 }) {
