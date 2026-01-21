@@ -10,6 +10,7 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
   const periodsInfo = getPackagePeriodsInfo(config);
   const pricesInfo = getPackagePrices(config);
   const totalPayableAmount = getTotalPayableAmount(config, { isTrialUsed });
+  const totalPayableBaseAmount = getTotalPayableAmount(config, { isTrialUsed, useBasePrices: true });
   const condition = getPackageCondition(config, { isTrialUsed });
   const state = getPackageState(config, { isTrialUsed });
   const discount = getDiscountPrices(config, totalPayableAmount);
@@ -19,6 +20,7 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
     ...periodsInfo,
     ...pricesInfo,
     totalPayableAmount,
+    totalPayableBaseAmount,
     condition,
     state,
     discount,
@@ -26,13 +28,17 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
   };
 }
 
+export function getQuantityInfo(config: FormConfig) {
+  const { $t } = useI18n(config.general.localization);
+  const quantity = config?.settings?.quantitySetting?.quantity || 1;
+  const templateParams = getPackageTemplateParams(config);
+  if (+quantity <= 1) return "";
+  return template($t('form.quantity.info'), templateParams);
+}
+
 export function getDiscountPrices(config?: FormConfig, defaultPrice?: string) {
-  const { customPrice, customCurrency } = config?.general || {};
   const { discountPrice, originalPrice, totalPrice } = config?.paymentData?.discount || {};
   let currency = config?.paymentData?.selectedPrice?.currency || '';
-  
-  const hasCustomPrice = !!customPrice && !!customCurrency;
-  if (hasCustomPrice) currency = customCurrency;
 
   defaultPrice = (defaultPrice || `0.00 ${currency}`);
 
@@ -46,23 +52,26 @@ export function getDiscountPrices(config?: FormConfig, defaultPrice?: string) {
 export function getPackagePrices(config?: FormConfig) {
   const { paymentData } = config || {};
   const { packageType, trialPackageType } = paymentData?.package || {};
-  const { price, currency = '', trialPrice = '', dailyPrice, weeklyPrice } = paymentData?.selectedPrice || {};
-  const { customPrice, customCurrency } = config?.general || {};
-  const hasCustomPrice = !!customPrice && !!customCurrency;
+  const { price, currency = '', trialPrice = '', dailyPrice, weeklyPrice, basePrice, baseTrialPrice } = paymentData?.selectedPrice || {};
 
-  const priceValue = hasCustomPrice ? customPrice : price;
-  const currencyValue = hasCustomPrice ? customCurrency : currency;
-
+  const priceValue = price;
+  const currencyValue = currency;
   let trialPriceValue = '0.00';
   if (packageType === PackageType.SUBSCRIPTION && trialPackageType === TrialPackageType.STARTING_PRICE) {
     trialPriceValue = trialPrice;
   }
 
+  function formatPrice(value?: string | number) {
+    return value ? `${(+value)?.toFixed(2)} ${currencyValue}` : '';
+  }
+
   return {
-    price: `${(priceValue ? +priceValue : 0)?.toFixed(2)} ${currencyValue}`,
-    trialPrice: `${trialPriceValue} ${currencyValue}`,
-    dailyPrice: `${dailyPrice} ${currencyValue}`,
-    weeklyPrice: `${weeklyPrice} ${currencyValue}`,
+    basePrice: formatPrice(basePrice),
+    baseTrialPrice: formatPrice(baseTrialPrice),
+    price: formatPrice(priceValue),
+    trialPrice: formatPrice(trialPriceValue),
+    dailyPrice: formatPrice(dailyPrice),
+    weeklyPrice: formatPrice(weeklyPrice),
     currency: currencyValue,
   };
 }
@@ -108,36 +117,33 @@ export function getPackagePeriodsInfo(config?: FormConfig) {
   }
 }
 
-export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUsed?: boolean }) {
+export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUsed?: boolean, useBasePrices?: boolean }): string {
   const { paymentData } = config || {};
-  if (!paymentData?.package?.packageId) return '';
-  const { isTrialUsed = false } = options || {};
+  if (!paymentData?.package?.packageId) return '0.00 USD';
+  const { isTrialUsed = false, useBasePrices = false } = options || {};
   const {
     packageType,
     trialPackageType,
   } = paymentData?.package || {};
-  const { price, trialPrice, currency } = getPackagePrices(config);
-  const { customPrice, customCurrency } = config?.general || {};
-  
-  const hasCustomPrice = !!customPrice && !!customCurrency;
-  if (hasCustomPrice) return `${customPrice} ${customCurrency}`;
+  const { price, trialPrice, basePrice, baseTrialPrice, currency } = getPackagePrices(config);
 
-  let priceValue = price;
+  let finalAmount = useBasePrices ? basePrice : price;
+  const trialPriceValue = useBasePrices ? baseTrialPrice : trialPrice;
   if (packageType === PackageType.SUBSCRIPTION && !isTrialUsed) {
     switch (trialPackageType) {
       case TrialPackageType.FREE_TRIAL: {
-        priceValue = `0.00 ${currency}`;
+        finalAmount = `0.00 ${currency}`;
         break;
       }
       case TrialPackageType.STARTING_PRICE: {
-        priceValue = trialPrice;
+        finalAmount = trialPriceValue;
         break;
       }
       default:
         break;
     }
   }
-  return `${priceValue}`;
+  return `${finalAmount}`;
 }
 
 function getPackageCondition(config?: FormConfig, options?: { isTrialUsed?: boolean }):PackageInfoType['condition'] {
@@ -194,6 +200,8 @@ export function getPackageTemplateParams(config: FormConfig) {
   const { $t } = useI18n(config.general.localization);
 
   return {
+    QUANTITY: config?.settings?.quantitySetting?.quantity || 1,
+    UNIT_PRICE: packageInfo?.totalPayableBaseAmount || "",
     PRICE: packageInfo?.price || "",
     TRIAL_PRICE: packageInfo?.trialPrice || "",
     DAILY_PRICE: packageInfo?.dailyPrice || "",

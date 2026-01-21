@@ -116,6 +116,11 @@ export interface IZotloCheckoutParams {
   /** Show saved credit cards if the user has any saved cards. Default is `false`. (To use this feature contact with support, a permission must be granted.) */
   showSavedCards?: boolean;
 
+  /** You can set a default quantity for the purchase */
+  quantitySetting?: {
+    quantity: number;
+  };
+
   useCookie?: boolean;
 }
 
@@ -252,7 +257,7 @@ export type FormSetting = {
   registerType: 'email' | 'phoneNumber' | 'other';
   hideSubscriberIdIfAlreadySet: boolean;
   allowSubscriberIdEditing: boolean;
-  quantitySetting: {
+  quantitySetting?: {
     quantity: string | number;
     allowUserModify: boolean;
     min: string | number;
@@ -275,6 +280,9 @@ export type PackageData = {
 export type SelectedPriceData = {
   type: string;
   currency: string;
+  quantity: number;
+  basePrice: string;
+  baseTrialPrice: string;
   price: string;
   trialPrice: string;
   dailyPrice: string;
@@ -327,6 +335,7 @@ export type PackageInfoType = {
   period: number;
   periodType: string;
   totalPayableAmount: string;
+  totalPayableBaseAmount: string;
   currency: string;
   condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
   state: keyof FormConfig['design']['button']['text'];

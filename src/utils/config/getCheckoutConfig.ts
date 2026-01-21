@@ -42,6 +42,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     customParameters,
     useCookie = false,
     showSavedCards,
+    quantitySetting,
   } = params || {};
 
   const payload = {
@@ -50,6 +51,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     ...(showSavedCards !== undefined && { showSavedCards }),
     ...(subscriberId && { subscriberId }),
     ...(customParameters && typeof customParameters === 'object' && { customParameters: JSON.stringify(customParameters) }),
+    ...(quantitySetting && { quantitySetting }),
   };
 
   const reqConfig = { headers: { Language: language } };
@@ -126,7 +128,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       hideSubscriberIdIfAlreadySet: (initData?.subscriberId && !!initData?.showSavedCards)
         ? initData?.registerType !== 'other'
         : !!+initData?.hideSubscriberIdIfAlreadySet,
-      quantitySetting: initData?.quantitySetting || {},
+      quantitySetting: initData?.quantitySetting || {} as InitResult['quantitySetting'],
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);
