@@ -284,6 +284,7 @@ export function createCreditCardForm(params: {
       'data-billing-form': showBillingFields ? 'true' : 'false',
     }),
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
+    QUANTITY_INFO: getQuantityInfo(config),
   });
 
   let cardTop = '';
@@ -427,7 +428,6 @@ export function createCreditCardForm(params: {
     CDN_URL: getCDNUrl(''),
     TOTAL_LABEL: $t('form.total.label'),
     TOTAL_PRICE: `${totalPrice}`,
-    QUANTITY_INFO: getQuantityInfo(config),
   })
 }
 
