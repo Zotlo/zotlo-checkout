@@ -74,14 +74,6 @@ export const FORM_ITEMS = {
       'data-mask': /^[\d-]*$/,
     }
   },
-  AGREEMENT_CHECKBOX: {
-    label: 'I read and agree to <a target="_blank" href="#">distance sales agreement</a> and <a href="#" target="_blank">information form</a>',
-    className: 'zotlo-checkout__agreement',
-    input: {
-      name: 'acceptPolicy',
-      'data-rules': 'required',
-    }
-  },
   SAVE_CARD_CHECKBOX: {
     label: 'Pay faster next time with this card',
     className: 'zotlo-checkout__save-card',

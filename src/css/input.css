@@ -39,7 +39,7 @@
   color: #E13023;
 }
 .zotlo-checkout__hint:empty {
-  display: none;
+  display: none !important;
 }
 
 .zotlo-checkout__input {

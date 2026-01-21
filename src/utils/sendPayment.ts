@@ -13,7 +13,7 @@ function preparePayload(payload: {
   config: FormConfig
 }) {
   const { providerKey, formData, params, config } = payload;
-  const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV, zipCode, saveCard, cardId = 0 } = formData || {};
+  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, zipCode, saveCard, cardId = 0 } = formData || {};
   const { returnUrl } = params || {};
   const showSavedCards = config.general.showSavedCards;
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
