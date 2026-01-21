@@ -7,6 +7,8 @@ import packageJson from './package.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const modeParam = process.argv.find((arg) => arg === '--mode');
+const mode = modeParam ? process.argv[process.argv.indexOf(modeParam) + 1] : 'production';
 const entryPoints = [
   { entry: 'src/zotlo-checkout.ts', name: 'ZotloCheckout'},
   { entry: 'src/zotlo-card.ts', name: 'ZotloCard'}
@@ -18,6 +20,7 @@ for await (const [index, item] of Object.entries(entryPoints)) {
       __APP_VERSION__: JSON.stringify(packageJson.version),
       __APP_NAME__: JSON.stringify(packageJson.name)
     },
+    mode,
     build: {
       lib: {
         name: item.name,
