@@ -71,7 +71,7 @@ function preparePayload(payload: {
 
       if (
         !!config?.paymentData?.sandboxPayment &&
-        [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY, PaymentProvider.PAYPAL].includes(providerKey)
+        [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY].includes(providerKey)
       ) {
         (data as any).transactionId = (config?.providerConfigs as any)?.[providerKey]?.transactionId || "";
         (data as any)[`${providerKey}Token`] = 'aaaaaa';
@@ -327,117 +327,6 @@ async function handleGooglePayPayment(payload: {
     // Prevent user closing form error
     if (error?.toString()?.includes("AbortError")) return;
     handlePaymentErrorMessage(error, params, "Google Pay payment process failed");
-  }
-}
-
-export async function renderPaypalButton(payload: {
-  params: IZotloCheckoutParams;
-  config: FormConfig;
-  refreshProviderConfigs: () => Promise<void>;
-  validateForm?: (providerKey: PaymentProvider) => {
-    isValid: boolean;
-    errors: Record<string, any>[];
-  };
-  getFormValues?: () => Record<string, any>;
-  forceRender?: boolean;
-}) {
-  const {
-    params,
-    config,
-    refreshProviderConfigs,
-    validateForm,
-    getFormValues,
-    forceRender = false,
-  } = payload || {};
-
-  try {
-    if (!config.paymentData?.useNewPayPal) return;
-    const paypal = (window as any)?.paypal;
-    const paypalButtonContainer = document.getElementById('paypal-button');
-    if (!paypalButtonContainer) return;
-    const hasExistingButton = paypalButtonContainer?.childElementCount > 0;
-    if ((hasExistingButton && !forceRender) || !paypal) return;
-    paypalButtonContainer.innerHTML = '';
-
-    const paypalConfig = config?.providerConfigs?.[PaymentProvider.PAYPAL];
-    const transactionId = paypalConfig?.transactionId;
-    const returnUrl = params?.returnUrl || '';
-    let subscriberId = "";
-    let formPayload = {} as any;
-    paypal.Buttons({
-      style: {
-          layout: 'vertical',
-          color: 'gold',
-          shape: 'rect',
-          tagline: false,
-          borderRadius: 8,
-          disableMaxHeight: true,
-      },
-      fundingSource: paypal.FUNDING.PAYPAL,
-      createBillingAgreement: async function (_data:any, _actions:any) {
-        try {
-          const { result, meta } = await CheckoutAPI.post("/payment/authorize", { transactionId, returnUrl, providerKey: PaymentProvider.PAYPAL });
-          if (meta?.errorCode) return params?.events?.onFail?.({ message: meta?.message, data: meta });
-          return result?.tokenId;
-        } catch (error) {
-          handlePaymentErrorMessage(error, params, "Paypal button process failed on createBillingAgreement");
-        }
-      },
-      onClick: async function (_data:any, actions:any) {
-        const validation = validateForm?.(PaymentProvider.PAYPAL);
-        if (!validation?.isValid) return actions.reject();
-        setFormLoading(true);
-        const formData = getFormValues?.() || {};
-        formPayload = preparePayload({ providerKey: PaymentProvider.PAYPAL, formData, params, config });
-        subscriberId = formData?.subscriberId || "";
-
-        const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
-        if (registerResponse?.meta?.errorCode) {
-          setFormLoading(false);
-          return actions.reject();
-        }
-
-        const isSandboxPayment = !!config?.paymentData?.sandboxPayment;
-        if (isSandboxPayment) {
-          const checkoutResponse = await CheckoutAPI.post("/payment/checkout", formPayload);
-          await handleCheckoutResponse({
-            checkoutResponse, 
-            params, 
-            refreshProviderConfigsFunction: refreshProviderConfigs 
-          });
-          setFormLoading(false);
-          return actions.reject();
-        }
-
-        return actions.resolve();
-      },
-      onApprove: async function (paypalData:any) {
-        const checkoutPayload = {
-          ...formPayload,
-          transactionId,
-          paypalToken: JSON.stringify(paypalData),
-        };
-        try {
-          const checkoutResponse = await CheckoutAPI.post("/payment/checkout", checkoutPayload);
-          await handleCheckoutResponse({
-            checkoutResponse,
-            params,
-            refreshProviderConfigsFunction: refreshProviderConfigs,
-          });
-        } finally {
-          setFormLoading(false);
-        }
-      },
-      onError: function (err:any) {
-        setFormLoading(false);
-        handlePaymentErrorMessage(err, params, "Paypal buttons error occurred");
-      },
-      onCancel() {
-        setFormLoading(false);
-      }
-    }).render('#paypal-button');
-  } catch (err: any) {
-    handlePaymentErrorMessage(err, params, "Paypal buttons error caught");
   }
 }
 
