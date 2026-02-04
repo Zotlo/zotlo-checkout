@@ -30,7 +30,6 @@ import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
-import { renderPaypalButton } from "../utils/sendPayment";
 import { createPaymentSuccessForm } from "./create";
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
@@ -65,26 +64,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   let destroySavedCardsEvents = null as (() => void) | null;
   let destroyBillingFormEvents = null as (() => void) | null;
 
-  function handleRenderPaypalButton(payload: { config: FormConfig; forceRender?: boolean }) {
-    const { config, forceRender = false } = payload;
-    renderPaypalButton({
-      config,
-      params,
-      validateForm: (providerKey: any) => {
-        return validateForm({
-          providerKey,
-          config,
-          validations
-        })
-      },
-      refreshProviderConfigs,
-      forceRender
-    });
-  }
-
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
-    handleRenderPaypalButton({ config, forceRender: true });
   }
 
   async function refreshPaymentInitData() {
@@ -462,7 +443,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       const { destroy: destroyFn } = handleSavedCardsEvents({ config });
       destroySavedCardsEvents = destroyFn;
       renderGooglePayButton(config);
-      handleRenderPaypalButton({ config });
     }
 
     const submitButtons = container?.querySelectorAll('button[data-provider]');

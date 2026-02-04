@@ -155,11 +155,7 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
 
 export async function getProvidersConfigData(paymentInitData:FormPaymentData, returnUrl: string) {
   const { providers = {} as Record<PaymentProvider, boolean> } = paymentInitData || {};
-  const providersHasConfig = [
-    PaymentProvider.APPLE_PAY, 
-    PaymentProvider.GOOGLE_PAY,
-    ...(!!paymentInitData?.useNewPayPal ? [PaymentProvider.PAYPAL] : [])
-  ];
+  const providersHasConfig = [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY];
   const providerKeys = providersHasConfig.filter(key => !!providers[key]);
   if (!providerKeys?.length) return {};
   const promises = providerKeys.map((providerKey) => getProviderConfig(providerKey as PaymentProvider, returnUrl));
@@ -213,8 +209,6 @@ export async function getProvidersConfig(paymentInitData: FormPaymentData, retur
     totalPriceStatus: 'FINAL',
     totalPrice: price
   }
-  // Paypal
-  const paypalConfig = configData?.configs?.paypal || {};
 
   return {
     [PaymentProvider.APPLE_PAY]: {
@@ -246,6 +240,5 @@ export async function getProvidersConfig(paymentInitData: FormPaymentData, retur
       tokenization: googlePayTokenizationSpecification,
       transactionId: googlePayConfig?.transactionId,
     },
-    [PaymentProvider.PAYPAL]: { ...paypalConfig } 
   } as ProviderConfigs
 }
