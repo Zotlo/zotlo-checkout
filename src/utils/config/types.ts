@@ -36,6 +36,7 @@ export type InitResult = {
   };
   integrations?: FormConfig['integrations'];
   showSavedCards: boolean;
+  enableDiscountCodeEntry: boolean;
 };
 
 export type CardInitResult = {
