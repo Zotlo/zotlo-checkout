@@ -52,7 +52,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       style: params.style,
       customParameters: params.customParameters,
       useCookie: !!params?.useCookie,
-      showSavedCards: params?.showSavedCards
+      showSavedCards: params?.showSavedCards,
+      enableDiscountCodeEntry: params?.enableDiscountCodeEntry
     });
     await refreshProviderConfigs();
   }
