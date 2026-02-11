@@ -104,6 +104,9 @@ export interface IZotloCheckoutParams {
   /** (Optional) The language code for the checkout form, e.g., `en`, `fr`, `pt_br`. */
   language?: string;
 
+  /** (Optional) Enable or disable the discount code entry field in the checkout form. Default is `false`. */
+  enableDiscountCodeEntry?: boolean;
+
   /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
   style?: IZotloCheckoutStyle;
 
@@ -264,6 +267,7 @@ export type FormSetting = {
     max: string | number;
     stepSize: string | number;
   };
+  enableDiscountCodeEntry?: boolean;
 };
 
 export type PackageData = {
