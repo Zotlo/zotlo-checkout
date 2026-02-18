@@ -38,6 +38,11 @@
           <td>{{STATIC_TOTAL}}</td>
           <td data-total-price class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
         </tr>
+        <% IF(QUANTITY_INFO) %>
+          <tr class="zotlo-checkout__total__quantity-info-table-row">
+            <td colspan="2"><div class="zotlo-checkout__total__quantity-info" data-quantity-info>{{QUANTITY_INFO}}</div></td>
+          </tr>
+        <% ENDIF %>
       </tfoot>
     </table>
   </div>

@@ -208,11 +208,29 @@
 
 .zotlo-checkout__total {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.zotlo-checkout__total__price-info {
+  display: flex;
   justify-content: space-between;
-  margin-top: 16px;
   color: var(--zc-form-totalPrice-color);
   font-size: 18px;
   font-weight: 600;
+}
+
+.zotlo-checkout__total__quantity-info {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 14px;
+  color: #78728C;
+  text-align: left;
+}
+
+.zotlo-checkout__total__quantity-info-table-row td {
+  padding-top: 0 !important;
 }
 
 .zotlo-checkout__total--basic {
@@ -232,7 +250,7 @@
 }
 
 .zotlo-checkout__cardSubmit {
-  margin-top: 32px;
+  margin-top: 16px;
 }
 
 .zotlo-checkout__button.provider {
