@@ -258,7 +258,6 @@ export function validateForm(params: {
   ];
   const sharedFields = [
     FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
-    FORM_ITEMS.AGREEMENT_CHECKBOX.input.name,
 
     // Zip code for US
     ...(config.general.isZipcodeRequired
