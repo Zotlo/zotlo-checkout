@@ -14,6 +14,10 @@ type Country = typeof Countries[0];
 
 export const ZOTLO_GLOBAL = {
   cardUpdate: false,
+  data: {
+    subscriberId: '',
+    zipCode: '',
+  },
   checkout: {
     containerId: '',
   },
@@ -40,6 +44,12 @@ export const ZOTLO_GLOBAL = {
   get formElement() {
     if (!this.container) return null;
     return this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement
+  },
+
+  reset() {
+    this.data.subscriberId = '';
+    this.data.zipCode = '';
+    this.containerId = '';
   }
 }
 
@@ -334,16 +344,22 @@ export async function handlePriceChangesBySubscriptionStatus(config: FormConfig)
 export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
   setTimeout(() => {
     inputNames.forEach(inputName => {
-      const cardInput = document?.querySelector(`[data-tab-content="creditCard"] input[name="${inputName}"]`) as HTMLInputElement;
-      const providersInput = document?.querySelector(`[data-tab-content="subscriberId"] input[name="${inputName}"]`) as HTMLInputElement;
+      const cardInput = ZOTLO_GLOBAL.formElement?.querySelector(`[data-tab-content="creditCard"] input[name="${inputName}"]`) as HTMLInputElement;
+      const providersInputs = ZOTLO_GLOBAL.formElement?.querySelectorAll<HTMLInputElement>(`[data-tab-content="subscriberId"] input[name="${inputName}"]`);
       const isCreditCardTab = tabName === PaymentProvider.CREDIT_CARD;
+
       // Sync inputs based on the active tab and trigger blur event to update validation
-      if (isCreditCardTab && cardInput) {
-        cardInput.value = providersInput?.value;
-        if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
-      } else if (providersInput) {
-        providersInput.value = cardInput?.value;
-        if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
+      if (Object.prototype.hasOwnProperty.call(ZOTLO_GLOBAL.data, inputName)) {
+        const value = (ZOTLO_GLOBAL.data as any)[inputName] || '';
+        if (isCreditCardTab && cardInput) {
+          cardInput.value = value;
+          if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
+        } else if (providersInputs) {
+          providersInputs?.forEach((providersInput) => {
+            providersInput.value = value;
+            if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
+          });
+        }
       }
     });
   }, 0);
