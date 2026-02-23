@@ -239,6 +239,6 @@ export async function getProvidersConfig(paymentInitData: FormPaymentData, retur
       },
       tokenization: googlePayTokenizationSpecification,
       transactionId: googlePayConfig?.transactionId,
-    }
+    },
   } as ProviderConfigs
 }
