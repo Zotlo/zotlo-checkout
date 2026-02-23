@@ -14,6 +14,10 @@ type Country = typeof Countries[0];
 
 export const ZOTLO_GLOBAL = {
   cardUpdate: false,
+  data: {
+    subscriberId: '',
+    zipCode: '',
+  },
   checkout: {
     containerId: '',
   },
@@ -40,6 +44,12 @@ export const ZOTLO_GLOBAL = {
   get formElement() {
     if (!this.container) return null;
     return this.container?.querySelector('form.zotlo-checkout') as HTMLFormElement
+  },
+
+  reset() {
+    this.data.subscriberId = '';
+    this.data.zipCode = '';
+    this.containerId = '';
   }
 }
 
@@ -173,7 +183,7 @@ export const debounce: any = (func: any, waitFor = 300) => {
 export function setFormDisabled(disabled = true) {
   const formElement = ZOTLO_GLOBAL.formElement;
   const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
-  const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox') as NodeListOf<HTMLElement>;
+  const wrappers = formElement?.querySelectorAll('.zotlo-checkout__input, .zotlo-checkout__checkbox, .zotlo-checkout__payment-provider') as NodeListOf<HTMLElement>;
   for (const wrapper of wrappers) {
     if (disabled) {
     wrapper.classList.add('disabled');
@@ -334,16 +344,22 @@ export async function handlePriceChangesBySubscriptionStatus(config: FormConfig)
 export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
   setTimeout(() => {
     inputNames.forEach(inputName => {
-      const cardInput = document?.querySelector(`[data-tab-content="creditCard"] input[name="${inputName}"]`) as HTMLInputElement;
-      const providersInput = document?.querySelector(`[data-tab-content="subscriberId"] input[name="${inputName}"]`) as HTMLInputElement;
+      const cardInput = ZOTLO_GLOBAL.formElement?.querySelector(`[data-tab-content="creditCard"] input[name="${inputName}"]`) as HTMLInputElement;
+      const providersInputs = ZOTLO_GLOBAL.formElement?.querySelectorAll<HTMLInputElement>(`[data-tab-content="subscriberId"] input[name="${inputName}"]`);
       const isCreditCardTab = tabName === PaymentProvider.CREDIT_CARD;
+
       // Sync inputs based on the active tab and trigger blur event to update validation
-      if (isCreditCardTab && cardInput) {
-        cardInput.value = providersInput?.value;
-        if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
-      } else if (providersInput) {
-        providersInput.value = cardInput?.value;
-        if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
+      if (Object.prototype.hasOwnProperty.call(ZOTLO_GLOBAL.data, inputName)) {
+        const value = (ZOTLO_GLOBAL.data as any)[inputName] || '';
+        if (isCreditCardTab && cardInput) {
+          cardInput.value = value;
+          if (cardInput.value) cardInput?.dispatchEvent(new Event('blur'));
+        } else if (providersInputs) {
+          providersInputs?.forEach((providersInput) => {
+            providersInput.value = value;
+            if (providersInput.value) providersInput?.dispatchEvent(new Event('blur'));
+          });
+        }
       }
     });
   }, 0);
@@ -373,13 +389,24 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
   const privacyUrl = config.general.privacyUrl;
   const tosUrl = config.general.tosUrl;
   const zotloUrls = config?.general?.zotloUrls || {};
+  const PaymentAggregator = 'https://3p-assets.cdnztl.com/docs/2025/09/10/jigle-payment-terms-ru.pdf'
 
   const footerInfo = {
+    SHOW_FOOTER_DESC: true,
     PRICE_INFO: '',
     FOOTER_DESC: $t('footer.desc'),
     DISCLAIMER: '',
-    ZOTLO_LEGALS_DESC: $t('footer.zotlo.legals.desc'),
-    ZOTLO_LEGALS_LINKS: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a><a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+    ZOTLO_LEGALS_TEXT: $t('footer.zotlo.legals.alltext', {
+      termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
+      privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
+      zotloTerms: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a>`,
+      zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+    }),
+    PAYMENT_AGGREGATOR: config.general.countryCode === 'RU'
+      ? $t('footer.zotlo.aggregator', {
+        here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`
+      }) 
+      : ''
   }
 
   if (ZOTLO_GLOBAL.cardUpdate) {
@@ -388,15 +415,7 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
     });
   } else {
     const footerPriceInfo = getFooterPriceInfo(config);
-    const disclaimer = !config?.design?.footer || config?.design?.footer?.showMerchantDisclaimer
-      ? $t('footer.disclaimer', {
-        termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
-        privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
-      })
-      : '';
-
     footerInfo.PRICE_INFO = footerPriceInfo;
-    footerInfo.DISCLAIMER = disclaimer && `<div>${disclaimer}</div>`
   }
 
   return footerInfo;

@@ -30,7 +30,7 @@ function preparePayload(payload: {
   config: FormConfig
 }) {
   const { providerKey, formData, params, config } = payload;
-  const { cardExpiration, acceptPolicy, cardNumber, cardHolder, cardCVV, zipCode, saveCard, cardId = 0 } = formData || {};
+  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, zipCode, saveCard, cardId = 0 } = formData || {};
   const { returnUrl } = params || {};
   const showSavedCards = config.general.showSavedCards;
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
@@ -131,6 +131,15 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
     const response = await registerPaymentUser(subscriberId, config, params);
     return response; 
   }
+}
+
+function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, messageFallback?: string) {
+  const message = (typeof error === 'string' ? error : error?.meta?.message) || messageFallback;
+  params.events?.onFail?.({
+    message,
+    data: typeof error !== 'string' ? error : {}
+  });
+  Logger.client?.captureException(error);
 }
 
 export async function handlePaymentSuccess(payload: { config: FormConfig; params: IZotloCheckoutParams | IZotloCardParams; }) {
@@ -274,12 +283,7 @@ async function handleApplePayPayment(payload: {
     // Show apple pay modal
     session.begin();
   } catch (error: any) {
-    const message = (typeof error === 'string' ? error : error?.meta?.message) || "Apple Pay payment process failed";
-    params.events?.onFail?.({
-      message,
-      data: typeof error !== 'string' ? error : {}
-    });
-    Logger.client?.captureException(error);
+    handlePaymentErrorMessage(error, params, "Apple Pay payment process failed");
   }
 }
 
@@ -322,12 +326,7 @@ async function handleGooglePayPayment(payload: {
   } catch (error: any) {
     // Prevent user closing form error
     if (error?.toString()?.includes("AbortError")) return;
-    const message = (typeof error === 'string' ? error : error?.meta?.message) || "Google Pay payment process failed";
-    params.events?.onFail?.({
-      message,
-      data: typeof error !== 'string' ? error : {}
-    });
-    Logger.client?.captureException(error);
+    handlePaymentErrorMessage(error, params, "Google Pay payment process failed");
   }
 }
 
@@ -368,7 +367,6 @@ export async function sendPayment(paymentParams: {
     const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
     handleCheckoutResponse({ checkoutResponse, params, refreshProviderConfigsFunction });
   } catch (err:any) {
-    params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });
-    Logger.client?.captureException(err);
+    handlePaymentErrorMessage(err, params);
   }
 }

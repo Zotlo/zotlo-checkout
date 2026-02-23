@@ -51,7 +51,8 @@ function loadScript(src: string, id?: string): Promise<void> {
   });
 }
 
-export async function loadProviderSDKs(paymentInitData?: FormPaymentData): Promise<void[]> {
+export async function loadProviderSDKs(params: { paymentInitData?: FormPaymentData }): Promise<void[]> {
+  const { paymentInitData } = params || {};
   const { providers = {} as Record<PaymentProvider, boolean> } = paymentInitData || {};
   const promises: Promise<void>[] = [];
 
@@ -95,7 +96,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
 
 export function renderGooglePayButton(config: FormConfig) {
   const googlePayConfig = config?.providerConfigs?.googlePay || {} as ProviderConfigs["googlePay"];
-  const wrapper = document.getElementById('google-pay-button');
+  const wrapper = document.getElementById('googlePay-button');
   const hasExistingButton = wrapper?.querySelector('button');
   const googlePayButton = getGooglePayButton(googlePayConfig, { 
     buttonColor: config?.design?.darkMode ? 'white' : 'black' 
@@ -146,7 +147,7 @@ export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
   [providerConfigs] = await Promise.all([
     getProvidersConfig(config?.paymentData || {} as FormPaymentData, returnUrl, config?.general?.countryCode),
-    loadProviderSDKs(config?.paymentData)
+    loadProviderSDKs({ paymentInitData: config?.paymentData })
   ]);
 
   const canAppleMakePayments = canMakeApplePayPayments();

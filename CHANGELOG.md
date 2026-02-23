@@ -1,5 +1,38 @@
 # Changelog
 
+## v1.11.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.10.1...v1.11.0)
+
+### 🚀 Enhancements
+
+- Add paypal payrails integrations ([db359c3](https://github.com/Zotlo/zotlo-checkout/commit/db359c3))
+- Implement conditional paypal integration based on useNewPayPal flag ([f46ef9b](https://github.com/Zotlo/zotlo-checkout/commit/f46ef9b))
+- Add extra clientId and merchantId checks for new paypal ([23c11f0](https://github.com/Zotlo/zotlo-checkout/commit/23c11f0))
+- **Z3-5872:** Add quantitySetting types ([3e0b44f](https://github.com/Zotlo/zotlo-checkout/commit/3e0b44f))
+- **Z3-5868:** Add agreegator link to footer ([ee1d573](https://github.com/Zotlo/zotlo-checkout/commit/ee1d573))
+- **Z3-5872:** Update total price display logic with quantity info ([6677d2d](https://github.com/Zotlo/zotlo-checkout/commit/6677d2d))
+- **Z3-5872:** Add fallback for total payable amount without package ([7f54f5c](https://github.com/Zotlo/zotlo-checkout/commit/7f54f5c))
+- **Z3-5955:** Remove agree-policy checkbox and its modal events ([3c6f496](https://github.com/Zotlo/zotlo-checkout/commit/3c6f496))
+- **Z3-5955:** Refactor terms and privacy text on footer ([dad2518](https://github.com/Zotlo/zotlo-checkout/commit/dad2518))
+- **Z3-5872:** Add quantitySetting as config param ([9a9c903](https://github.com/Zotlo/zotlo-checkout/commit/9a9c903))
+- **Z3-5872:** Fix quantity info template location ([7ff397a](https://github.com/Zotlo/zotlo-checkout/commit/7ff397a))
+- **Z3-5930:** Remove paypal sdk integrations and related configs ([edc8d23](https://github.com/Zotlo/zotlo-checkout/commit/edc8d23))
+
+### 🩹 Fixes
+
+- **Z3-5977:** Fix the issue that reset subscriberId and zipcode input if user change active payment tab ([6e752e3](https://github.com/Zotlo/zotlo-checkout/commit/6e752e3))
+- Add mode parameter for production build ([f928ec0](https://github.com/Zotlo/zotlo-checkout/commit/f928ec0))
+
+### 🏡 Chore
+
+- Remove button element description section ([75bbbd7](https://github.com/Zotlo/zotlo-checkout/commit/75bbbd7))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.10.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.10.0...v1.10.1)

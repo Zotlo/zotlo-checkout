@@ -12,9 +12,10 @@ import modalElement from '../html/modal.html?raw'
 import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
 import savedCardItemElement from '../html/saved-card-item.html?raw'
 import savedCardsFormElement from '../html/saved-cards-form.html?raw'
+import footerHTML from '../html/footer.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL } from "../utils";
-import { getPackagePaymentAmountText } from '../utils/getPackageInfo';
+import { getPackagePaymentAmountText, getQuantityInfo } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData } from './types'
 import { FORM_ITEMS } from './fields'
@@ -195,7 +196,6 @@ export function createCheckbox(payload: {
 
 export function createButton(payload: {
   content: string;
-  description?: string;
   className?: string;
   attrs?: Record<string, string | number | boolean>;
   wrapperAttrs?: Record<string, string | number | boolean>;
@@ -205,7 +205,6 @@ export function createButton(payload: {
     WRAPPER_ATTRIBUTES: generateAttributes(payload.wrapperAttrs || {}),
     ATTRIBUTES: generateAttributes(payload.attrs || {}),
     CONTENT: payload.content || '',
-    DESC: payload.description || ''
   });
 }
 
@@ -284,6 +283,7 @@ export function createCreditCardForm(params: {
       'data-billing-form': showBillingFields ? 'true' : 'false',
     }),
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
+    QUANTITY_INFO: getQuantityInfo(config),
   });
 
   let cardTop = '';
@@ -327,20 +327,6 @@ export function createCreditCardForm(params: {
     let fieldContent = '';
     
     switch (key) {
-      case "AGREEMENT_CHECKBOX": {
-        if (!config.cardUpdate) {
-          fieldContent = config.general.isPolicyRequired
-            ? createCheckbox({
-                ...options,
-                label: $t(`form.${key}.label`, {
-                  distance: `<a href="javascript:;" data-agreement="distanceSalesAgreement">${$t(`form.${key}.keyword.distance`)}</a>`,
-                  info: `<a href="javascript:;" data-agreement="informationForm">${$t(`form.${key}.keyword.info`)}</a>`
-                })
-              })
-            : '';
-        }
-      }
-        break;
       case "BILLING_ACTIVATE": {
         if (showBillingForm && businessPurchase?.canUserModify) {
           fieldContent = createCheckbox({
@@ -426,7 +412,7 @@ export function createCreditCardForm(params: {
     CARD_SUBMIT: cardSubmit,
     CDN_URL: getCDNUrl(''),
     TOTAL_LABEL: $t('form.total.label'),
-    TOTAL_PRICE: `${totalPrice}`
+    TOTAL_PRICE: `${totalPrice}`,
   })
 }
 
@@ -436,18 +422,17 @@ export function createProviderButton(params: {
   tabAvailable?: boolean;
 }) {
   const { provider, config, tabAvailable } = params;
-  const { $t } = useI18n(config.general.localization);
   const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
   const postfix = canDarkMode ? '_black' : '';
+  const buttonsRenderedBySdks = [PaymentProvider.GOOGLE_PAY];
 
-  if (provider === PaymentProvider.GOOGLE_PAY && import.meta.env.VITE_SDK_API_URL) {
-    return `<div id="google-pay-button" class="zotlo-checkout__payment-provider" ${tabAvailable ? 'data-tab-content="googlePay" data-tab-active="true"' : ''}></div>`;
+  if (import.meta.env.VITE_SDK_API_URL && buttonsRenderedBySdks.includes(provider)) {
+    return `<div id="${provider}-button" class="zotlo-checkout__payment-provider zotlo-checkout__payment-provider-button-wrapper" ${tabAvailable ? `data-tab-content="${provider}" data-tab-active="true"` : ''}></div>`;
   }
 
   return createButton({
     content: `<img src="${getCDNUrl(`editor/payment-providers/${provider}${postfix}.png`)}" alt="${provider}">`,
     className: 'provider '+provider,
-    description: provider === PaymentProvider.PAYPAL ? $t('paypalMotto') : undefined,
     attrs: { 'data-provider': provider },
     wrapperAttrs: {
       class: 'zotlo-checkout__payment-provider',
@@ -522,6 +507,11 @@ export function preparePaymentDetailsSection(params: {
   });
 
   const footerInfo = prepareFooterInfo({ config });
+  const footerCommon = createFooter({
+    ...footerInfo,
+    SHOW_FOOTER_DESC: false,
+    PAYMENT_AGGREGATOR: '',
+  }) || '';
 
   return template(paymentDetailsElement, {
     FORM_TYPE: config.cardUpdate ? 'CARD' : 'CHECKOUT',
@@ -535,9 +525,7 @@ export function preparePaymentDetailsSection(params: {
     PAYMENT_AMOUNT_TITLE: $t('common.paymentAmount'),
     PAYMENT_AMOUNT_TEXT: paymentAmountText,
     FOOTER: paymentDetailsFooterElement,
-    DISCLAIMER: footerInfo.DISCLAIMER,
-    ZOTLO_LEGALS_DESC: footerInfo.ZOTLO_LEGALS_DESC,
-    ZOTLO_LEGALS_LINKS: footerInfo.ZOTLO_LEGALS_LINKS,
+    FOOTER_COMMON: footerCommon,
   });
 }
 
@@ -643,23 +631,6 @@ export function createPaymentSuccessForm(params: {
   }
 }
 
-export function createAgreementModal(params: {
-  key: 'distanceSalesAgreement' | 'informationForm';
-  config: FormConfig;
-}) {
-  const { key, config } = params;
-  const { $t } = useI18n(config.general.localization);
-
-  const bodyContent = `<iframe src="${config.general.documents[key]}" frameborder="0" width="100%" height="100%"></iframe>`;
-
-  return template(modalElement, {
-    MODAL_NAME: 'agreement',
-    TITLE: $t(`agreement.title.${key}`),
-    BODY_CONTENT: bodyContent,
-    SHOW_CLOSE_BUTTON: true,
-  })
-}
-
 export function createAllCardsModal(params: {
   config: FormConfig;
 }) {
@@ -714,5 +685,23 @@ export function createPaymentHeader(params: {
     SHOW_CLOSE_BUTTON: !!config.design.header?.close?.show && !!closeButtonUrl,
     CLOSE_BUTTON_URL: closeButtonUrl,
     CLOSE_BUTTON_TEXT: $t('common.close'),
+  })
+}
+
+export function createFooter(footerInfo: {
+  SHOW_FOOTER_DESC?: boolean;
+  PRICE_INFO: string;
+  FOOTER_DESC: string;
+  DISCLAIMER: string;
+  ZOTLO_LEGALS_TEXT: string;
+  PAYMENT_AGGREGATOR: string;
+}) {
+  return template(footerHTML, {
+    SHOW_FOOTER_DESC: !!footerInfo.SHOW_FOOTER_DESC,
+    PRICE_INFO: footerInfo.PRICE_INFO,
+    FOOTER_DESC: footerInfo.FOOTER_DESC,
+    DISCLAIMER: footerInfo.DISCLAIMER,
+    ZOTLO_LEGALS_TEXT: footerInfo.ZOTLO_LEGALS_TEXT,
+    PAYMENT_AGGREGATOR: footerInfo.PAYMENT_AGGREGATOR,
   })
 }
