@@ -130,11 +130,11 @@ export function setFormLoading(loading: boolean = true) {
   const formElement = ZOTLO_GLOBAL.formElement;
 
   if (!formElement) return;
-  let loaderEl = formElement.querySelector('.zotlo-checkout__loader') as HTMLDivElement;
+  let loaderEl = formElement.querySelector('.zotlo-checkout__form-loader') as HTMLDivElement;
   if (loading) {
     if (!loaderEl) {
       loaderEl = document.createElement('div');
-      loaderEl.className = 'zotlo-checkout__loader';
+      loaderEl.className = 'zotlo-checkout__form-loader';
       formElement.insertBefore(loaderEl, formElement.firstChild);
     }
     disableTabKeyNavigation(formElement);
@@ -180,6 +180,12 @@ export const debounce: any = (func: any, waitFor = 300) => {
   };
 }
 
+function disableCountryInput() {
+  const countryInput = ZOTLO_GLOBAL.container?.querySelector('input[name="country"]') as HTMLInputElement;
+  countryInput?.setAttribute('disabled', 'true');
+  countryInput?.parentElement?.classList.add('disabled');
+}
+
 export function setFormDisabled(disabled = true) {
   const formElement = ZOTLO_GLOBAL.formElement;
   const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
@@ -198,6 +204,7 @@ export function setFormDisabled(disabled = true) {
       input.removeAttribute('disabled');
     }
   }
+  disableCountryInput();
 }
 
 export function activateDisabledSubscriberIdInputs() {
@@ -320,7 +327,7 @@ export function getSubmitButtonContent(config: FormConfig) {
   return buttonContent;
 }
 
-export async function handlePriceChangesBySubscriptionStatus(config: FormConfig) {
+export async function handlePriceChanges(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   if (!ZOTLO_GLOBAL.formElement) return;
 
@@ -339,6 +346,10 @@ export async function handlePriceChangesBySubscriptionStatus(config: FormConfig)
   updateElementsValue<HTMLElement>('[data-discount-price]', config?.packageInfo?.discount?.price as string);
   const footerFullDescription = `${getFooterPriceInfo(config)} ${$t('footer.desc')}`;
   updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
+}
+
+export function getIsDiscountCodeApplied(config: FormConfig): boolean {
+  return !!config?.paymentData?.discount?.code;
 }
 
 export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {

@@ -308,6 +308,16 @@ export type SavedCreditCardData = {
   creditCardExpired: boolean;
 };
 
+enum DiscountType {
+  RATE = 'rate',
+  AMOUNT = 'amount'
+}
+
+enum DiscountRecurringType {
+  LIMITED = 'limited',
+  FOREVER = 'forever'
+}
+
 export type FormPaymentData = {
   package: PackageData;
   providers: Record<PaymentProvider, boolean>;
@@ -319,6 +329,21 @@ export type FormPaymentData = {
     discountPrice: number | string;
     originalPrice: number | string;
     totalPrice: number | string;
+    price: number | string;
+    trialPrice: number | string;
+    f?: boolean;
+    code?: string;
+    type?: DiscountType;
+    rate?: number;
+    amount?: number | string;
+    allowTrial?: 1 | 0;
+    recurringStatus?: 1 | 0;
+    recurringMode?: DiscountRecurringType;
+    recurringBillingPeriod?: string | null;
+    discountedPackagePrice?: string;
+    discountedPackageTrialPrice?: string;
+    discountedDailyPrice?: string;
+    discountedWeeklyPrice?: string;
   };
   documents: {
     distanceSalesAgreement: string;
@@ -337,6 +362,12 @@ export type PackageInfoType = {
   trialPeriodType: string;
   period: number;
   periodType: string;
+  purePrice: string;
+  pureTrialPrice: string;
+  discountedPackagePrice: string;
+  discountedPackageTrialPrice: string;
+  discountedDailyPrice: string;
+  discountedWeeklyPrice: string;
   totalPayableAmount: string;
   totalPayableBaseAmount: string;
   currency: string;

@@ -13,8 +13,10 @@ import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
 import savedCardItemElement from '../html/saved-card-item.html?raw'
 import savedCardsFormElement from '../html/saved-cards-form.html?raw'
 import footerHTML from '../html/footer.html?raw'
+import discountInputElement from '../html/discount-input.html?raw'
+import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied } from "../utils";
 import { getPackagePaymentAmountText, getQuantityInfo } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData } from './types'
@@ -284,6 +286,7 @@ export function createCreditCardForm(params: {
     }),
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
     QUANTITY_INFO: getQuantityInfo(config),
+    DISCOUNT_SECTION: prepareDiscountSection({ config }),
   });
 
   let cardTop = '';
@@ -704,4 +707,46 @@ export function createFooter(footerInfo: {
     ZOTLO_LEGALS_TEXT: footerInfo.ZOTLO_LEGALS_TEXT,
     PAYMENT_AGGREGATOR: footerInfo.PAYMENT_AGGREGATOR,
   })
+}
+
+export function prepareDiscountSection(params: { config: FormConfig }) {
+  const { config } = params;
+  const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
+  if (!isDiscountCodeEntryEnabled) return '';
+  if (isDiscountCodeApplied) return createAppliedDiscountSection({ config });
+  return createDiscountInput({ config });
+}
+
+export function createDiscountInput(params: { config: FormConfig }) {
+  const { config } = params;
+  const { $t } = useI18n(config.general.localization);
+  const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
+  if (isDiscountCodeEntryEnabled) return template(discountInputElement, {
+    TOGGLE_TEXT: $t('form.discount.iHaveCode'),
+    INPUT_PLACEHOLDER: $t('form.discount.inputPlaceholder'),
+    CANCEL_TEXT: $t('common.cancel'),
+  });
+  return '';
+}
+
+export function createAppliedDiscountSection(params: { config: FormConfig }) {
+  const { config } = params || {};
+  const { paymentData } = config;
+  const { $t } = useI18n(config.general.localization);
+
+  const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
+  const isTrialDiscountAllowed = !!config.paymentData?.discount?.allowTrial;
+  const discountCode = paymentData?.discount?.code || '';
+  const currency = config.packageInfo?.currency || 'USD';
+  const discount = paymentData?.discount?.type === "rate" ? `${paymentData?.discount?.rate || 0}%` : `${paymentData?.discount?.amount || 0} ${currency}`;
+  const originalPrice = isTrialDiscountAllowed ? config.paymentData?.discount?.originalPrice : config.paymentData?.discount?.price;
+  
+  if (isDiscountCodeEntryEnabled && isDiscountCodeApplied) return template(appliedDiscountSection, {
+    DISCOUNT_CODE: discountCode,
+    DISCOUNT_AMOUNT: $t('form.discount.discountInfo', { discount }),
+    OLD_PRICE: `${originalPrice} ${currency}`,
+  });
+  return '';
 }
