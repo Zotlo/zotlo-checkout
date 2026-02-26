@@ -11,14 +11,15 @@ import { Logger } from '../lib/logger';
 
 export function useDiscount(payload: { params: IZotloCheckoutParams; config: FormConfig, syncAllPrices: () => Promise<void> }) {
   const { params, config, syncAllPrices } = payload;
-  const discountSection = ZOTLO_GLOBAL.container?.querySelector('[discount-section]') as HTMLElement;
+  const discountSection = ZOTLO_GLOBAL.container?.querySelector('[data-discount-section]') as HTMLElement;
+  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
 
   const destroyList = {
     discounted: null as (() => void) | null,
     undiscounted: null as (() => void) | null,
   }
 
-  const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
+  const isDiscountCodeEntryEnabled = !!config.settings?.enableDiscountCodeEntry;
   if (!isDiscountCodeEntryEnabled) return destroyList;
 
   const { $t } = useI18n(config.general.localization);
@@ -65,6 +66,8 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
         return;
       }
       setDiscountErrorMessage();
+
+      if (isPanelEditMode) return destroyList;
       try {
         setLoadingForDiscount(true);
         const response = await CheckoutAPI.post('/payment/apply-discount', { discountCode });
@@ -147,6 +150,7 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
     const removeDiscountButton = ZOTLO_GLOBAL.container?.querySelector('[data-discount-remove]') as HTMLButtonElement;
 
     async function onClickRemoveDiscount() {
+      if (isPanelEditMode) return destroyList;
       try {
         setLoadingForDiscount(true);
         const response = await CheckoutAPI.post('/payment/apply-discount', { remove: true });
