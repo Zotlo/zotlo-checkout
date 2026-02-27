@@ -124,11 +124,13 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
     }
 
     function onKeyUpDiscountCode(e: KeyboardEvent) {
-      const value = (e.target as HTMLInputElement)?.value?.trim() || '';
       if (e.key === 'Enter') return applyDiscount();
+    }
 
+    function onInput(e: Event) {
+      const value = (e.target as HTMLInputElement)?.value?.trim().toUpperCase() || '';
       ZOTLO_GLOBAL.data.discountCode = value;
-
+      (e.target as HTMLInputElement).value = value;
       tabList?.forEach((tab) => {
         const actionButton = tab?.querySelector('[data-discount-action]') as HTMLButtonElement;
         const actionButtonSpan = actionButton?.querySelector('[data-discount-action-span]') as HTMLSpanElement;
@@ -162,12 +164,14 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
     toggleButton?.addEventListener('click', onClickToggle);
     discountCodeInput?.addEventListener('keydown', onKeyDownDiscountCode);
     discountCodeInput?.addEventListener('keyup', onKeyUpDiscountCode);
+    discountCodeInput?.addEventListener('input', onInput);
     actionButton?.addEventListener('click', onClickAction);
 
     return function destroy() {
       toggleButton?.removeEventListener('click', onClickToggle);
       discountCodeInput?.removeEventListener('keydown', onKeyDownDiscountCode);
       discountCodeInput?.removeEventListener('keyup', onKeyUpDiscountCode);
+      discountCodeInput?.removeEventListener('input', onInput);
       actionButton?.removeEventListener('click', onClickAction);
     }
   }
