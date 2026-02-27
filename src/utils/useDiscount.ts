@@ -11,7 +11,9 @@ import { Logger } from '../lib/logger';
 
 export function useDiscount(payload: { params: IZotloCheckoutParams; config: FormConfig, syncAllPrices: () => Promise<void> }) {
   const { params, config, syncAllPrices } = payload;
-  const discountSection = ZOTLO_GLOBAL.container?.querySelector('[data-discount-section]') as HTMLElement;
+  const isMobileAppTheme = config.design.theme === 'mobileapp';
+  const tabList = isMobileAppTheme ? [ZOTLO_GLOBAL.formElement] : ZOTLO_GLOBAL.container?.querySelectorAll('[data-tab-content]');
+  const activeTab = isMobileAppTheme ? ZOTLO_GLOBAL.formElement : ZOTLO_GLOBAL.container?.querySelector('[data-tab-active="true"]');
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
 
   const destroyList = {
@@ -31,36 +33,39 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
   }
 
   function setDiscountErrorMessage(message: string = "") {
-    const errorMessage = ZOTLO_GLOBAL.container?.querySelector('[data-discount-error]') as HTMLElement;
-    errorMessage.innerText = message;
+    const errorMessageAll = ZOTLO_GLOBAL.container?.querySelectorAll('[data-discount-error]') as NodeListOf<HTMLElement>;
+
+    errorMessageAll?.forEach((errorMessage) => {
+      errorMessage.innerText = message;
+    });
   }
 
   function setLoadingForDiscount(isLoading = true, actionAfterLoading = "apply") {
-    const actionButton = ZOTLO_GLOBAL.container?.querySelector('[data-discount-action]') as HTMLButtonElement;
-    const discountAppliedSection = ZOTLO_GLOBAL.container?.querySelector('.zotlo-checkout__discount-content__discount-applied') as HTMLElement;
-
-    if (isLoading) {
-      setFormDisabled();
-      actionButton?.setAttribute('disabled', 'true');
-      actionButton?.setAttribute('data-discount-action', 'loading');
-      discountAppliedSection?.setAttribute('data-loading', 'true');
-    } else {
-      setFormDisabled(false);
-      actionButton?.removeAttribute('disabled');
-      discountAppliedSection?.removeAttribute('data-loading');
-      actionButton?.setAttribute('data-discount-action', actionAfterLoading);
-    }
+    tabList?.forEach((tab) => {
+      const actionButton = tab?.querySelector('[data-discount-action]') as HTMLButtonElement;
+      const discountAppliedSection = tab?.querySelector('.zotlo-checkout__discount-content__discount-applied') as HTMLElement;
+  
+      if (isLoading) {
+        setFormDisabled();
+        actionButton?.setAttribute('disabled', 'true');
+        actionButton?.setAttribute('data-discount-action', 'loading');
+        discountAppliedSection?.setAttribute('data-loading', 'true');
+      } else {
+        setFormDisabled(false);
+        actionButton?.removeAttribute('disabled');
+        discountAppliedSection?.removeAttribute('data-loading');
+        actionButton?.setAttribute('data-discount-action', actionAfterLoading);
+      }
+    });
   }
 
   function loadUndiscountedState() {
-    const discountContent = ZOTLO_GLOBAL.container?.querySelector('[data-discount-content]') as HTMLElement;
-    const toggleButton = ZOTLO_GLOBAL.container?.querySelector('[data-discount-toggle]') as HTMLButtonElement;
-    const discountCodeInput = ZOTLO_GLOBAL.container?.querySelector('input[name="discountCode"]') as HTMLInputElement;
-    const actionButton = ZOTLO_GLOBAL.container?.querySelector('[data-discount-action]') as HTMLButtonElement;
-    const actionButtonSpan = actionButton?.querySelector('[data-discount-action-span]') as HTMLSpanElement;
+    const toggleButton = activeTab?.querySelector('[data-discount-toggle]') as HTMLButtonElement;
+    const discountCodeInput = activeTab?.querySelector('input[name="discountCode"]') as HTMLInputElement;
+    const actionButton = activeTab?.querySelector('[data-discount-action]') as HTMLButtonElement;
 
     async function applyDiscount() {
-      const discountCode = discountCodeInput.value || '';
+      const discountCode = ZOTLO_GLOBAL.data.discountCode;
       if (!validateDiscountCode(discountCode)) {
         setDiscountErrorMessage($t('form.discount.validationWithMinMax', { min: 3, max: 15 }));
         return;
@@ -87,34 +92,55 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
 
       await syncAllPrices();
 
-      discountSection.innerHTML = createAppliedDiscountSection({ config });
+      for (const tab of tabList || []) {
+        const section = tab?.querySelector('[data-discount-section]') as HTMLElement;
+        if (section) section.innerHTML = createAppliedDiscountSection({ config });
+      }
+
+      ZOTLO_GLOBAL.data.discountCode = '';
       setLoadingForDiscount(false);
       discountCodeInput?.focus();
       destroyList.discounted = loadDiscountedState();
     }
 
     function cancelDiscount() {
-      discountCodeInput.value = '';
-      discountContent?.setAttribute('data-discount-content', 'false');
-      setDiscountErrorMessage();
+      tabList?.forEach((tab) => {
+        const input = tab?.querySelector('input[name="discountCode"]') as HTMLInputElement;
+        if (input) input.value = '';
+        tab?.querySelector('[data-discount-content]')?.setAttribute('data-discount-content', 'false');
+        setDiscountErrorMessage();
+      });
+
+      ZOTLO_GLOBAL.data.discountCode = '';
     }
 
     function onClickToggle() {
-      const isActive = discountContent?.getAttribute('data-discount-content') === 'true';
-      discountContent?.setAttribute('data-discount-content', isActive ? 'false' : 'true');
-      if (!isActive) discountCodeInput?.focus();
+      tabList?.forEach((tab) => {
+        const content = tab?.querySelector('[data-discount-content]');
+        const isActive = content?.getAttribute('data-discount-content') === 'true';
+        content?.setAttribute('data-discount-content', isActive ? 'false' : 'true');
+        if (!isActive) discountCodeInput?.focus();
+      })
     }
 
     function onKeyUpDiscountCode(e: KeyboardEvent) {
       const value = (e.target as HTMLInputElement)?.value?.trim() || '';
       if (e.key === 'Enter') return applyDiscount();
-      if (value) {
-        actionButtonSpan.innerText = $t('common.apply');
-        actionButton?.setAttribute('data-discount-action', 'apply');
-      } else {
-        actionButtonSpan.innerText = $t('common.cancel');
-        actionButton?.setAttribute('data-discount-action', 'cancel');
-      }
+
+      ZOTLO_GLOBAL.data.discountCode = value;
+
+      tabList?.forEach((tab) => {
+        const actionButton = tab?.querySelector('[data-discount-action]') as HTMLButtonElement;
+        const actionButtonSpan = actionButton?.querySelector('[data-discount-action-span]') as HTMLSpanElement;
+    
+        if (value) {
+          if (actionButtonSpan) actionButtonSpan.innerText = $t('common.apply');
+          actionButton?.setAttribute('data-discount-action', 'apply');
+        } else {
+          if (actionButtonSpan) actionButtonSpan.innerText = $t('common.cancel');
+          actionButton?.setAttribute('data-discount-action', 'cancel');
+        }
+      });
     }
 
     function onKeyDownDiscountCode(e: KeyboardEvent) {
@@ -147,7 +173,7 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
   }
 
   function loadDiscountedState() {
-    const removeDiscountButton = ZOTLO_GLOBAL.container?.querySelector('[data-discount-remove]') as HTMLButtonElement;
+    const removeDiscountButton = activeTab?.querySelector('[data-discount-remove]') as HTMLButtonElement;
 
     async function onClickRemoveDiscount() {
       if (isPanelEditMode) return destroyList;
@@ -170,7 +196,11 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
 
       await syncAllPrices();
 
-      discountSection.innerHTML = createDiscountInput({ config });
+      for (const tab of tabList || []) {
+        const section = tab?.querySelector('[data-discount-section]') as HTMLElement;
+        if (section) section.innerHTML = createDiscountInput({ config });
+      }
+
       setLoadingForDiscount(false, "cancel");
 
       destroyList.undiscounted = loadUndiscountedState();

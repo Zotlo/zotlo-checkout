@@ -189,7 +189,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         } else {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
         }
-        syncInputsOnTabs(tabName, ['subscriberId', 'zipCode']);
+        syncInputsOnTabs(tabName, ['subscriberId', 'zipCode', 'discountCode']);
         initFormInputs();
       } catch (err) {
         Logger.client?.captureException(err);
