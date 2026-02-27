@@ -329,8 +329,8 @@ export type FormPaymentData = {
     discountPrice: number | string;
     originalPrice: number | string;
     totalPrice: number | string;
-    price: number | string;
-    trialPrice: number | string;
+    price?: number | string;
+    trialPrice?: number | string;
     f?: boolean;
     code?: string;
     type?: DiscountType;

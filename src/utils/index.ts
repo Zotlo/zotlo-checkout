@@ -17,6 +17,7 @@ export const ZOTLO_GLOBAL = {
   data: {
     subscriberId: '',
     zipCode: '',
+    discountCode: '',
   },
   checkout: {
     containerId: '',
