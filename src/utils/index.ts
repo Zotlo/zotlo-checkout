@@ -307,7 +307,17 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
-  return template($t(`footer.priceInfo.${packageCondition}`), {
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
+  const isTrialDiscountAllowed = !!config?.paymentData?.discount?.allowTrial || false;
+  const isRecurringDiscountLimited = (config?.paymentData?.discount?.recurringMode === 'limited') || false;
+
+  const discountTrialKey = isTrialDiscountAllowed ? 'allowTrialDiscount' : 'noTrialDiscount';
+  const discountRecurringKey = isRecurringDiscountLimited ? 'recurringLimited' : 'recurringForever';
+  const finalLocalizationKey = isDiscountCodeApplied ? 
+    `footer.priceInfo.discounted.${packageCondition}.${discountTrialKey}.${discountRecurringKey}` : 
+    `footer.priceInfo.${packageCondition}`;
+
+  return template($t(finalLocalizationKey), {
     ...getPackageTemplateParams(config)
   });
 }
