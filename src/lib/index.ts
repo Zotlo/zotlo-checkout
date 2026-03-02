@@ -254,7 +254,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   async function syncAllPrices() {
-    await Promise.all([refreshPaymentInitData(), refreshProviderConfigs()]);
+    await refreshPaymentInitData();
+    await refreshProviderConfigs();
     handlePriceChanges(config);
   }
 
