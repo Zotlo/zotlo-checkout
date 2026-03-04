@@ -232,7 +232,7 @@ export function getPackageTemplateParams(config: FormConfig) {
   };
 }
 
-export function getPackagePaymentAmountText(config: FormConfig) {
+export function getPlanInfoText(config: FormConfig) {
   const { paymentData } = config || {};
   const {
     packageType = PackageType.CONSUMABLE,
