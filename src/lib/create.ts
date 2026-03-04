@@ -491,8 +491,8 @@ export function preparePaymentDetailsSection(params: {
   const { $t } = useI18n(config.general.localization);
   const productName = paymentDetail?.application?.name || '-';
   const { 
-    purchase_date:purchaseDate = '-', 
-    expire_date:expireDate = '-', 
+    purchase_date:purchaseDate = '-',
+    expire_date:expireDate = '-',
     provider_key_translation:paymentMethod = '-',
     provider_key: paymentProviderKey = '',
     currency = '',
@@ -500,7 +500,8 @@ export function preparePaymentDetailsSection(params: {
     quantity = 1,
     card_brand_id = '',
   } = paymentDetail?.transaction?.[0] || {};
-  const planInfoText = import.meta.env.VITE_CONSOLE ? '-' : getPlanInfoText(config);
+  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
+  const planInfoText = isPanelEditMode ? '-' : getPlanInfoText(config);
   const isOneTimePayment = config.packageInfo?.condition === 'onetime_payment';
   const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
   const zotloAccountUrl = "https://account.zotlo.com/";
@@ -509,6 +510,8 @@ export function preparePaymentDetailsSection(params: {
   const totalPrice = price ? `${price} ${currency}` : '-';
   const isCreditCardPayment = paymentProviderKey === PaymentProvider.CREDIT_CARD;
   const creditCardIconImg = isCreditCardPayment ? getCardInfoFromCardNumber(card_brand_id)?.cardIconImg : '';
+  const discountText = isPanelEditMode ? '' : getDiscountInfo({ config, discountObject: paymentDetail?.discount });
+  const discountOldPrice = paymentDetail?.discount?.originalPrice ? `${paymentDetail?.discount?.originalPrice} ${currency}` : '';
 
   const paymentDetailsFooterElement = template(
     config.cardUpdate
@@ -539,8 +542,8 @@ export function preparePaymentDetailsSection(params: {
     PLAN_TITLE: $t('common.plan'),
     PLAN_TEXT: planInfoText,
     DISCOUNT_TITLE: $t('common.discount'),
-    DISCOUNT_TEXT: getDiscountInfo({ config, discountObject: paymentDetail?.discount }),
-    DISCOUNT_OLD_PRICE: paymentDetail?.discount?.originalPrice ? `${paymentDetail?.discount?.originalPrice} ${currency}` : '',
+    DISCOUNT_TEXT: discountText,
+    DISCOUNT_OLD_PRICE: discountOldPrice,
     TOTAL_TITLE: $t('common.total'),
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: quantityInfo,
