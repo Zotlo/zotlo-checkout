@@ -182,9 +182,11 @@ export const debounce: any = (func: any, waitFor = 300) => {
 }
 
 function disableCountryInput() {
-  const countryInput = ZOTLO_GLOBAL.container?.querySelector('input[name="country"]') as HTMLInputElement;
-  countryInput?.setAttribute('disabled', 'true');
-  countryInput?.parentElement?.classList.add('disabled');
+  const countryInputs = ZOTLO_GLOBAL.container?.querySelectorAll('input[name="country"]') as NodeListOf<HTMLInputElement>;
+  countryInputs?.forEach(countryInput => {
+    countryInput?.setAttribute('disabled', 'true');
+    countryInput?.parentElement?.classList.add('disabled');
+  });
 }
 
 export function setFormDisabled(disabled = true) {

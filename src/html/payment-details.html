@@ -9,16 +9,45 @@
           <td class="zotlo-checkout__payment-details__text-col">{{PRODUCT_TEXT}}</td>
         </tr>
         <tr>
+          <td class="zotlo-checkout__payment-details__title-col">{{PLAN_TITLE}}</td>
+          <td class="zotlo-checkout__payment-details__text-col">{{PLAN_TEXT}}</td>
+        </tr>
+        <tr>
           <td class="zotlo-checkout__payment-details__title-col">{{DATE_TITLE}}</td>
           <td class="zotlo-checkout__payment-details__text-col">{{DATE_TEXT}}</td>
         </tr>
         <tr>
           <td class="zotlo-checkout__payment-details__title-col">{{PAYMENT_METHOD_TITLE}}</td>
-          <td class="zotlo-checkout__payment-details__text-col">{{PAYMENT_METHOD_TEXT}}</td>
+          <td class="zotlo-checkout__payment-details__text-col">
+            <div class="zotlo-checkout__payment-details__payment-method">
+              <% IF(CREDIT_CARD_ICON_IMG) %>
+                {{CREDIT_CARD_ICON_IMG}}
+              <% ENDIF %>
+              <span>{{PAYMENT_METHOD_TEXT}}</span>
+            </div>
+          </td>
         </tr>
+        <% IF(DISCOUNT_TEXT) %>
         <tr>
-          <td class="zotlo-checkout__payment-details__title-col">{{PAYMENT_AMOUNT_TITLE}}</td>
-          <td class="zotlo-checkout__payment-details__text-col">{{PAYMENT_AMOUNT_TEXT}}</td>
+          <td class="zotlo-checkout__payment-details__title-col">{{DISCOUNT_TITLE}}</td>
+          <td class="zotlo-checkout__payment-details__text-col">
+            <div class="zotlo-checkout__payment-details__discount">
+              <span class="zotlo-checkout__payment-details__discount-text">{{DISCOUNT_TEXT}}</span>
+              <span class="zotlo-checkout__payment-details__discount-old-price">{{DISCOUNT_OLD_PRICE}}</span>
+            </div>
+          </td>
+        </tr>
+        <% ENDIF %>
+        <tr>
+          <td class="zotlo-checkout__payment-details__title-col zotlo-checkout__payment-details__total-title">{{TOTAL_TITLE}}</td>
+          <td class="zotlo-checkout__payment-details__text-col">
+            <div class="zotlo-checkout__payment-details__total">
+              <span class="zotlo-checkout__payment-details__total-price">{{TOTAL_PRICE}}</span>
+              <% IF(QUANTITY_INFO) %>
+              <span class="zotlo-checkout__payment-details__total-quantity-info">{{QUANTITY_INFO}}</span>
+              <% ENDIF %>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
