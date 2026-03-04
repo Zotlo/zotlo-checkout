@@ -161,8 +161,13 @@ export async function getProvidersConfigData(paymentInitData:FormPaymentData, re
   const providersHasConfig = [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY];
   const providerKeys = providersHasConfig.filter(key => !!providers[key]);
   if (!providerKeys?.length) return {};
-  const promises = providerKeys.map((providerKey) => getProviderConfig(providerKey as PaymentProvider, returnUrl));
-  const results = await Promise.all(promises);
+  const results = [];
+
+  for await (const providerKey of providerKeys) {
+    const response = await getProviderConfig(providerKey as PaymentProvider, returnUrl)
+    results.push(response);
+  }
+
   const reducedObj = results.reduce((acc, result, index) => {
     const key = providerKeys?.[index];
     const returnObj = { 
