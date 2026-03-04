@@ -754,7 +754,7 @@ export function getDiscountInfo(params: { config: FormConfig, discountObject?: F
   const { config, discountObject } = params;
   const { $t } = useI18n(config.general.localization);
   const discount = discountObject || config.paymentData?.discount;
-  if (!discount) return '';
+  if (!discount?.code) return '';
   const currency = config.packageInfo?.currency || 'USD';
   const discountText = discount.type === "rate" ? `${discount.rate || 0}%` : `${discount.amount || 0} ${currency}`;
   return $t('form.discount.discountInfo', { discount: discountText });
