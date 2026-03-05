@@ -358,6 +358,8 @@ export type FormPaymentData = {
 
 export type PackageInfoType = {
   price: string;
+  basePrice: string;
+  baseTrialPrice: string;
   trialPrice: string;
   dailyPrice: string;
   weeklyPrice: string;
