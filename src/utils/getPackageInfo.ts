@@ -217,6 +217,8 @@ export function getPackageTemplateParams(config: FormConfig) {
     QUANTITY: config?.settings?.quantitySetting?.quantity || 1,
     UNIT_PRICE: packageInfo?.totalPayableBaseAmount || "",
     PRICE: packageInfo?.price || "",
+    BASE_PRICE: packageInfo?.basePrice || "",
+    BASE_TRIAL_PRICE: packageInfo?.baseTrialPrice || "",
     PURE_PRICE: packageInfo?.purePrice || "",
     PURE_TRIAL_PRICE: packageInfo?.pureTrialPrice || "",
     DISCOUNTED_PRICE: packageInfo?.discountedPackagePrice || "",
