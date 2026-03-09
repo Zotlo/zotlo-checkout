@@ -14,7 +14,9 @@
     </div>
     <div class="zotlo-checkout__discount-content__price-info">
       <span class="zotlo-checkout__discount-content__price-info--discount">{{DISCOUNT_AMOUNT}}</span>
+      <% IF(OLD_PRICE) %>
       <span class="zotlo-checkout__discount-content__price-info--old">{{OLD_PRICE}}</span>
+      <% ENDIF %>
     </div>
   </div>
 </div>

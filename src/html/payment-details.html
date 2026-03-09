@@ -33,7 +33,9 @@
           <td class="zotlo-checkout__payment-details__text-col">
             <div class="zotlo-checkout__payment-details__discount">
               <span class="zotlo-checkout__payment-details__discount-text">{{DISCOUNT_TEXT}}</span>
+              <% IF(DISCOUNT_OLD_PRICE) %>
               <span class="zotlo-checkout__payment-details__discount-old-price">{{DISCOUNT_OLD_PRICE}}</span>
+              <% ENDIF %>
             </div>
           </td>
         </tr>
