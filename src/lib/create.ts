@@ -17,7 +17,7 @@ import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied } from "../utils";
-import { getPlanInfoText, getQuantityInfo } from '../utils/getPackageInfo';
+import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData, type FormPaymentData } from './types'
 import { FORM_ITEMS } from './fields'
@@ -510,8 +510,7 @@ export function preparePaymentDetailsSection(params: {
   const totalPrice = price ? `${price} ${currency}` : '-';
   const isCreditCardPayment = paymentProviderKey === PaymentProvider.CREDIT_CARD;
   const creditCardIconImg = isCreditCardPayment ? getCardInfoFromCardNumber(card_brand_id)?.cardIconImg : '';
-  const discountText = isPanelEditMode ? '' : getDiscountInfo({ config, discountObject: paymentDetail?.discount });
-  const discountOldPrice = paymentDetail?.discount?.originalPrice ? `${paymentDetail?.discount?.originalPrice} ${currency}` : '';
+  const { discountText, oldPrice } = getDiscountInfo({ config, discountObject: paymentDetail?.discount });
 
   const paymentDetailsFooterElement = template(
     config.cardUpdate
@@ -543,7 +542,7 @@ export function preparePaymentDetailsSection(params: {
     PLAN_TEXT: planInfoText,
     DISCOUNT_TITLE: $t('common.discount'),
     DISCOUNT_TEXT: discountText,
-    DISCOUNT_OLD_PRICE: discountOldPrice,
+    DISCOUNT_OLD_PRICE: oldPrice,
     TOTAL_TITLE: $t('common.total'),
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: quantityInfo,
@@ -751,30 +750,43 @@ export function createDiscountInput(params: { config: FormConfig }) {
 }
 
 export function getDiscountInfo(params: { config: FormConfig, discountObject?: FormPaymentData['discount'] }) {
+  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
   const { config, discountObject } = params;
   const { $t } = useI18n(config.general.localization);
+  const info = {
+    discountCode: '',
+    discountText: '',
+    oldPrice: '',
+  }
   const discount = discountObject || config.paymentData?.discount;
-  if (!discount?.code) return '';
+  if (!discount?.code || isPanelEditMode) return info;
+
+  const { isFreeTrial, isPaidTrial } = getPackageTypeConditions(config);
+  const isTrialDiscountAllowed = !!config.paymentData?.discount?.allowTrial;
+  const isDiscountAfterTrial = isFreeTrial || (isPaidTrial && !isTrialDiscountAllowed);
+  const originalPrice = config.paymentData?.discount?.originalPrice;
   const currency = config.packageInfo?.currency || 'USD';
-  const discountText = discount.type === "rate" ? `${discount.rate || 0}%` : `${discount.amount || 0} ${currency}`;
-  return $t('form.discount.discountInfo', { discount: discountText });
+  const originalPriceInfo = originalPrice ? `${originalPrice} ${currency}` : '';
+  const discountAmountInfo = discount.type === "rate" ? `${discount.rate || 0}%` : `${discount.amount || 0} ${currency}`;
+  const discountTextKey = isDiscountAfterTrial ? 'form.discount.discountInfoAfterTrial' : 'form.discount.discountInfo';
+
+  info.discountCode = discount.code;
+  info.discountText = $t(discountTextKey, { discount: discountAmountInfo });
+  info.oldPrice = isDiscountAfterTrial ? '' : originalPriceInfo;
+
+  return info;
 }
 
 export function createAppliedDiscountSection(params: { config: FormConfig }) {
   const { config } = params || {};
-  const { paymentData } = config;
-
   const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
   const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
-  const isTrialDiscountAllowed = !!config.paymentData?.discount?.allowTrial;
-  const discountCode = paymentData?.discount?.code || '';
-  const currency = config.packageInfo?.currency || 'USD';
-  const originalPrice = isTrialDiscountAllowed ? config.paymentData?.discount?.originalPrice : config.paymentData?.discount?.price;
+  const { discountCode, discountText, oldPrice } = getDiscountInfo({ config });
   
   if (isDiscountCodeEntryEnabled && isDiscountCodeApplied) return template(appliedDiscountSection, {
     DISCOUNT_CODE: discountCode,
-    DISCOUNT_AMOUNT: getDiscountInfo({ config }),
-    OLD_PRICE: `${originalPrice} ${currency}`,
+    DISCOUNT_AMOUNT: discountText,
+    OLD_PRICE: oldPrice,
   });
   return '';
 }
