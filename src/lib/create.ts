@@ -773,7 +773,7 @@ export function getDiscountInfo(params: { config: FormConfig, discountObject?: F
 
   const { isFreeTrial, isPaidTrial } = getPackageTypeConditions(config);
   const isTrialDiscountAllowed = !!discount?.allowTrial;
-  const isDiscountAfterTrial = isFreeTrial || (isPaidTrial && !isTrialDiscountAllowed && isTrialTransaction && !isTrialUsed);
+  const isDiscountAfterTrial = (isFreeTrial && !isTrialUsed && isTrialTransaction) || (isPaidTrial && !isTrialDiscountAllowed && isTrialTransaction && !isTrialUsed);
   const originalPrice = discount?.originalPrice;
   const currency = config.packageInfo?.currency || 'USD';
   const originalPriceInfo = originalPrice ? `${originalPrice} ${currency}` : '';
