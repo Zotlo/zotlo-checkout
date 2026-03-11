@@ -499,6 +499,7 @@ export function preparePaymentDetailsSection(params: {
     price = '',
     quantity = 1,
     card_brand_id = '',
+    status = '',
   } = paymentDetail?.transaction?.[0] || {};
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
   const planInfoText = isPanelEditMode ? '-' : getPlanInfoText(config);
@@ -510,7 +511,11 @@ export function preparePaymentDetailsSection(params: {
   const totalPrice = price ? `${price} ${currency}` : '-';
   const isCreditCardPayment = paymentProviderKey === PaymentProvider.CREDIT_CARD;
   const creditCardIconImg = isCreditCardPayment ? getCardInfoFromCardNumber(card_brand_id)?.cardIconImg : '';
-  const { discountText, oldPrice } = getDiscountInfo({ config, discountObject: paymentDetail?.discount });
+  const { discountText, oldPrice } = getDiscountInfo({
+    config,
+    discountObject: paymentDetail?.discount,
+    isTrialTransaction: status === 'trial'
+  });
 
   const paymentDetailsFooterElement = template(
     config.cardUpdate
@@ -749,9 +754,13 @@ export function createDiscountInput(params: { config: FormConfig }) {
   return '';
 }
 
-export function getDiscountInfo(params: { config: FormConfig, discountObject?: FormPaymentData['discount'] }) {
+export function getDiscountInfo(params: { config: FormConfig, discountObject?: FormPaymentData['discount'], isTrialTransaction?: boolean }) {
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
-  const { config, discountObject } = params;
+  const { 
+    config, 
+    discountObject, 
+    isTrialTransaction = true,
+  } = params;
   const { $t } = useI18n(config.general.localization);
   const info = {
     discountCode: '',
@@ -762,9 +771,9 @@ export function getDiscountInfo(params: { config: FormConfig, discountObject?: F
   if (!discount?.code || isPanelEditMode) return info;
 
   const { isFreeTrial, isPaidTrial } = getPackageTypeConditions(config);
-  const isTrialDiscountAllowed = !!config.paymentData?.discount?.allowTrial;
-  const isDiscountAfterTrial = isFreeTrial || (isPaidTrial && !isTrialDiscountAllowed);
-  const originalPrice = config.paymentData?.discount?.originalPrice;
+  const isTrialDiscountAllowed = !!discount?.allowTrial;
+  const isDiscountAfterTrial = isFreeTrial || (isPaidTrial && !isTrialDiscountAllowed && isTrialTransaction);
+  const originalPrice = discount?.originalPrice;
   const currency = config.packageInfo?.currency || 'USD';
   const originalPriceInfo = originalPrice ? `${originalPrice} ${currency}` : '';
   const discountAmountInfo = discount.type === "rate" ? `${discount.rate || 0}%` : `${discount.amount || 0} ${currency}`;
