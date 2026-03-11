@@ -754,12 +754,13 @@ export function createDiscountInput(params: { config: FormConfig }) {
   return '';
 }
 
-export function getDiscountInfo(params: { config: FormConfig, discountObject?: FormPaymentData['discount'], isTrialTransaction?: boolean }) {
+export function getDiscountInfo(params: { config: FormConfig, discountObject?: FormPaymentData['discount'], isTrialTransaction?: boolean, isTrialUsed?: boolean }) {
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
   const { 
     config, 
     discountObject, 
     isTrialTransaction = true,
+    isTrialUsed = false,
   } = params;
   const { $t } = useI18n(config.general.localization);
   const info = {
@@ -772,7 +773,7 @@ export function getDiscountInfo(params: { config: FormConfig, discountObject?: F
 
   const { isFreeTrial, isPaidTrial } = getPackageTypeConditions(config);
   const isTrialDiscountAllowed = !!discount?.allowTrial;
-  const isDiscountAfterTrial = isFreeTrial || (isPaidTrial && !isTrialDiscountAllowed && isTrialTransaction);
+  const isDiscountAfterTrial = isFreeTrial || (isPaidTrial && !isTrialDiscountAllowed && isTrialTransaction && !isTrialUsed);
   const originalPrice = discount?.originalPrice;
   const currency = config.packageInfo?.currency || 'USD';
   const originalPriceInfo = originalPrice ? `${originalPrice} ${currency}` : '';
@@ -789,8 +790,9 @@ export function getDiscountInfo(params: { config: FormConfig, discountObject?: F
 export function createAppliedDiscountSection(params: { config: FormConfig }) {
   const { config } = params || {};
   const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
+  const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
   const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
-  const { discountCode, discountText, oldPrice } = getDiscountInfo({ config });
+  const { discountCode, discountText, oldPrice } = getDiscountInfo({ config, isTrialUsed });
   
   if (isDiscountCodeEntryEnabled && isDiscountCodeApplied) return template(appliedDiscountSection, {
     DISCOUNT_CODE: discountCode,
