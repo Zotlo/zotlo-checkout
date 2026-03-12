@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.12.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.11.0...v1.12.0)
+
+### 🚀 Enhancements
+
+- **Z3-6052:** Add/send discount-code-entry flag ([51582df](https://github.com/Zotlo/zotlo-checkout/commit/51582df))
+- **Z3-6052:** Pass missing param to init config ([94eaec0](https://github.com/Zotlo/zotlo-checkout/commit/94eaec0))
+- **Z3-6052:** Update README ([b5417c5](https://github.com/Zotlo/zotlo-checkout/commit/b5417c5))
+- **Z3-6053:** Implement discount code functionality and UI components ([2754b9b](https://github.com/Zotlo/zotlo-checkout/commit/2754b9b))
+- **Z3-6053:** Prevent applying discount code on edit mode ([c2e917c](https://github.com/Zotlo/zotlo-checkout/commit/c2e917c))
+- **Z3-6053:** Update discount types to fix preview issue ([6a86d7b](https://github.com/Zotlo/zotlo-checkout/commit/6a86d7b))
+- **Z3-6053:** Update discount code input handling with uppercase transformation ([0c38dee](https://github.com/Zotlo/zotlo-checkout/commit/0c38dee))
+- **Z3-6053:** Wait for payment data before getting provider configs for syncing prices ([68b6f82](https://github.com/Zotlo/zotlo-checkout/commit/68b6f82))
+- **Z3-6068:** Update footer price info conditions for discounted prices ([6af29f1](https://github.com/Zotlo/zotlo-checkout/commit/6af29f1))
+- **Z3-6124:** Enhance payment details with plan, quantity and discount infos ([f9fe4d3](https://github.com/Zotlo/zotlo-checkout/commit/f9fe4d3))
+- **Z3-6124:** Update payment details discount section for panel edit mode ([71e6cb9](https://github.com/Zotlo/zotlo-checkout/commit/71e6cb9))
+- **Z3-6124:** Check for real discount for discount info on payment details ([dd11659](https://github.com/Zotlo/zotlo-checkout/commit/dd11659))
+- **Z3-6124:** Use package base prices for plan info on payment details ([66cdda0](https://github.com/Zotlo/zotlo-checkout/commit/66cdda0))
+- **Z3-6158:** Update discount info on form and payment details ([652bb52](https://github.com/Zotlo/zotlo-checkout/commit/652bb52))
+- **Z3-6158:** Update discount info by trial transaction status ([a2f8e00](https://github.com/Zotlo/zotlo-checkout/commit/a2f8e00))
+- **Z3-6158:** Add isTrialUsed condition for discount after trial ([f5772a4](https://github.com/Zotlo/zotlo-checkout/commit/f5772a4))
+- **Z3-6158:** Add conditions for discount info for free trial ([8103585](https://github.com/Zotlo/zotlo-checkout/commit/8103585))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.11.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.10.1...v1.11.0)
