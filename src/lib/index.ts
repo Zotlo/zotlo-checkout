@@ -17,7 +17,7 @@ import {
   handleSubscriberIdInputEventListeners,
   activateDisabledSubscriberIdInputs,
   useI18n,
-  handlePriceChangesBySubscriptionStatus,
+  handlePriceChanges,
   syncInputsOnTabs,
   handleSavedCardsEvents,
   getActiveSavedCardId,
@@ -30,6 +30,7 @@ import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
+import { useDiscount } from "../utils/useDiscount";
 import { createPaymentSuccessForm } from "./create";
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
@@ -54,6 +55,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       useCookie: !!params?.useCookie,
       showSavedCards: params?.showSavedCards,
       quantitySetting: params?.quantitySetting,
+      enableDiscountCodeEntry: params?.enableDiscountCodeEntry
     });
     await refreshProviderConfigs();
   }
@@ -63,6 +65,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
   let destroySavedCardsEvents = null as (() => void) | null;
   let destroyBillingFormEvents = null as (() => void) | null;
+  let destroyDiscountEvents = { discounted: null, undiscounted: null } as ReturnType<typeof useDiscount>;
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
@@ -186,7 +189,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         } else {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
         }
-        syncInputsOnTabs(tabName, ['subscriberId', 'zipCode']);
+        syncInputsOnTabs(tabName, ['subscriberId', 'zipCode', 'discountCode']);
         initFormInputs();
       } catch (err) {
         Logger.client?.captureException(err);
@@ -250,6 +253,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
   }
 
+  async function syncAllPrices() {
+    await refreshPaymentInitData();
+    await refreshProviderConfigs();
+    handlePriceChanges(config);
+  }
+
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
     if (!import.meta.env.VITE_SDK_API_URL || !config.packageInfo?.isProviderRefreshNecessary) return;
     const subscriberInput = event?.target as HTMLInputElement;
@@ -265,8 +274,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         subscriberInput.focus();
         return;
       }
-      await Promise.all([refreshPaymentInitData(), refreshProviderConfigs()]);
-      handlePriceChangesBySubscriptionStatus(config);
+      await syncAllPrices();
       setFormDisabled(false);
       subscriberInput.focus();
     } catch {
@@ -456,6 +464,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     destroyBillingFormEvents = handleBillingForm();
 
+    destroyDiscountEvents = useDiscount({ params, config, syncAllPrices });
+
     formElement?.addEventListener('submit', handleForm);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
@@ -493,6 +503,9 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     validatorInstance?.clearRules();
     destroySavedCardsEvents?.();
     destroyBillingFormEvents?.();
+
+    destroyDiscountEvents.discounted?.();
+    destroyDiscountEvents.undiscounted?.();
   }
 
   function init() {

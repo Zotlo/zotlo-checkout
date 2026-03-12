@@ -2,7 +2,7 @@ import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
-import { createButton, createCreditCardForm, createFooter, createPaymentHeader } from '../../create'
+import { createButton, createCreditCardForm, createFooter, createPaymentHeader, prepareDiscountSection } from '../../create'
 import { getPackageName, getQuantityInfo } from '../../../utils/getPackageInfo';
 import { prepareProvider } from './utils';
 
@@ -124,6 +124,7 @@ export function generateThemeMobileApp(params: {
     ADDITIONAL_PRICE: additionalPrice,
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: getQuantityInfo(config),
+    DISCOUNT_SECTION: prepareDiscountSection({ config }),
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,

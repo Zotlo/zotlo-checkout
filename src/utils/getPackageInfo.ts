@@ -1,5 +1,5 @@
 import { type FormConfig, PackageInfoType, PackageType, TrialPackageType } from "../lib/types";
-import { useI18n } from "../utils";
+import { useI18n, getIsDiscountCodeApplied } from "../utils";
 import { template } from "./template";
 
 export function getPackageInfo(config?: FormConfig): PackageInfoType {
@@ -53,13 +53,18 @@ export function getPackagePrices(config?: FormConfig) {
   const { paymentData } = config || {};
   const { packageType, trialPackageType } = paymentData?.package || {};
   const { price, currency = '', trialPrice = '', dailyPrice, weeklyPrice, basePrice, baseTrialPrice } = paymentData?.selectedPrice || {};
+  const { discountedPackagePrice, discountedPackageTrialPrice = '', discountedDailyPrice, discountedWeeklyPrice, totalPrice } = paymentData?.discount || {};
 
-  const priceValue = price;
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config || {} as FormConfig);
+
+  const priceValue = isDiscountCodeApplied ? discountedPackagePrice || totalPrice : price;
   const currencyValue = currency;
   let trialPriceValue = '0.00';
   if (packageType === PackageType.SUBSCRIPTION && trialPackageType === TrialPackageType.STARTING_PRICE) {
-    trialPriceValue = trialPrice;
+    trialPriceValue = isDiscountCodeApplied ? discountedPackageTrialPrice : trialPrice;
   }
+  const dailyPriceValue = isDiscountCodeApplied ? discountedDailyPrice : dailyPrice;
+  const weeklyPriceValue = isDiscountCodeApplied ? discountedWeeklyPrice : weeklyPrice;
 
   function formatPrice(value?: string | number) {
     return value ? `${(+value)?.toFixed(2)} ${currencyValue}` : '';
@@ -70,8 +75,14 @@ export function getPackagePrices(config?: FormConfig) {
     baseTrialPrice: formatPrice(baseTrialPrice),
     price: formatPrice(priceValue),
     trialPrice: formatPrice(trialPriceValue),
-    dailyPrice: formatPrice(dailyPrice),
-    weeklyPrice: formatPrice(weeklyPrice),
+    dailyPrice: formatPrice(dailyPriceValue),
+    weeklyPrice: formatPrice(weeklyPriceValue),
+    purePrice: formatPrice(price),
+    pureTrialPrice: formatPrice(trialPrice),
+    discountedPackagePrice: formatPrice(discountedPackagePrice),
+    discountedPackageTrialPrice: formatPrice(discountedPackageTrialPrice),
+    discountedDailyPrice: formatPrice(discountedDailyPrice),
+    discountedWeeklyPrice: formatPrice(discountedWeeklyPrice),
     currency: currencyValue,
   };
 }
@@ -121,12 +132,15 @@ export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUs
   const { paymentData } = config || {};
   if (!paymentData?.package?.packageId) return '0.00 USD';
   const { isTrialUsed = false, useBasePrices = false } = options || {};
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config || {} as FormConfig);
   const {
     packageType,
     trialPackageType,
   } = paymentData?.package || {};
   const { price, trialPrice, basePrice, baseTrialPrice, currency } = getPackagePrices(config);
 
+  if (isDiscountCodeApplied && !useBasePrices) return getDiscountPrices(config).total;
+  
   let finalAmount = useBasePrices ? basePrice : price;
   const trialPriceValue = useBasePrices ? baseTrialPrice : trialPrice;
   if (packageType === PackageType.SUBSCRIPTION && !isTrialUsed) {
@@ -147,19 +161,10 @@ export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUs
 }
 
 function getPackageCondition(config?: FormConfig, options?: { isTrialUsed?: boolean }):PackageInfoType['condition'] {
-  const { paymentData } = config || {};
   const { isTrialUsed = false } = options || {};
-  const {
-    packageType,
-    trialPackageType,
-  } = paymentData?.package || {};
-  const { customPrice, customCurrency } = config?.general || {};
-  const hasCustomPrice = !!customPrice && !!customCurrency;
 
   let condition = 'package_with_trial' as PackageInfoType['condition'];
-  const isOneTimePayment = [PackageType.CONSUMABLE, PackageType.EPIN].includes(packageType as PackageType) || hasCustomPrice;
-  const isNoTrial = !trialPackageType || trialPackageType === TrialPackageType.NO;
-  const isTrialUsedValue = trialPackageType && isTrialUsed;
+  const { isOneTimePayment, isNoTrial, isTrialUsed:isTrialUsedValue } = getPackageTypeConditions(config || {} as FormConfig, { isTrialUsed });
 
   if (isOneTimePayment) {
     condition = 'onetime_payment';
@@ -195,7 +200,7 @@ export function getIsProviderRefreshNecessary(config?: FormConfig, options?: { i
 export function getPackageTemplateParams(config: FormConfig) {
   if (!config || !config?.packageInfo) return {};
 
-  const { packageInfo } = config;
+  const { packageInfo, paymentData } = config || {};
   const { period = 0, trialPeriod = 0, periodType, trialPeriodType } = packageInfo || {};
   const { $t } = useI18n(config.general.localization);
 
@@ -203,6 +208,15 @@ export function getPackageTemplateParams(config: FormConfig) {
     QUANTITY: config?.settings?.quantitySetting?.quantity || 1,
     UNIT_PRICE: packageInfo?.totalPayableBaseAmount || "",
     PRICE: packageInfo?.price || "",
+    BASE_PRICE: packageInfo?.basePrice || "",
+    BASE_TRIAL_PRICE: packageInfo?.baseTrialPrice || "",
+    PURE_PRICE: packageInfo?.purePrice || "",
+    PURE_TRIAL_PRICE: packageInfo?.pureTrialPrice || "",
+    DISCOUNTED_PRICE: packageInfo?.discountedPackagePrice || "",
+    DISCOUNTED_TRIAL_PRICE: packageInfo?.discountedPackageTrialPrice || "",
+    DISCOUNTED_DAILY_PRICE: packageInfo?.discountedDailyPrice || "",
+    DISCOUNTED_WEEKLY_PRICE: packageInfo?.discountedWeeklyPrice || "",
+    DISCOUNTED_RECURRING_BILLING_PERIOD: paymentData?.discount?.recurringBillingPeriod || '',
     TRIAL_PRICE: packageInfo?.trialPrice || "",
     DAILY_PRICE: packageInfo?.dailyPrice || "",
     WEEKLY_PRICE: packageInfo?.weeklyPrice || "",
@@ -211,16 +225,45 @@ export function getPackageTemplateParams(config: FormConfig) {
   };
 }
 
-export function getPackagePaymentAmountText(config: FormConfig) {
+export function getPackageTypeConditions(config: FormConfig, options?: { isTrialUsed?: boolean }) {
+  const { paymentData } = config || {};
+  const { customPrice, customCurrency } = config?.general || {};
+  const { isTrialUsed = false } = options || {};
+
+  const hasCustomPrice = !!customPrice && !!customCurrency;
+
+  const { packageType = PackageType.CONSUMABLE, trialPackageType = TrialPackageType.NO } = paymentData?.package || {};
+
+  const isConsumable = packageType === PackageType.CONSUMABLE;
+  const isSubscription = packageType === PackageType.SUBSCRIPTION;
+  const isEpin = packageType === PackageType.EPIN;
+  const isOneTimePayment = isConsumable || isEpin || hasCustomPrice;
+  const isFreeTrial = isSubscription && trialPackageType === TrialPackageType.FREE_TRIAL;
+  const isPaidTrial = isSubscription && trialPackageType === TrialPackageType.STARTING_PRICE;
+  const isNoTrial = isSubscription && trialPackageType === TrialPackageType.NO;
+  const isTrialUsedValue = isTrialUsed && (isFreeTrial || isPaidTrial);
+
+  return {
+    isOneTimePayment,
+    isSubscription,
+    isConsumable,
+    isEpin,
+    isFreeTrial,
+    isPaidTrial,
+    isNoTrial,
+    isTrialUsed: isTrialUsedValue
+  }
+}
+
+export function getPlanInfoText(config: FormConfig) {
   const { paymentData } = config || {};
   const {
-    packageType = PackageType.CONSUMABLE,
     trialPackageType = TrialPackageType.NO,
   } = paymentData?.package || {};
   const { $t } = useI18n(config.general.localization);
   let text = "";
   const templateParams = getPackageTemplateParams(config);
-  const isOneTimePayment = [PackageType.CONSUMABLE, PackageType.EPIN].includes(packageType);
+  const { isOneTimePayment } = getPackageTypeConditions(config);
 
   if (isOneTimePayment) {
     text = $t("paymentSuccess.paymentDetails.packagePriceInfo.oneTimePayment");
@@ -250,9 +293,11 @@ export function getPackageName(config: FormConfig) {
 
     packageName = packageItem?.name || '';
 
-    if (packageItem?.packageType === PackageType.SUBSCRIPTION) {
+    const { isOneTimePayment, isSubscription } = getPackageTypeConditions(config);
+
+    if (isSubscription) {
       packageName = $t(`subscription.${periodInfo.periodType}`);
-    } else if ([PackageType.CONSUMABLE, PackageType.EPIN].includes(packageItem?.packageType as PackageType)) {
+    } else if (isOneTimePayment) {
       packageName = $t('onetimePayment');
     }
   }

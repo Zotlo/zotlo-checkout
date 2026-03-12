@@ -370,19 +370,20 @@ You can also include Zotlo Card directly in the browser using CDN links:
 ### Parameters
 These parameters specify the parameters and descriptions used in the Zotlo Card.
 
-| Name                    | Required | Description                                                                                                                  |
-|-------------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
-| `token`                 | **yes**  | The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. |
-| `packageId`             | **yes**  | The ID of the package you want to use.                                                                                       |
-| `subscriberId`          | **yes**  | Default subscriber ID for card update; can be an email, phone number, or UUID v4.                                            |
-| `returnUrl`             | no.      | The URL to redirect the user after card update completion.                                                                   |
-| `style`                 | no       | Custom styling on config                                                                                                     |
-| `customParameters`      | no       | Send custom parameters to webhooks                                                                                           |
-| `events`                | no       | Event listeners that can be used during the update process.                                                                  |
-| `events.onLoad`         | no       | Triggers after form loaded.                                                                                                  |
-| `events.onSubmit`       | no       | Triggered after the form is submitted.                                                                                       |
-| `events.onSuccess`      | no       | Triggered after a successful update.                                                                                         |
-| `events.onFail`         | no       | Triggered when a update fails.                                                                                               |
-| `events.onInvalidForm`  | no       | Triggers when form has an invalid field.                                                                                     |
+| Name                      | Required | Description                                                                                                                  |
+|---------------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
+| `token`                   | **yes**  | The checkout token obtained from the Zotlo Console. You can find this in your project's Developer Tools > Checkout SDK page. |
+| `packageId`               | **yes**  | The ID of the package you want to use.                                                                                       |
+| `subscriberId`            | **yes**  | Default subscriber ID for card update; can be an email, phone number, or UUID v4.                                            |
+| `returnUrl`               | no.      | The URL to redirect the user after card update completion.                                                                   |
+| `enableDiscountCodeEntry` | no       | Allow users to enter discount code on form.                                                                                  |
+| `style`                   | no       | Custom styling on config                                                                                                     |
+| `customParameters`        | no       | Send custom parameters to webhooks                                                                                           |
+| `events`                  | no       | Event listeners that can be used during the update process.                                                                  |
+| `events.onLoad`           | no       | Triggers after form loaded.                                                                                                  |
+| `events.onSubmit`         | no       | Triggered after the form is submitted.                                                                                       |
+| `events.onSuccess`        | no       | Triggered after a successful update.                                                                                         |
+| `events.onFail`           | no       | Triggered when a update fails.                                                                                               |
+| `events.onInvalidForm`    | no       | Triggers when form has an invalid field.                                                                                     |
 
 **Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#621) file.

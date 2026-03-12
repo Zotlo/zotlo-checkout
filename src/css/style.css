@@ -121,7 +121,7 @@
 }
 
 .zotlo-checkout tfoot tr.zotlo-checkout__package__summary__head td {
-  padding-top: 24px;
+  padding-top: 16px;
 }
 
 .zotlo-checkout tfoot tr.zotlo-checkout__package__summary__head td {
@@ -518,6 +518,49 @@
   padding-left: 8px;
 }
 
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__payment-method {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__discount {
+  font-weight: 600;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__discount-text {
+  color: #008BFF;
+}
+
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__discount-old-price {
+  color: #737380;
+  text-decoration: line-through;
+}
+
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__total-title {
+  font-weight: 600;
+}
+
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__total {
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: column;
+}
+
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__total-price {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.zotlo-checkout__payment-details .zotlo-checkout__payment-details__total-quantity-info {
+  font-weight: 400;
+  color: #737380;
+}
+
 .zotlo-checkout__payment-details__footer {
   color: #737380;
   font-size: 10px;
@@ -533,8 +576,11 @@
   text-decoration: none;
 }
 
+.zotlo-checkout__form-loader,
 .zotlo-checkout__loader {
   position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -544,6 +590,7 @@
   background-color: #0B0B0BA3;
 }
 
+.zotlo-checkout__form-loader::before,
 .zotlo-checkout__loader::before {
   position: relative;
   content: "";
@@ -556,6 +603,12 @@
   border-bottom: 3px solid var(--zc-form-spinner-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.zotlo-checkout__loader.zotlo-checkout__loader--mini::before {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
 }
 
 .zotlo-checkout__payment-provider .gpay-card-info-container-fill,
@@ -735,6 +788,164 @@
   flex-direction: column;
   gap: 16px;
   padding: 0 8px 16px;
+}
+
+div[data-discount-section] {
+  margin-top: -16px;
+}
+
+.zotlo-checkout__discount-content {
+  margin-top: 8px;
+}
+
+.zotlo-checkout__discount-content__input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zotlo-checkout__discount-content .zotlo-checkout__input {
+  padding: 0;
+  overflow: hidden;
+}
+
+.zotlo-checkout__discount-content .zotlo-checkout__input input {
+  padding: 16px 0 16px 16px;
+}
+
+.zotlo-checkout__discount-content [data-discount-error] {
+  text-align: left;
+  font-weight: var(--zc-form-input-label-fontWeight, 500);
+}
+
+.zotlo-checkout__discount-content button {
+  height: 40px;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  padding: 0 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #008BFF;
+}
+
+.zotlo-checkout__discount-content .zotlo-checkout__discount-content__toggle-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.zotlo-checkout__discount-content .zotlo-checkout__discount-content__toggle-container button {
+  padding: 0;
+}
+
+.zotlo-checkout__discount-content[data-discount-content="false"] .zotlo-checkout__discount-content__input-container,
+.zotlo-checkout__discount-content[data-discount-content="true"] button[data-discount-toggle] {
+  display: none;
+}
+
+.zotlo-checkout__discount-content button[data-discount-toggle],
+.zotlo-checkout__discount-content__discount-applied {
+  height: 42px;
+}
+
+.zotlo-checkout__discount-content__discount-applied {
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #008BFF;
+}
+
+.zotlo-checkout__discount-content__discount-applied .zotlo-checkout__loader {
+  display: none;
+}
+
+.zotlo-checkout__discount-content__discount-applied[data-loading="true"] .zotlo-checkout__loader {
+  display: flex;
+}
+
+.zotlo-checkout__discount-content__discount-applied[data-loading="true"] .zotlo-checkout__discount-content__coupon,
+.zotlo-checkout__discount-content__discount-applied[data-loading="true"] .zotlo-checkout__discount-content__price-info {
+  opacity: .5;
+}
+
+.zotlo-checkout__discount-content__coupon {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #F4FCFF;
+  color: #008BFF;
+}
+
+[data-theme="dark"] .zotlo-checkout__discount-content__coupon {
+  background-color: #008BFF;
+  color: #C6EFFF;
+}
+
+.zotlo-checkout__discount-content__price-info {
+  display: flex;
+  position: relative;
+  gap: 6px;
+  align-items: center;
+}
+
+.zotlo-checkout__discount-content__price-info--old {
+  color: #A9A7B1;
+  text-decoration: line-through;
+}
+
+.zotlo-checkout__discount-content button[data-discount-remove] {
+  padding: 0;
+  height: 16px;
+  color: #A9A7B1;
+}
+
+.zotlo-checkout__discount-content button[data-discount-action] {
+  overflow: hidden;
+  position: relative;
+}
+
+.zotlo-checkout__discount-content button[data-discount-action] .zotlo-checkout__loader {
+  display: none;
+}
+
+.zotlo-checkout__discount-content button[data-discount-action='loading'] span {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.zotlo-checkout__discount-content button[data-discount-action='loading'] .zotlo-checkout__loader {
+  display: flex;
+}
+
+.zotlo-checkout__discount-content .zotlo-checkout__loader {
+  background-color: transparent;
+}
+
+.zotlo-checkout__discount-content .zotlo-checkout__loader::before {
+  border-top-color: #008BFF;
+  border-right-color: #008BFF;
+  border-bottom-color: #008BFF;
+}
+
+[data-theme="dark"] button[data-discount-remove] {
+  color: #1A182280; /* #1A1822 with 0.5 opacity */
+}
+
+.zotlo-checkout table td.zotlo-checkout__discount-content-cell {
+  text-align: left;
+}
+
+.zotlo-checkout__package__summary .zotlo-checkout__discount-content-cell {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 [data-theme="dark"] .zotlo-checkout__modal[data-modal="all-cards"] .zotlo-checkout__card-item .zotlo-checkout__card-item-number {

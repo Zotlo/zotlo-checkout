@@ -99,7 +99,7 @@ function maskCardNumber(cardNumber: string, cardMask: string) {
 export function getCardInfoFromCardNumber(cardNumber: string) {
   const currentMask = getCardMask(cardNumber);
   const url = getCDNUrl(`cards/${currentMask.icon}.svg`);
-  const cardIconImg = url ? `<img src="${url}" alt="${currentMask.icon}" />` : '';
+  const cardIconImg = url ? `<img src="${url}" title="${currentMask.name}" alt="${currentMask.icon}" />` : '';
   const cardMask = currentMask.mask.replace(/0/g, '#');
   const maskedCardNumber = maskCardNumber(cardNumber, cardMask);
 

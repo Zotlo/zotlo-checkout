@@ -43,6 +43,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     useCookie = false,
     showSavedCards,
     quantitySetting,
+    enableDiscountCodeEntry,
   } = params || {};
 
   const payload = {
@@ -52,6 +53,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     ...(subscriberId && { subscriberId }),
     ...(customParameters && typeof customParameters === 'object' && { customParameters: JSON.stringify(customParameters) }),
     ...(quantitySetting && { quantitySetting }),
+    ...(enableDiscountCodeEntry !== undefined && { enableDiscountCodeEntry }),
   };
 
   const reqConfig = { headers: { Language: language } };
@@ -129,6 +131,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
         ? initData?.registerType !== 'other'
         : !!+initData?.hideSubscriberIdIfAlreadySet,
       quantitySetting: initData?.quantitySetting || {} as InitResult['quantitySetting'],
+      enableDiscountCodeEntry: !!+initData?.enableDiscountCodeEntry,
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);

@@ -104,6 +104,9 @@ export interface IZotloCheckoutParams {
   /** (Optional) The language code for the checkout form, e.g., `en`, `fr`, `pt_br`. */
   language?: string;
 
+  /** (Optional) Enable or disable the discount code entry field in the checkout form. Default is `false`. */
+  enableDiscountCodeEntry?: boolean;
+
   /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
   style?: IZotloCheckoutStyle;
 
@@ -264,6 +267,7 @@ export type FormSetting = {
     max: string | number;
     stepSize: string | number;
   };
+  enableDiscountCodeEntry?: boolean;
 };
 
 export type PackageData = {
@@ -304,6 +308,38 @@ export type SavedCreditCardData = {
   creditCardExpired: boolean;
 };
 
+enum DiscountType {
+  RATE = 'rate',
+  AMOUNT = 'amount'
+}
+
+enum DiscountRecurringType {
+  LIMITED = 'limited',
+  FOREVER = 'forever'
+}
+
+export type DiscountObject = {
+  discountPrice: number | string;
+  originalPrice: number | string;
+  totalPrice: number | string;
+  price?: number | string;
+  trialPrice?: number | string;
+  f?: boolean;
+  code?: string;
+  type?: DiscountType;
+  rate?: number;
+  amount?: number | string;
+  quantity?: number;
+  allowTrial?: 1 | 0;
+  recurringStatus?: 1 | 0;
+  recurringMode?: DiscountRecurringType;
+  recurringBillingPeriod?: string | null;
+  discountedPackagePrice?: string;
+  discountedPackageTrialPrice?: string;
+  discountedDailyPrice?: string;
+  discountedWeeklyPrice?: string;
+};
+
 export type FormPaymentData = {
   package: PackageData;
   providers: Record<PaymentProvider, boolean>;
@@ -311,11 +347,7 @@ export type FormPaymentData = {
   selectedPrice: SelectedPriceData;
   subscriberCountry: string;
   subscriberStatuses: SubscriberStatusesData;
-  discount?: {
-    discountPrice: number | string;
-    originalPrice: number | string;
-    totalPrice: number | string;
-  };
+  discount?: DiscountObject;
   documents: {
     distanceSalesAgreement: string;
     informationForm: string;
@@ -326,6 +358,8 @@ export type FormPaymentData = {
 
 export type PackageInfoType = {
   price: string;
+  basePrice: string;
+  baseTrialPrice: string;
   trialPrice: string;
   dailyPrice: string;
   weeklyPrice: string;
@@ -333,6 +367,12 @@ export type PackageInfoType = {
   trialPeriodType: string;
   period: number;
   periodType: string;
+  purePrice: string;
+  pureTrialPrice: string;
+  discountedPackagePrice: string;
+  discountedPackageTrialPrice: string;
+  discountedDailyPrice: string;
+  discountedWeeklyPrice: string;
   totalPayableAmount: string;
   totalPayableBaseAmount: string;
   currency: string;
@@ -546,6 +586,8 @@ export type TransactionDetail = {
   };
   provider_key: string;
   provider_key_translation: string;
+  quantity: number;
+  card_brand_id: string;
 }
 
 export type PaymentDetail = {
@@ -603,6 +645,7 @@ export type PaymentDetail = {
     };
   };
   transaction?: TransactionDetail[];
+  discount?: DiscountObject;
 }
 
 export interface IFormLoad {

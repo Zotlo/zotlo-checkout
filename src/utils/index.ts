@@ -17,6 +17,7 @@ export const ZOTLO_GLOBAL = {
   data: {
     subscriberId: '',
     zipCode: '',
+    discountCode: '',
   },
   checkout: {
     containerId: '',
@@ -130,11 +131,11 @@ export function setFormLoading(loading: boolean = true) {
   const formElement = ZOTLO_GLOBAL.formElement;
 
   if (!formElement) return;
-  let loaderEl = formElement.querySelector('.zotlo-checkout__loader') as HTMLDivElement;
+  let loaderEl = formElement.querySelector('.zotlo-checkout__form-loader') as HTMLDivElement;
   if (loading) {
     if (!loaderEl) {
       loaderEl = document.createElement('div');
-      loaderEl.className = 'zotlo-checkout__loader';
+      loaderEl.className = 'zotlo-checkout__form-loader';
       formElement.insertBefore(loaderEl, formElement.firstChild);
     }
     disableTabKeyNavigation(formElement);
@@ -180,6 +181,14 @@ export const debounce: any = (func: any, waitFor = 300) => {
   };
 }
 
+function disableCountryInput() {
+  const countryInputs = ZOTLO_GLOBAL.container?.querySelectorAll('input[name="country"]') as NodeListOf<HTMLInputElement>;
+  countryInputs?.forEach(countryInput => {
+    countryInput?.setAttribute('disabled', 'true');
+    countryInput?.parentElement?.classList.add('disabled');
+  });
+}
+
 export function setFormDisabled(disabled = true) {
   const formElement = ZOTLO_GLOBAL.formElement;
   const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
@@ -198,6 +207,7 @@ export function setFormDisabled(disabled = true) {
       input.removeAttribute('disabled');
     }
   }
+  disableCountryInput();
 }
 
 export function activateDisabledSubscriberIdInputs() {
@@ -299,7 +309,17 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
-  return template($t(`footer.priceInfo.${packageCondition}`), {
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
+  const isTrialDiscountAllowed = !!config?.paymentData?.discount?.allowTrial || false;
+  const isRecurringDiscountLimited = (config?.paymentData?.discount?.recurringMode === 'limited') || false;
+
+  const discountTrialKey = isTrialDiscountAllowed ? 'allowTrialDiscount' : 'noTrialDiscount';
+  const discountRecurringKey = isRecurringDiscountLimited ? 'recurringLimited' : 'recurringForever';
+  const finalLocalizationKey = isDiscountCodeApplied ? 
+    `footer.priceInfo.discounted.${packageCondition}.${discountTrialKey}.${discountRecurringKey}` : 
+    `footer.priceInfo.${packageCondition}`;
+
+  return template($t(finalLocalizationKey), {
     ...getPackageTemplateParams(config)
   });
 }
@@ -320,7 +340,7 @@ export function getSubmitButtonContent(config: FormConfig) {
   return buttonContent;
 }
 
-export async function handlePriceChangesBySubscriptionStatus(config: FormConfig) {
+export async function handlePriceChanges(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
   if (!ZOTLO_GLOBAL.formElement) return;
 
@@ -339,6 +359,10 @@ export async function handlePriceChangesBySubscriptionStatus(config: FormConfig)
   updateElementsValue<HTMLElement>('[data-discount-price]', config?.packageInfo?.discount?.price as string);
   const footerFullDescription = `${getFooterPriceInfo(config)} ${$t('footer.desc')}`;
   updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
+}
+
+export function getIsDiscountCodeApplied(config: FormConfig): boolean {
+  return !!config?.paymentData?.discount?.code;
 }
 
 export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {

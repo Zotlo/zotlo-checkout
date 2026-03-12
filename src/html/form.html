@@ -27,6 +27,11 @@
 
     <% IF(SHOW_PRICE===true) %>
     <div class="zotlo-checkout__total">
+      <% IF(DISCOUNT_SECTION) %>
+        <div data-discount-section>
+          {{DISCOUNT_SECTION}}
+        </div>
+      <% ENDIF %>
       <div class="zotlo-checkout__total__price-info">
         <span>{{TOTAL_LABEL}}:</span>
         <span data-total-price>{{TOTAL_PRICE}}</span>

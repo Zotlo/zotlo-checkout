@@ -1,0 +1,22 @@
+<div class="zotlo-checkout__discount-content">
+  <div class="zotlo-checkout__discount-content__discount-applied">
+    <div class="zotlo-checkout__loader zotlo-checkout__loader--mini"></div>
+    <div class="zotlo-checkout__discount-content__coupon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13.1669 1.33301C13.9953 1.33301 14.6669 2.00458 14.6669 2.83301V6.47431C14.6669 7.04886 14.4387 7.59988 14.0325 8.00619L8.3651 13.6749C7.5188 14.5195 6.1483 14.5201 5.30086 13.6759L2.32639 10.7058C1.47941 9.86051 1.47832 8.48859 2.32387 7.64178L7.99031 1.96856C8.39672 1.56165 8.94823 1.33301 9.52333 1.33301H13.1669ZM11.3335 3.6678C10.7812 3.6678 10.3335 4.1155 10.3335 4.66778C10.3335 5.22005 10.7812 5.66776 11.3335 5.66776C11.8858 5.66776 12.3335 5.22005 12.3335 4.66778C12.3335 4.1155 11.8858 3.6678 11.3335 3.6678Z" fill="currentColor"/>
+      </svg>
+      <span class="zotlo-checkout__discount-content__coupon-text">{{DISCOUNT_CODE}}</span>
+      <button type="button" data-discount-remove>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3.93725 4.05608L3.99274 3.99323C4.23321 3.75276 4.6116 3.73427 4.87329 3.93774L4.93613 3.99323L8.00189 7.05847L11.0677 3.99323C11.3282 3.73272 11.7505 3.73272 12.011 3.99323C12.2715 4.25374 12.2715 4.67611 12.011 4.93662L8.9458 8.00238L12.011 11.0681C12.2515 11.3086 12.27 11.687 12.0665 11.9487L12.011 12.0115C11.7706 12.252 11.3922 12.2705 11.1305 12.067L11.0677 12.0115L8.00189 8.94629L4.93613 12.0115C4.67562 12.272 4.25325 12.272 3.99274 12.0115C3.73224 11.751 3.73224 11.3286 3.99275 11.0681L7.05798 8.00238L3.99274 4.93662C3.75228 4.69615 3.73378 4.31776 3.93725 4.05608L3.99274 3.99323L3.93725 4.05608Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+    <div class="zotlo-checkout__discount-content__price-info">
+      <span class="zotlo-checkout__discount-content__price-info--discount">{{DISCOUNT_AMOUNT}}</span>
+      <% IF(OLD_PRICE) %>
+      <span class="zotlo-checkout__discount-content__price-info--old">{{OLD_PRICE}}</span>
+      <% ENDIF %>
+    </div>
+  </div>
+</div>

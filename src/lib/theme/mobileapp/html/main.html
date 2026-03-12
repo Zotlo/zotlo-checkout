@@ -34,6 +34,13 @@
       </tbody>
 
       <tfoot>
+        <% IF(DISCOUNT_SECTION) %>
+        <tr class="zotlo-checkout__discount-content-row">
+          <td colspan="2" class="zotlo-checkout__discount-content-cell" data-discount-section>
+            {{DISCOUNT_SECTION}}
+          </td>
+        </tr>
+        <% ENDIF %>
         <tr class="zotlo-checkout__package__summary__head">
           <td>{{STATIC_TOTAL}}</td>
           <td data-total-price class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
