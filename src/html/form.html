@@ -50,7 +50,9 @@
       <div><img src="{{CDN_URL}}img/payment-methods/visa.png" alt="visa"></div>
       <div><img src="{{CDN_URL}}img/payment-methods/mastercard.png" alt="mastercard"></div>
       <div><img src="{{CDN_URL}}img/payment-methods/american.png" alt="american"></div>
+      <% IF(COUNTRY_CODE==="RU") %>
       <div><img src="{{CDN_URL}}img/payment-methods/mnp.png" alt="mnp"></div>
+      <% ENDIF %>
       <div><img src="{{CDN_URL}}img/payment-methods/jcb.png" alt="jcb"></div>
       <div><img src="{{CDN_URL}}img/payment-methods/discover.png" alt="discover"></div>
       <div><img src="{{CDN_URL}}img/payment-methods/diners.png" alt="diners"></div>

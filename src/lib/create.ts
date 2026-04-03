@@ -286,6 +286,7 @@ export function createCreditCardForm(params: {
     }),
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
     QUANTITY_INFO: getQuantityInfo(config),
+    COUNTRY_CODE: config.general.countryCode,
     DISCOUNT_SECTION: prepareDiscountSection({ config }),
   });
 
