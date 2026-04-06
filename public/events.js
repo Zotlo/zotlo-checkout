@@ -169,7 +169,7 @@ window.EventActions = {
         value: price,
         currency,
         orderID: transactionId,
-        eventID: transactionId,
+        eventID: result.sessionId,
       });
 
       window.Tiktok.purchase({
@@ -178,7 +178,7 @@ window.EventActions = {
         description: app.name || ' ',
         content_id: packageData.packageId,
         orderID: transactionId
-      })
+      }, result.sessionId);
     }
   },
 }

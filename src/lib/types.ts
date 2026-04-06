@@ -593,6 +593,7 @@ export type TransactionDetail = {
 export type PaymentDetail = {
   cardUpdate?: boolean;
   isSandbox: boolean;
+  sessionId: string;
   application: {
     id: number;
     name: string;

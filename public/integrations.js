@@ -224,6 +224,11 @@
     return session;
   }
 
+  function getSessionId() {
+    const session = getSession({ key: COOKIE.UUID });
+    return session?.id || '';
+  }
+
   /**
    * 
    * @param {string} cookieText 
@@ -264,11 +269,6 @@
       }
     },
 
-    getSessionId() {
-      const session = getSession({ key: COOKIE.UUID });
-      return session?.id || '';
-    },
-
     /**
      * 
      * @param {string} eventName 
@@ -279,8 +279,8 @@
      */
     event(eventName, params, thirdArgs, ...restOfArgs) {
       if (!this.options.id) return;
-      const sessionId = this.getSessionId();
-      const thirdArgsObj = { ...(thirdArgs || {}), event_id: sessionId };
+      const sessionId = getSessionId();
+      const thirdArgsObj = { ...(thirdArgs || {}), event_id: thirdArgs?.event_id || sessionId };
       const argList = [eventName, params, thirdArgsObj, ...restOfArgs];
       globalThis?.ttq?.track?.(...argList);
       this.log("event", argList);
@@ -298,13 +298,14 @@
      * @param {string} payload.description
      * @param {string} payload.content_id
      * @param {string} payload.orderID
+     * @param {string} [eventID]
      */
-    purchase(payload) {
+    purchase(payload, eventID) {
       this.event('Purchase', {
         quantity: 1,
         content_type: 'product',
         ...payload
-      });
+      }, eventID ? { event_id: eventID } : undefined);
     },
 
     /**
@@ -355,7 +356,7 @@
           };
           ttq.load(id, { historyObserver: false });
           ttq.page({ event_id: sid });
-        }(window, document, 'ttq', this.options.id, this.getSessionId()));
+        }(window, document, 'ttq', this.options.id, getSessionId()));
       }
 
       return headScripts
@@ -376,17 +377,36 @@
       }
     },
     
-    event(...args) {
-      if (!this.options.id) return
-      if (window.fbq) {
-        window.fbq(...args);
-      }
-      this.log("event", args);
+    /**
+     * @param {string} eventType
+     * @param {any} eventName
+     * @param {any} [params]
+     * @param {Record<string, any>} [forthArgs]
+     * @param {...any} restOfArgs
+     */
+    event(eventType, eventName, params, forthArgs, ...restOfArgs) {
+      if (!this.options.id) return;
+      const sessionId = getSessionId();
+      const forthArgsObj = { ...(forthArgs || {}), eventID: forthArgs?.eventID || sessionId };
+      const argList = [eventType, eventName, params, forthArgsObj, ...restOfArgs];
+      globalThis?.fbq?.(...argList);
+      this.log("event", argList);
     },
-  
+
+    /**
+     * @param {...any} args
+     */
     track(...args) {
       if (!this.options.id) return
       this.event('track', ...args);
+    },
+
+    /**
+     * @param {...any} args
+     */
+    trackCustom(...args) {
+      if (!this.options.id) return
+      this.event('trackCustom', ...args);
     },
     
     /**
@@ -396,13 +416,13 @@
      * @param {string} payload.orderID
      * @param {string} [payload.eventID]
      */
-    purchase(payload) {
+     purchase(payload) {
       this.track('Purchase', {
         value: payload.value,
         currency: payload.currency
       }, {
-        eventID: payload.eventID,
         orderID: payload.orderID,
+        ...(payload.eventID ? {eventID: payload.eventID} : undefined),
       })
     },
   
@@ -902,12 +922,12 @@
     }
   }
 
-  window.checkConsent = checkConsent;
-  window.setCookie = setCookie;
-  window.getCookie = getCookie;
-  window.Facebook = Facebook;
-  window.GTM = GTM;
-  window.GA4 = GA4;
-  window.Tiktok = Tiktok;
-  window.Integration = Integration;
+  globalThis.checkConsent = checkConsent;
+  globalThis.setCookie = setCookie;
+  globalThis.getCookie = getCookie;
+  globalThis.Facebook = Facebook;
+  globalThis.GTM = GTM;
+  globalThis.GA4 = GA4;
+  globalThis.Tiktok = Tiktok;
+  globalThis.Integration = Integration;
 })();
