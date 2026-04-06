@@ -24,9 +24,13 @@
       show: { type: Boolean, default: false },
       text: { type: String, default: '' }
     },
+    data() {
+      return { content_id: '' }
+    },
     methods: {
-      toggle(show) {
+      toggle(show, content_id = '') {
         this._.props.show = !!show;
+        this._.data.content_id = content_id;
       },
       updateText(text) {
         this._.props.text = text;
@@ -63,11 +67,15 @@
           // Init other integrations
           if (granted) {
             window.Integration.meta();
+            window.Integration.tiktok();
             window.Facebook.track('AddToCart');
+            window.Tiktok.track('AddToCart', {
+              content_id: this._.data.content_id || 'none',
+            });
           }
         }
 
-        this.toggle(false);
+        this.toggle(false, this._.data.content_id);
 
         // Clear instances
         window.VueCookieApp._.appContext.app.unmount();

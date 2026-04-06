@@ -654,6 +654,7 @@ export interface IFormLoad {
   integrations: FormConfig['integrations'];
   backgroundColor: string;
   cookieText: string;
+  packageId: string;
 }
 
 export interface IFormInvalid {

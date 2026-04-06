@@ -513,6 +513,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const { $t } = useI18n(config.general.localization);
 
     params.events?.onLoad?.({
+      packageId: params.packageId,
       sandbox: !!config?.paymentData?.sandboxPayment,
       countryCode: config.general.countryCode || '',
       integrations: config.integrations,
