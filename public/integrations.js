@@ -29,6 +29,10 @@
  * @property {0|1} facebookData.isActive
  * @property {string} facebookData.pixelId
  * @property {'both'|'pixel'|'capi'} facebookData.integrationType
+ * @property {Object} tiktokData
+ * @property {0|1} tiktokData.isActive
+ * @property {string} tiktokData.pixelId
+ * @property {'both'|'pixel'|'capi'} tiktokData.integrationType
  * @property {Object} gaData
  * @property {0|1} gaData.isActive
  * @property {string} gaData.gaCode
@@ -202,10 +206,36 @@
   }
 
   /**
+   * @param {Object} [params] - Optional parameters
+   * @param {string} [params.path] - The path
+   * @param {boolean} [params.useCookie] - Whether to use cookie
+   * @param {string} [params.key] - The cookie key
+   */
+  function getSession(params) {
+    const { path, useCookie, key } = params || {};
+    if (useCookie) {
+      const id = getCookie(key || COOKIE.UUID)
+      return { id };
+    }
+    const sessionString = localStorage.getItem(key || COOKIE.UUID);
+    const sessions = (sessionString ? JSON.parse(atob(sessionString)) : null);
+    const pathName = path || globalThis?.location?.pathname || "/";
+    const session = sessions?.[pathName];
+    return session;
+  }
+
+  function getSessionId() {
+    const session = getSession({ key: COOKIE.UUID });
+    return session?.id || '';
+  }
+
+  /**
    * 
    * @param {string} cookieText 
+   * @param {string} countryCode
+   * @param {string} content_id
    */
-  function checkConsent(cookieText, countryCode) {
+  function checkConsent(cookieText, countryCode, content_id) {
     const cookieApp = window.VueCookieApp;
     if (!cookieApp || !cookieApp._) return false;
 
@@ -222,8 +252,116 @@
     cookiePopup.updateText(cookieText);
     
     // Show the cookie consent popup
-    cookiePopup.toggle(true);
+    cookiePopup.toggle(true, content_id);
   }
+
+  const Tiktok = {
+    options: {
+      id: null,
+      debug: false,
+      pageSlug: '',
+      countryCode: ''
+    },
+
+    log(...args) {
+      if (this.options.debug) {
+        console.log("%cTiktok Pixel", logSyle, ...args);
+      }
+    },
+
+    /**
+     * 
+     * @param {string} eventName 
+     * @param {Record<string, any>} [params] 
+     * @param {Record<string, any>} [thirdArgs] 
+     * @param  {...any} restOfArgs 
+     * @returns 
+     */
+    event(eventName, params, thirdArgs, ...restOfArgs) {
+      if (!this.options.id) return;
+      const sessionId = getSessionId();
+      const thirdArgsObj = { ...(thirdArgs || {}), event_id: thirdArgs?.event_id || sessionId };
+      const argList = [eventName, params, thirdArgsObj, ...restOfArgs];
+      globalThis?.ttq?.track?.(...argList);
+      this.log("event", argList);
+    },
+
+    track(...args) {
+      if (!this.options.id) return
+      this.event(...args);
+    },
+
+    /**
+     * @param {Object} payload
+     * @param {any} payload.value
+     * @param {any} payload.currency
+     * @param {string} payload.description
+     * @param {string} payload.content_id
+     * @param {string} payload.orderID
+     * @param {string} [eventID]
+     */
+    purchase(payload, eventID) {
+      this.event('Purchase', {
+        quantity: 1,
+        content_type: 'product',
+        ...payload
+      }, eventID ? { event_id: eventID } : undefined);
+    },
+
+    /**
+     * @param {Object} payload
+     * @param {(number|string)} payload.pixelId
+     * @param {boolean} [payload.debug]
+     * @param {string} payload.pageSlug
+     * @param {string} payload.countryCode
+     * @returns 
+     */
+    init(payload) {
+      const headScripts = {
+        script: [],
+        noscript: []
+      };
+
+      if (this.options.id) return headScripts;
+      if (!payload.pixelId) {
+        console.warn("Tiktok Pixel cannot be installed because there is no Pixel ID!");
+        return headScripts;
+      }
+
+      this.options.id = payload.pixelId;
+      this.options.debug = !!payload.debug;
+      this.options.pageSlug = payload.pageSlug;
+      this.options.countryCode = payload.countryCode;
+
+      if (this.options.debug) {
+        this.track('load', this.options.id);
+        this.track('page');
+        return headScripts;
+      }
+
+      if (window.document) {
+        (function (w, d, t, id, sid) {
+          w.TiktokAnalyticsObject=t;
+          var ttq=w[t]=w[t]||[];
+          ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],
+          ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};
+          for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);
+          ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},
+          ttq.load=function(e,n) {
+            var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},
+            ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,
+            o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a?.parentNode?.insertBefore(o,a);
+            w.loadedIntegrations=w.loadedIntegrations||[];
+            w.loadedIntegrations.push('Tiktok');
+          };
+          ttq.load(id, { historyObserver: false });
+          ttq.page({ event_id: sid });
+        }(window, document, 'ttq', this.options.id, getSessionId()));
+      }
+
+      return headScripts
+    },
+  };
 
   const Facebook = {
     options: {
@@ -239,17 +377,36 @@
       }
     },
     
-    event(...args) {
-      if (!this.options.id) return
-      if (window.fbq) {
-        window.fbq(...args);
-      }
-      this.log("event", args);
+    /**
+     * @param {string} eventType
+     * @param {any} eventName
+     * @param {any} [params]
+     * @param {Record<string, any>} [forthArgs]
+     * @param {...any} restOfArgs
+     */
+    event(eventType, eventName, params, forthArgs, ...restOfArgs) {
+      if (!this.options.id) return;
+      const sessionId = getSessionId();
+      const forthArgsObj = { ...(forthArgs || {}), eventID: forthArgs?.eventID || sessionId };
+      const argList = [eventType, eventName, params, forthArgsObj, ...restOfArgs];
+      globalThis?.fbq?.(...argList);
+      this.log("event", argList);
     },
-  
+
+    /**
+     * @param {...any} args
+     */
     track(...args) {
       if (!this.options.id) return
       this.event('track', ...args);
+    },
+
+    /**
+     * @param {...any} args
+     */
+    trackCustom(...args) {
+      if (!this.options.id) return
+      this.event('trackCustom', ...args);
     },
     
     /**
@@ -259,13 +416,13 @@
      * @param {string} payload.orderID
      * @param {string} [payload.eventID]
      */
-    purchase(payload) {
+     purchase(payload) {
       this.track('Purchase', {
         value: payload.value,
         currency: payload.currency
       }, {
-        eventID: payload.eventID,
         orderID: payload.orderID,
+        ...(payload.eventID ? {eventID: payload.eventID} : undefined),
       })
     },
   
@@ -677,9 +834,10 @@
       // Init if user access granted on cookie popup
       if (cookieConsent) {
         const metaScripts = this.meta();
-  
-        headScripts.script.push(...metaScripts.script);
-        headScripts.noscript.push(...metaScripts.noscript);
+        const tiktokScripts = this.tiktok();
+
+        headScripts.script.push(...metaScripts.script, ...tiktokScripts.script);
+        headScripts.noscript.push(...metaScripts.noscript, ...tiktokScripts.noscript);
       }
   
       return headScripts;
@@ -717,6 +875,32 @@
       return headScripts;
     },
 
+    tiktok() {
+      const tiktokData = this.list.tiktokData;
+      const pageSlug = window.location.pathname || '';
+
+      const headScripts = {
+        script: [],
+        noscript: []
+      };
+
+      if (tiktokData?.isActive && tiktokData?.integrationType !== 'capi' && !!tiktokData?.pixelId) {
+        const payload = {
+          pixelId: tiktokData.pixelId,
+          debug: this.debug,
+          pageSlug,
+          countryCode: this.data.countryCode
+        };
+
+        const scripts = Tiktok.init(payload);
+
+        headScripts.script.push(...scripts.script);
+        headScripts.noscript.push(...scripts.noscript);
+      }
+
+      return headScripts;
+    },
+
     /**
      * 
      * @param {Array<{src?: string, async?: boolean; onload?: Function; innerHTML?: string}>} list 
@@ -738,11 +922,12 @@
     }
   }
 
-  window.checkConsent = checkConsent;
-  window.setCookie = setCookie;
-  window.getCookie = getCookie;
-  window.Facebook = Facebook;
-  window.GTM = GTM;
-  window.GA4 = GA4;
-  window.Integration = Integration;
+  globalThis.checkConsent = checkConsent;
+  globalThis.setCookie = setCookie;
+  globalThis.getCookie = getCookie;
+  globalThis.Facebook = Facebook;
+  globalThis.GTM = GTM;
+  globalThis.GA4 = GA4;
+  globalThis.Tiktok = Tiktok;
+  globalThis.Integration = Integration;
 })();

@@ -30,7 +30,7 @@ import { ZotloCard } from './lib/card'
 
       if (!win.Integration) return;
 
-      win.checkConsent(config.cookieText, config.countryCode);
+      win.checkConsent(config.cookieText, config.countryCode, config.packageId);
 
       // Load itegrations
       const Integration = win.Integration || {};
@@ -40,7 +40,7 @@ import { ZotloCard } from './lib/card'
       Integration.loadScripts(headScripts.script || []);
 
       // Load integration events
-      win.EventActions.payment.loadGTMClickEvents();
+      win.EventActions.payment.loadGTMClickEvents(config.packageId);
     },
     onSuccess(result) {
       if (!win.EventActions) return;

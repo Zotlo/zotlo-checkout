@@ -48,7 +48,7 @@ window.EventActions = {
       }
     },
 
-    loadGTMClickEvents() {
+    loadGTMClickEvents(content_id) {
       const buttons = document.querySelectorAll('.zotlo-checkout__button');
 
       for (const button of buttons) {
@@ -56,6 +56,9 @@ window.EventActions = {
       }
 
       window.Facebook.track('AddToCart');
+      window.Tiktok.track('AddToCart', {
+        content_id: content_id || '',
+      });
       EventActions.general.pageView('Payment');
     },
 
@@ -166,8 +169,16 @@ window.EventActions = {
         value: price,
         currency,
         orderID: transactionId,
-        eventID: transactionId,
+        eventID: result.sessionId,
       });
+
+      window.Tiktok.purchase({
+        value: price,
+        currency,
+        description: app.name || ' ',
+        content_id: packageData.packageId,
+        orderID: transactionId
+      }, result.sessionId);
     }
   },
 }

@@ -593,6 +593,7 @@ export type TransactionDetail = {
 export type PaymentDetail = {
   cardUpdate?: boolean;
   isSandbox: boolean;
+  sessionId: string;
   application: {
     id: number;
     name: string;
@@ -654,6 +655,7 @@ export interface IFormLoad {
   integrations: FormConfig['integrations'];
   backgroundColor: string;
   cookieText: string;
+  packageId: string;
 }
 
 export interface IFormInvalid {

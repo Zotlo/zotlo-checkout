@@ -107,7 +107,7 @@
 
             if (!window.Integration) return;
 
-            window.checkConsent(config.cookieText, config.countryCode);
+            window.checkConsent(config.cookieText, config.countryCode, config.packageId);
 
             // Load itegrations
             const Integration = window.Integration || {};
@@ -117,7 +117,7 @@
             Integration.loadScripts(headScripts.script || []);
 
             // Load integration events
-            window.EventActions.payment.loadGTMClickEvents();
+            window.EventActions.payment.loadGTMClickEvents(config.packageId);
           },
           onSuccess(result) {
             if (!window.EventActions) return;

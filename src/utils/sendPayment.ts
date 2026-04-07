@@ -2,7 +2,7 @@ import { handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
-import { deleteSession } from "./session";
+import { deleteSession, getSession } from "./session";
 import { Logger } from "../lib/logger";
 import { COOKIE } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
@@ -166,13 +166,15 @@ export async function handlePaymentSuccess(payload: { config: FormConfig; params
       }
     }
 
+    params.events?.onSuccess?.({
+      ...result,
+      sessionId: getSession({ key: ZOTLO_GLOBAL.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID })?.id || '',
+      cardUpdate: ZOTLO_GLOBAL.cardUpdate
+    });
+
     deleteSession({
       useCookie: !!params.useCookie,
       key: config.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID
-    });
-    params.events?.onSuccess?.({
-      ...result,
-      cardUpdate: ZOTLO_GLOBAL.cardUpdate
     });
     return result;
   } catch (e) {
