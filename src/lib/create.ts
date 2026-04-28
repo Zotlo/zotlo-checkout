@@ -134,7 +134,7 @@ export function createInput(payload: {
   const inputWrapperClassName = payload?.input?.disabled ? 'disabled' : '';
 
   const inputHint = payload?.hint
-    ? `<span class="zotlo-checkout__hint__toggle"><img src="${getCDNUrl('cards/info.svg')}" alt="Info" class="size-16"></span>` + tooltipElement.replace(/\{\{CONTENT\}}/gm, payload.hint)
+    ? `<span class="zotlo-checkout__hint__toggle"><img src="${getCDNUrl('cards/info.svg')}" alt="Info"></span>` + tooltipElement.replace(/\{\{CONTENT\}}/gm, payload.hint)
     : ''
 
   const typeName = (payload?.input?.type === 'phone' ? 'text' : payload?.input?.type) || 'text';
