@@ -44,11 +44,15 @@
  */
 
 (() => {
+  let EXTERNAL_ID;
+
   const COOKIE = {
     UUID: "zc_uuid",
     COOKIE_CONSENT: 'cookieConsent',
     FBCLICK_ID: '_fbc',
     FBBROWSER_ID: '_fbp',
+    TTCLICK_ID: 'ttclid',
+    TTBROWSER_ID: '_ttp',
   }
 
   const consentCountries = [
@@ -58,6 +62,55 @@
   ];
 
   const logSyle = 'background: #2E495E;border-radius: 0.5em;color: white;font-weight: bold;padding: 2px 0.5em;';
+
+  getExternalId().then((id) => {EXTERNAL_ID = id});
+
+  function parseValue(value) {
+    if (value === 'true') return true;
+    else if (value === 'false') return false;
+    else if (value === undefined) return undefined;
+    else if (value === null) return null;
+    else if (isJSON(value)) return JSON.parse(value);
+    else if (!isNaN(Number(value))) return +value;
+    return value;
+  }
+
+  function isPlainObject(item) {
+    return (!!item && typeof item === 'object' && !Array.isArray(item));
+  }
+
+  function mergeDeep(target, ...sources) {
+    if (!sources.length) return { ...target };
+    const source = sources.shift();
+    const result = { ...target };
+
+    if (isPlainObject(result) && isPlainObject(source)) {
+      for (const key in source) {
+        if (isPlainObject(source[key])) {
+          result[key] = mergeDeep(result[key] || {}, source[key]);
+        } else {
+          result[key] = source[key];
+        }
+      }
+    }
+
+    return mergeDeep(result, ...sources);
+  }
+
+  async function sha256(message) {
+    // encode as (utf-8) Uint8Array
+    const msgBuffer = new TextEncoder().encode(message);                    
+
+    // hash the message
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+    // convert buffer to byte array
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+    // convert bytes to hex string                  
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  }
 
   /**
    * @param {string} str 
@@ -89,7 +142,7 @@
       if (cookie.indexOf(nameEQ) === 0) {
         const val = decodeURIComponent(cookie.substring(nameEQ.length));
 
-        if (!isNaN(parseFloat(val))) {
+        if (val.trim() !== '' && !isNaN(val) && !isNaN(parseFloat(val))) {
           return parseFloat(val);
         }
 
@@ -229,6 +282,14 @@
     return session?.id || '';
   }
 
+  function getEventId(eventName) {
+    return getSessionId() + '_' + eventName;
+  }
+
+  async function getExternalId() {
+    return sha256(getSessionId());
+  }  
+
   /**
    * 
    * @param {string} cookieText 
@@ -260,12 +321,27 @@
       id: null,
       debug: false,
       pageSlug: '',
-      countryCode: ''
     },
+
+    // Temporary store for events triggered before cookie consent is given
+    temp: [],
 
     log(...args) {
       if (this.options.debug) {
         console.log("%cTiktok Pixel", logSyle, ...args);
+      }
+    },
+
+    loadTemp() {
+      for (const args of this.temp) {
+        globalThis?.ttq?.[args[0]]?.(...args[1]);
+      }
+    },
+
+    getAMData() {
+      return {
+        external_id: EXTERNAL_ID,
+        country: Integration.data.countryCode,
       }
     },
 
@@ -278,17 +354,43 @@
      * @returns 
      */
     event(eventName, params, thirdArgs, ...restOfArgs) {
-      if (!this.options.id) return;
-      const sessionId = getSessionId();
-      const thirdArgsObj = { ...(thirdArgs || {}), event_id: thirdArgs?.event_id || sessionId };
-      const argList = [eventName, params, thirdArgsObj, ...restOfArgs];
+      const cookieConsent = parseValue(getCookie(COOKIE.COOKIE_CONSENT));
+      const paramObj = mergeDeep({...(params || {})}, this.getAMData());
+      const thirdArgsObj = mergeDeep({...(thirdArgs || {})}, { event_id: getEventId(eventName) });
+      const argList = [eventName, paramObj, thirdArgsObj, ...restOfArgs];
+
       globalThis?.ttq?.track?.(...argList);
+
+      if (!cookieConsent && eventName !== 'Pageview') {
+        this.temp.push(['track', argList]);
+      }
+
       this.log("event", argList);
     },
 
     track(...args) {
-      if (!this.options.id) return
       this.event(...args);
+    },
+
+    /**
+     * 
+     * @param {Object} payload 
+     * @param {string} [payload.email]
+     * @param {string} [payload.phone_number]
+     */
+    identify(payload) {
+      const cookieConsent = parseValue(getCookie(COOKIE.COOKIE_CONSENT));
+      const paramObj = mergeDeep({ ...(payload || {}) }, {
+        external_id: EXTERNAL_ID,
+      });
+
+      globalThis?.ttq?.identify?.(paramObj);
+
+      if (!cookieConsent) {
+        this.temp.push(['identify', [paramObj]]);
+      }
+
+      this.log("identify", paramObj);
     },
 
     /**
@@ -298,14 +400,87 @@
      * @param {string} payload.description
      * @param {string} payload.content_id
      * @param {string} payload.orderID
-     * @param {string} [eventID]
+     * @param {Object} payload.context
+     * @param {Object} [payload.contents]
+     * @param {string} payload.contents[].content_id
+     * @param {string} payload.contents[].content_name
+     * @param {number} payload.contents[].price
+     * @param {number} payload.contents[].quantity
      */
-    purchase(payload, eventID) {
+    purchase(payload) {
       this.event('Purchase', {
         quantity: 1,
         content_type: 'product',
         ...payload
-      }, eventID ? { event_id: eventID } : undefined);
+      });
+    },
+
+    /** 
+     * @param {string} siteUrl
+     * @param {Record<string, string>} [ttParams] - Optional TikTok parameters, if not provided, it will be retrieved from cookies and URL
+    */
+    prepareCAPIParams(siteUrl, ttParams) {
+      ttParams = ttParams || {
+        [COOKIE.TTCLICK_ID]: getCookie(COOKIE.TTCLICK_ID) || '',
+        [COOKIE.TTBROWSER_ID]: getCookie(COOKIE.TTBROWSER_ID) || ''
+      };
+
+      const location = new URL(`${siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`}`);
+      const { ttclid } = parseQueryString(location?.search || '');
+
+      if (!ttParams[COOKIE.TTCLICK_ID] && ttclid) {
+        // const subdomainIndex = 1;
+        /* let subdomainIndex = location.host.split('.').length - 1;
+        if (subdomainIndex > 2) subdomainIndex = 2;
+        if (subdomainIndex < 0) subdomainIndex = 0; */
+    
+        ttParams[COOKIE.TTCLICK_ID] = ttclid || '';
+      }
+
+      return ttParams;
+    },
+
+    /**
+     * 
+     * @param {Object} params 
+     * @param {string} [params.siteUrl]
+     * @param {string} [params.value]
+     * @param {string} params.pageSlug
+     */
+    createCAPIClickID(params) {
+      const { value, pageSlug } = params;
+
+      return {
+        cookieName: COOKIE.TTCLICK_ID,
+        exdays: generateExpireTime(new Date(new Date().setDate(new Date().getDate() + 90))).date, // 90 days
+        value: value || '',
+        path: pageSlug
+      }
+    },
+
+    sendCAPIInfo() {
+      const win = globalThis;
+
+      setTimeout(() => {
+        const params = Tiktok.prepareCAPIParams(window.location.href);
+        const hasAnyValue = !!Object.values(params).filter(Boolean).length;
+
+        if (hasAnyValue) {
+          const myEvent = new CustomEvent('sendCAPIInfo', {
+            detail: {
+              integration: 'TT',
+              params: {
+                ttclid: params[COOKIE.TTCLICK_ID],
+                ttp: params[COOKIE.TTBROWSER_ID]
+              }
+            },
+            bubbles: true, 
+            cancelable: true
+          });
+
+          document.dispatchEvent(myEvent);
+        }
+      }, 1000);
     },
 
     /**
@@ -313,7 +488,6 @@
      * @param {(number|string)} payload.pixelId
      * @param {boolean} [payload.debug]
      * @param {string} payload.pageSlug
-     * @param {string} payload.countryCode
      * @returns 
      */
     init(payload) {
@@ -331,7 +505,6 @@
       this.options.id = payload.pixelId;
       this.options.debug = !!payload.debug;
       this.options.pageSlug = payload.pageSlug;
-      this.options.countryCode = payload.countryCode;
 
       if (this.options.debug) {
         this.track('load', this.options.id);
@@ -339,8 +512,10 @@
         return headScripts;
       }
 
+      document.addEventListener('tiktokLoad', Tiktok.sendCAPIInfo.bind(this), { once: true });
+
       if (window.document) {
-        (function (w, d, t, id, sid) {
+        (function (w, d, t, id, sid, ldtmp) {
           w.TiktokAnalyticsObject=t;
           var ttq=w[t]=w[t]||[];
           ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],
@@ -351,12 +526,15 @@
             var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},
             ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,
             o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a?.parentNode?.insertBefore(o,a);
+            document.dispatchEvent(new CustomEvent('tiktokLoad', {detail: {},bubbles: true, cancelable: true}));
             w.loadedIntegrations=w.loadedIntegrations||[];
             w.loadedIntegrations.push('Tiktok');
           };
           ttq.load(id, { historyObserver: false });
-          ttq.page({ event_id: sid });
-        }(window, document, 'ttq', this.options.id, getSessionId()));
+          ttq.page(sid);
+          ttq.identify({ external_id: sid.external_id });
+          if (ldtmp) ldtmp();
+        }(window, document, 'ttq', this.options.id, {...this.getAMData(), event_id: getEventId('page') }, () => this.loadTemp()));
       }
 
       return headScripts
@@ -368,13 +546,38 @@
       id: null,
       debug: false,
       pageSlug: '',
-      countryCode: ''
     },
+
+    // Temporary store for events triggered before cookie consent is given
+    temp: [],
   
     log(...args) {
       if (this.options.debug) {
         console.log("%cFacebook Pixel", logSyle, ...args);
       }
+    },
+
+    loadTemp() {
+      for (const args of this.temp) {
+        globalThis?.fbq?.(...args);
+      }
+    },
+
+    getAMData() {
+      let clientIp;
+
+      try {
+        clientIp = Integration.data.ia ? atob(Integration.data.ia) : undefined
+      } catch {}
+
+      return {
+        external_id: EXTERNAL_ID,
+        country: Integration.data.countryCode,
+        client_ip_address: clientIp,
+        client_user_agent: globalThis?.navigator.userAgent,
+        fbp: getCookie(COOKIE.FBBROWSER_ID) || undefined,
+        fbc: getCookie(COOKIE.FBCLICK_ID) || undefined,
+      };
     },
     
     /**
@@ -384,12 +587,18 @@
      * @param {Record<string, any>} [forthArgs]
      * @param {...any} restOfArgs
      */
-    event(eventType, eventName, params, forthArgs, ...restOfArgs) {
-      if (!this.options.id) return;
-      const sessionId = getSessionId();
-      const forthArgsObj = { ...(forthArgs || {}), eventID: forthArgs?.eventID || sessionId };
-      const argList = [eventType, eventName, params, forthArgsObj, ...restOfArgs];
+    async event(eventType, eventName, params, forthArgs, ...restOfArgs) {
+      const cookieConsent = parseValue(getCookie(COOKIE.COOKIE_CONSENT));
+      const paramObj = mergeDeep((params || {}), this.getAMData());
+      const forthArgsObj = mergeDeep((forthArgs || {}), { eventID: getEventId(eventName) });
+      const argList = [eventType, eventName, paramObj, forthArgsObj, ...restOfArgs];
+
       globalThis?.fbq?.(...argList);
+
+      if (!cookieConsent && eventName !== 'PageView' && eventType !== 'init') {
+        this.temp.push(argList);
+      }
+
       this.log("event", argList);
     },
 
@@ -397,7 +606,6 @@
      * @param {...any} args
      */
     track(...args) {
-      if (!this.options.id) return
       this.event('track', ...args);
     },
 
@@ -405,7 +613,6 @@
      * @param {...any} args
      */
     trackCustom(...args) {
-      if (!this.options.id) return
       this.event('trackCustom', ...args);
     },
     
@@ -413,28 +620,29 @@
      * @param {Object} payload
      * @param {string} payload.value
      * @param {string} payload.currency
-     * @param {string} payload.orderID
-     * @param {string} [payload.eventID]
+     * @param {Record<string, any>} payload.userData
+     * @param {Record<string, any>} [payload.otherData]
      */
-     purchase(payload) {
+    purchase(payload) {
       this.track('Purchase', {
         value: payload.value,
-        currency: payload.currency
-      }, {
-        orderID: payload.orderID,
-        ...(payload.eventID ? {eventID: payload.eventID} : undefined),
-      })
+        currency: payload.currency,
+        pageUrl: window.location.href,
+        ...(payload.otherData || {}),
+        ...(payload.userData || {}),
+        fbp: getCookie(COOKIE.FBBROWSER_ID) || '',
+        fbc: getCookie(COOKIE.FBCLICK_ID) || ''
+      });
     },
   
-    prepareCAPIParams(siteUrl) {
-      const fbParams = {
+    prepareCAPIParams(siteUrl, fbParams) {
+      fbParams = fbParams || {
         [COOKIE.FBCLICK_ID]: getCookie(COOKIE.FBCLICK_ID) || '',
         [COOKIE.FBBROWSER_ID]: getCookie(COOKIE.FBBROWSER_ID) || ''
       };
   
       const location = new URL(`${siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`}`);
-      const query = parseQueryString(location.search || '');
-      const fbclid = query.fbclid || ''
+      const { fbclid } = parseQueryString(location?.search || '');
   
       if (!fbParams[COOKIE.FBCLICK_ID] && fbclid) {
         const subdomainIndex = 1;
@@ -471,14 +679,21 @@
         const hasAnyValue = !!Object.values(params).filter(Boolean).length;
   
         if (hasAnyValue) {
-          sendFBCapi({
-            fbp: params[COOKIE.FBBROWSER_ID]
-          }, { hideErrorToast: true });
+          const myEvent = new CustomEvent('sendCAPIInfo', {
+            detail: {
+              integration: 'FB',
+              params: {
+                fbp: params[COOKIE.FBBROWSER_ID],
+                fbclid: params[COOKIE.FBCLICK_ID]
+              }
+            },
+            bubbles: true, 
+            cancelable: true
+          });
+
+          document.dispatchEvent(myEvent);
         }
       }, 1000);
-  
-      // Delete temp proxy object
-      if (win.proxy1) delete win.proxy1;
     },
   
     /**
@@ -486,7 +701,6 @@
      * @param {(number|string)} payload.pixelId
      * @param {boolean} [payload.debug]
      * @param {string} payload.pageSlug
-     * @param {string} payload.countryCode
      */
     init(payload) {
       const headScripts = {
@@ -503,13 +717,15 @@
       this.options.id = payload.pixelId;
       this.options.debug = !!payload.debug;
       this.options.pageSlug = payload.pageSlug;
-      this.options.countryCode = payload.countryCode;
   
       if (this.options.debug) {
         this.event('init', this.options.id);
         this.track('PageView');
         return headScripts;
       }
+
+      const win = globalThis;
+      document.addEventListener('fbLoad', Facebook.sendCAPIInfo.bind(this), { once: true });
   
       if (window.document) {
         (function(f, b, e, v) {
@@ -530,6 +746,7 @@
           t.src=v;
           t.onload=function() {
             const win = window;
+            document.dispatchEvent(new CustomEvent('fbLoad', {detail: {},bubbles: true,cancelable: true}));
             if (win) {
               win.loadedIntegrations=win.loadedIntegrations||[];
               win.loadedIntegrations.push('FB');
@@ -538,8 +755,9 @@
           const s = b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t, s);
         })(window, document,'script', 'https://connect.facebook.net/en_US/fbevents.js');
-        this.event('init', this.options.id);
-        this.track('PageView');
+        this.event('init', this.options.id, this.getAMData());
+        this.track('PageView', this.getAMData());
+        this.loadTemp();
       }
   
       headScripts.noscript.push({
@@ -781,7 +999,8 @@
     /** @type {Integrations} */
     list: {},
     data: {
-      countryCode: ''
+      countryCode: '',
+      ia: ''
     },
     debug: false,
 

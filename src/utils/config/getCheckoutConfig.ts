@@ -95,6 +95,11 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       params.style?.success || {}
     ) as FormSuccess;
 
+    if (window?.Integration) {
+      window.Integration.data.ia = initData?.ia || '';
+      window.Integration.data.countryCode = config.general.countryCode || '';
+    }
+
     config.general = {
       localization: initData?.localization || config.general.localization,
       showPaypal: !!paymentInitData?.providers?.paypal,

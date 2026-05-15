@@ -68,10 +68,14 @@
           if (granted) {
             window.Integration.meta();
             window.Integration.tiktok();
-            window.Facebook.track('AddToCart');
-            window.Tiktok.track('AddToCart', {
-              content_id: this._.data.content_id || 'none',
+
+            const myEvent = new CustomEvent('cookieConsent', {
+              detail: { consent: granted },
+              bubbles: true, 
+              cancelable: true
             });
+
+            document.dispatchEvent(myEvent);
           }
         }
 
