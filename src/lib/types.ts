@@ -357,24 +357,24 @@ export type FormPaymentData = {
 }
 
 export type PackageInfoType = {
-  price: string;
-  basePrice: string;
-  baseTrialPrice: string;
-  trialPrice: string;
-  dailyPrice: string;
-  weeklyPrice: string;
+  price: string | number;
+  basePrice: string | number;
+  baseTrialPrice: string | number;
+  trialPrice: string | number;
+  dailyPrice: string | number;
+  weeklyPrice: string | number;
   trialPeriod: number;
   trialPeriodType: string;
   period: number;
   periodType: string;
-  purePrice: string;
-  pureTrialPrice: string;
-  discountedPackagePrice: string;
-  discountedPackageTrialPrice: string;
-  discountedDailyPrice: string;
-  discountedWeeklyPrice: string;
-  totalPayableAmount: string;
-  totalPayableBaseAmount: string;
+  purePrice: string | number;
+  pureTrialPrice: string | number;
+  discountedPackagePrice: string | number;
+  discountedPackageTrialPrice: string | number;
+  discountedDailyPrice: string | number;
+  discountedWeeklyPrice: string | number;
+  totalPayableAmount: string | number;
+  totalPayableBaseAmount: string | number;
   currency: string;
   condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
   state: keyof FormConfig['design']['button']['text'];

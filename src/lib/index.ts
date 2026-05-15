@@ -22,7 +22,8 @@ import {
   handleSavedCardsEvents,
   getActiveSavedCardId,
   ZOTLO_GLOBAL,
-  shouldSkipBillingFields
+  shouldSkipBillingFields,
+  getUserDataForIntegration
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -77,6 +78,26 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     config.packageInfo = getPackageInfo(config);
   }
 
+  function getEventData() {
+    const selectedPackage = config.paymentData?.package;
+    const packageInfo = getPackageInfo(config, true);
+
+    return {
+      content_id: selectedPackage?.packageId,
+      content_type: 'product',
+      quantity: 1,
+      description: config.general.appName,
+      value: packageInfo.totalPayableAmount,
+      currency: packageInfo.currency,
+      contents: [{
+        content_id: selectedPackage?.packageId,
+        content_name: selectedPackage?.name,
+        price: packageInfo.totalPayableAmount,
+        quantity: 1
+      }]
+    };
+  }
+
   async function handleFormSubmit(providerKey: PaymentProvider = PaymentProvider.CREDIT_CARD) {
     // Reset form validations
     for (const validation of Object.values(validations)) {
@@ -97,6 +118,18 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       const result = getFormValues(config);
       const cardId = getActiveSavedCardId({ providerKey, config });
       params.events?.onSubmit?.();
+
+      const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+        registerType: config.settings.registerType,
+        subscriberId: result.subscriberId || config.general.subscriberId
+      });
+      
+      window?.Facebook?.track('AddToCart', fbSiteData);
+      window?.Tiktok?.track('AddToCart', {
+        ...getEventData(),
+        ...tiktokContext
+      });
+
       try {
         setFormLoading(true);
         await sendPayment({
@@ -320,10 +353,79 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     return destroy;
   }
 
+  async function onFormInputChange() {
+    const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+      registerType: config.settings.registerType,
+      subscriberId: config.general.subscriberId
+    });
+
+    // Send events to FB and Tiktok when user starts filling the form
+    window?.Facebook?.track('AddPaymentInfo', {
+      pageType: 'Payment',
+      pageSlug: globalThis?.location?.pathname,
+      ...fbSiteData
+    });
+    window?.Tiktok?.track('AddPaymentInfo', {
+      pageType: 'Payment',
+      pageSlug: globalThis?.location?.pathname,
+      ...tiktokContext
+    });
+
+    // Bind AddPaymentInfo event to BE
+    CheckoutAPI.post('/payment/eventInfo', {
+      eventName: 'AddPaymentInfo',
+      payload: {
+        pageType: 'Payment',
+        pageSlug: globalThis?.location?.pathname,
+      }
+    });
+
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
+    const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
+
+    formInputs?.forEach((input) => {
+      input.removeEventListener('change', onFormInputChange);
+    });
+  }
+
+  async function onCookieConsentGranted() {
+    const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+      registerType: config.settings.registerType,
+      subscriberId: config.general.subscriberId
+    });
+
+    window?.Facebook?.track('InitiateCheckout', fbSiteData);
+    window?.Tiktok?.track('InitiateCheckout', {
+      ...getEventData(),
+      ...tiktokContext
+    });
+  }
+
+  async function sendCAPIInfo(e: any) {
+    const data = e?.detail || {}
+    const params = data?.params || {};
+    const payload: Record<string, string> = {}
+
+    if (data.integration === 'FB' && params.fbclid) {
+      payload.fbclid = params.fbclid || '';
+    }
+
+    if (data.integration === 'TT' && params.ttclid) {
+      payload.ttclid = params.ttclid || '';
+    }
+
+    if (Object.keys(payload).length === 0) return;
+
+    // Bind to BE
+    CheckoutAPI.post('/clickId', payload);
+  }
+
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const container = ZOTLO_GLOBAL.container;
     const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
     const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');
     const selectboxes = container?.querySelectorAll(wrapper + '[data-select]');
@@ -467,12 +569,19 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     destroyDiscountEvents = useDiscount({ params, config, syncAllPrices });
 
     formElement?.addEventListener('submit', handleForm);
+    formInputs?.forEach((input) => {
+      input.addEventListener('change', onFormInputChange, { once: true });
+    });
+    document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
+    document.addEventListener('sendCAPIInfo', sendCAPIInfo);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const container = ZOTLO_GLOBAL.container;
     const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
     const submitButtons = container?.querySelectorAll('button[data-provider]');
 
     if (submitButtons) {
@@ -499,6 +608,15 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       item?.destroy?.();
       delete selectboxList[key];
     }
+
+    if (formInputs) {
+      for (const input of formInputs) {
+        input.removeEventListener('change', onFormInputChange);
+      }
+    }
+
+    document.removeEventListener('cookieConsent', onCookieConsentGranted);
+    document.removeEventListener('sendCAPIInfo', sendCAPIInfo);
 
     validatorInstance?.clearRules();
     destroySavedCardsEvents?.();
