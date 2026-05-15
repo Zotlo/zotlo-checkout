@@ -321,7 +321,6 @@
       id: null,
       debug: false,
       pageSlug: '',
-      countryCode: '',
     },
 
     // Temporary store for events triggered before cookie consent is given
@@ -342,7 +341,7 @@
     getAMData() {
       return {
         external_id: EXTERNAL_ID,
-        country: this.options.countryCode,
+        country: Integration.data.countryCode,
       }
     },
 
@@ -482,12 +481,6 @@
           document.dispatchEvent(myEvent);
         }
       }, 1000);
-
-      // Delete temp proxy object
-      if (win?.proxy1) delete win.proxy1;
-
-      // Destroy listener event
-      win?.__EMITTER__?.off('tiktokLoad');
     },
 
     /**
@@ -495,7 +488,6 @@
      * @param {(number|string)} payload.pixelId
      * @param {boolean} [payload.debug]
      * @param {string} payload.pageSlug
-     * @param {string} payload.countryCode
      * @returns 
      */
     init(payload) {
@@ -513,7 +505,6 @@
       this.options.id = payload.pixelId;
       this.options.debug = !!payload.debug;
       this.options.pageSlug = payload.pageSlug;
-      this.options.countryCode = payload.countryCode;
 
       if (this.options.debug) {
         this.track('load', this.options.id);
@@ -555,7 +546,6 @@
       id: null,
       debug: false,
       pageSlug: '',
-      countryCode: '',
     },
 
     // Temporary store for events triggered before cookie consent is given
@@ -582,7 +572,7 @@
 
       return {
         external_id: EXTERNAL_ID,
-        country: this.options.countryCode,
+        country: Integration.data.countryCode,
         client_ip_address: clientIp,
         client_user_agent: globalThis?.navigator.userAgent,
         fbp: getCookie(COOKIE.FBBROWSER_ID) || undefined,
@@ -704,9 +694,6 @@
           document.dispatchEvent(myEvent);
         }
       }, 1000);
-  
-      // Delete temp proxy object
-      if (win.proxy1) delete win.proxy1;
     },
   
     /**
@@ -714,7 +701,6 @@
      * @param {(number|string)} payload.pixelId
      * @param {boolean} [payload.debug]
      * @param {string} payload.pageSlug
-     * @param {string} payload.countryCode
      */
     init(payload) {
       const headScripts = {
@@ -731,8 +717,6 @@
       this.options.id = payload.pixelId;
       this.options.debug = !!payload.debug;
       this.options.pageSlug = payload.pageSlug;
-      this.options.countryCode = payload.countryCode;
-      this.options.ipAddress = payload.ipAddress;
   
       if (this.options.debug) {
         this.event('init', this.options.id);

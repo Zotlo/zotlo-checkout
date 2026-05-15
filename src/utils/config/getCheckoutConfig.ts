@@ -97,6 +97,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
 
     if (window?.Integration) {
       window.Integration.data.ia = initData?.ia || '';
+      window.Integration.data.countryCode = config.general.countryCode || '';
     }
 
     config.general = {
