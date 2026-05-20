@@ -19,7 +19,7 @@ import Countries from '../countries.json'
 import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied } from "../utils";
 import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
-import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData, type FormPaymentData } from './types'
+import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData, type FormPaymentData, type FooterInfo } from './types'
 import { FORM_ITEMS } from './fields'
 import { getCardInfoFromCardNumber } from '../utils/getCardMask';
 
@@ -531,6 +531,7 @@ export function preparePaymentDetailsSection(params: {
     ...footerInfo,
     SHOW_FOOTER_DESC: false,
     PAYMENT_AGGREGATOR: '',
+    ZOTLO_ADDRESS_TEXT: '',
   }) || '';
 
   return template(paymentDetailsElement, {
@@ -715,14 +716,7 @@ export function createPaymentHeader(params: {
   })
 }
 
-export function createFooter(footerInfo: {
-  SHOW_FOOTER_DESC?: boolean;
-  PRICE_INFO: string;
-  FOOTER_DESC: string;
-  DISCLAIMER: string;
-  ZOTLO_LEGALS_TEXT: string;
-  PAYMENT_AGGREGATOR: string;
-}) {
+export function createFooter(footerInfo: FooterInfo) {
   return template(footerHTML, {
     SHOW_FOOTER_DESC: !!footerInfo.SHOW_FOOTER_DESC,
     PRICE_INFO: footerInfo.PRICE_INFO,
@@ -730,6 +724,7 @@ export function createFooter(footerInfo: {
     DISCLAIMER: footerInfo.DISCLAIMER,
     ZOTLO_LEGALS_TEXT: footerInfo.ZOTLO_LEGALS_TEXT,
     PAYMENT_AGGREGATOR: footerInfo.PAYMENT_AGGREGATOR,
+    ZOTLO_ADDRESS_TEXT: footerInfo.ZOTLO_ADDRESS_TEXT
   })
 }
 

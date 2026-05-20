@@ -1,5 +1,5 @@
 import mainHTML from './html/main.html?raw'
-import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme } from '../../types'
+import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme, type FooterInfo } from '../../types'
 import { useI18n, getCDNUrl, generateAttributes } from '../../../utils'
 import { template } from "../../../utils/template";
 import { createButton, createCreditCardForm, createProviderButton, createPaymentHeader, createFooter } from '../../create'
@@ -9,13 +9,7 @@ export function generateThemeDefault(params: {
   dir: 'rtl' | 'ltr';
   themePreference: 'dark' | 'light';
   paymentMethods: FormSetting['paymentMethodSetting'];
-  footerInfo: {
-    PRICE_INFO: string;
-    FOOTER_DESC: string;
-    DISCLAIMER: string;
-    ZOTLO_LEGALS_TEXT: string;
-    PAYMENT_AGGREGATOR: string;
-  };
+  footerInfo: FooterInfo;
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
   const { $t } = useI18n(config.general.localization);
