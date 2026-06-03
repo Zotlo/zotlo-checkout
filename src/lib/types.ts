@@ -671,3 +671,13 @@ export interface IZotloCardParams extends Omit<IZotloCheckoutParams, 'returnUrl'
   /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
   style?: IZotloCardStyle;
 }
+
+export type FooterInfo = {
+  SHOW_FOOTER_DESC?: boolean;
+  PRICE_INFO: string;
+  FOOTER_DESC: string;
+  DISCLAIMER: string;
+  ZOTLO_LEGALS_TEXT: string;
+  PAYMENT_AGGREGATOR: string;
+  ZOTLO_ADDRESS_TEXT: string;
+}

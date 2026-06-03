@@ -1,5 +1,5 @@
 import Countries from '../countries.json';
-import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName } from '../lib/types';
+import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo } from '../lib/types';
 import { createAllCardsModal, createSavedCardItem } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
@@ -413,9 +413,10 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
   const privacyUrl = config.general.privacyUrl;
   const tosUrl = config.general.tosUrl;
   const zotloUrls = config?.general?.zotloUrls || {};
+  const isRussia = config.general.countryCode === 'RU';
   const PaymentAggregator = 'https://3p-assets.cdnztl.com/docs/2025/09/10/jigle-payment-terms-ru.pdf'
 
-  const footerInfo = {
+  const footerInfo: FooterInfo = {
     SHOW_FOOTER_DESC: true,
     PRICE_INFO: '',
     FOOTER_DESC: $t('footer.desc'),
@@ -426,11 +427,12 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
       zotloTerms: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a>`,
       zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
     }),
-    PAYMENT_AGGREGATOR: config.general.countryCode === 'RU'
+    PAYMENT_AGGREGATOR: isRussia
       ? $t('footer.zotlo.aggregator', {
         here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`
       }) 
-      : ''
+      : '',
+    ZOTLO_ADDRESS_TEXT: isRussia ? '' : $t('footer.zotlo.legals.address')
   }
 
   if (ZOTLO_GLOBAL.cardUpdate) {

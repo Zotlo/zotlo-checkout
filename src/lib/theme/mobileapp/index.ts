@@ -1,7 +1,7 @@
 import mainHTML from './html/main.html?raw';
 import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
-import { PaymentProvider, type FormConfig, type FormSetting } from '../../types';
+import { PaymentProvider, type FormConfig, type FormSetting, type FooterInfo } from '../../types';
 import { createButton, createCreditCardForm, createFooter, createPaymentHeader, prepareDiscountSection } from '../../create'
 import { getPackageName, getQuantityInfo } from '../../../utils/getPackageInfo';
 import { prepareProvider } from './utils';
@@ -11,13 +11,7 @@ export function generateThemeMobileApp(params: {
   dir: 'rtl' | 'ltr';
   themePreference: 'dark' | 'light';
   paymentMethods: FormSetting['paymentMethodSetting'];
-  footerInfo: {
-    PRICE_INFO: string;
-    FOOTER_DESC: string;
-    DISCLAIMER: string;
-    ZOTLO_LEGALS_TEXT: string;
-    PAYMENT_AGGREGATOR: string;
-  };
+  footerInfo: FooterInfo;
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
 
