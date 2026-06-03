@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.13.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.12.0...v1.13.0)
+
+### 🚀 Enhancements
+- **Z3-6315:** add address line to footer info ([51582df](https://github.com/Zotlo/zotlo-checkout/commit/ce62f28))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.12.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.11.0...v1.12.0)
