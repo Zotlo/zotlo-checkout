@@ -261,15 +261,14 @@
   /**
    * @param {Object} [params] - Optional parameters
    * @param {string} [params.path] - The path
-   * @param {boolean} [params.useCookie] - Whether to use cookie
    * @param {string} [params.key] - The cookie key
    */
   function getSession(params) {
-    const { path, useCookie, key } = params || {};
-    if (useCookie) {
-      const id = getCookie(key || COOKIE.UUID)
-      return { id };
-    }
+    const { path, key } = params || {};
+    const id = getCookie(key || COOKIE.UUID);
+
+    if (id) return { id };
+    
     const sessionString = localStorage.getItem(key || COOKIE.UUID);
     const sessions = (sessionString ? JSON.parse(atob(sessionString)) : null);
     const pathName = path || globalThis?.location?.pathname || "/";
