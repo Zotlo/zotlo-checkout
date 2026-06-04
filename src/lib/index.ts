@@ -1,4 +1,4 @@
-import { DesignTheme, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
+import { DesignTheme, PaymentCallbackStatus, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
 import { generateEmptyPage, generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, updateValidationMessages, validatorInstance, checkboxValidation, inputValidation, validateForm, detectAndValidateForm } from "../utils/validation";
@@ -29,7 +29,7 @@ import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
-import { handleUrlQuery } from "../utils/handleUrlQuery";
+import { handleUrlQuery, UrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { useDiscount } from "../utils/useDiscount";
 import { createPaymentSuccessForm } from "./create";
@@ -389,7 +389,20 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     });
   }
 
-  async function onCookieConsentGranted() {
+  async function onCookieConsentGranted(e: any) {
+    const queryString = globalThis?.location?.search || "";
+    const urlParams = new URLSearchParams(queryString);
+    const queryParams = Object.fromEntries(urlParams?.entries());
+    const hasConsent = !!e?.detail?.consent;
+
+    if (
+      hasConsent &&
+      queryParams[UrlQuery.STATUS] === PaymentCallbackStatus.SUCCESS &&
+      queryParams?.transactionId
+    ) {
+      return;
+    }
+
     const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
       registerType: config.settings.registerType,
       subscriberId: config.general.subscriberId
