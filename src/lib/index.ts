@@ -167,6 +167,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     return handleFormSubmit(providerKey);
   }
 
+  function handleAutoFill(e: any) {
+    // If the browser/1Password inserts a value, programmatically trigger validation
+    if (!e.isTrusted) {
+      validations?.[e.target.name]?.validate();
+    }
+  }
+
   function hasAnyConfig() {
     return Object.keys(config.settings).length > 0;
   }
@@ -583,6 +590,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     formElement?.addEventListener('submit', handleForm);
     formInputs?.forEach((input) => {
+      input.addEventListener('change', handleAutoFill);
       input.addEventListener('change', onFormInputChange, { once: true });
     });
     document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
@@ -623,7 +631,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     }
 
     if (formInputs) {
-      for (const input of formInputs) {
+      for (const input of formInputs as NodeListOf<HTMLInputElement>) {
+        input.removeEventListener('change', handleAutoFill);
         input.removeEventListener('change', onFormInputChange);
       }
     }
