@@ -42,23 +42,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
-  if (import.meta.env.VITE_SDK_API_URL) {
-    CheckoutAPI.setUseCookie(!!params?.useCookie);
-    config = await getCheckoutConfig({
-      token: params.token,
-      packageId: params.packageId,
-      language: params.language,
-      subscriberId: params.subscriberId,
-      returnUrl: params.returnUrl,
-      style: params.style,
-      customParameters: params.customParameters,
-      useCookie: !!params?.useCookie,
-      showSavedCards: params?.showSavedCards,
-      quantitySetting: params?.quantitySetting,
-      enableDiscountCodeEntry: params?.enableDiscountCodeEntry
-    });
-    await refreshProviderConfigs();
-  }
+  await reloadSession();
 
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
@@ -66,6 +50,28 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   let destroySavedCardsEvents = null as (() => void) | null;
   let destroyBillingFormEvents = null as (() => void) | null;
   let destroyDiscountEvents = { discounted: null, undiscounted: null } as ReturnType<typeof useDiscount>;
+
+  async function reloadSession() {
+    config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
+
+    if (import.meta.env.VITE_SDK_API_URL) {
+      CheckoutAPI.setUseCookie(!!params?.useCookie);
+      config = await getCheckoutConfig({
+        token: params.token,
+        packageId: params.packageId,
+        language: params.language,
+        subscriberId: params.subscriberId,
+        returnUrl: params.returnUrl,
+        style: params.style,
+        customParameters: params.customParameters,
+        useCookie: !!params?.useCookie,
+        showSavedCards: params?.showSavedCards,
+        quantitySetting: params?.quantitySetting,
+        enableDiscountCodeEntry: params?.enableDiscountCodeEntry
+      });
+      await refreshProviderConfigs();
+    }
+  }
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
@@ -526,7 +532,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     });
     handleUrlQuery({
       params,
-      config
+      config,
+      reloadSession
     });
   }
 

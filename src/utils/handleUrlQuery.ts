@@ -11,8 +11,9 @@ export enum UrlQuery {
 export async function handleUrlQuery(payload: {
   params: IZotloCheckoutParams | IZotloCardParams;
   config: FormConfig;
+  reloadSession?: () => Promise<void>;
 }) {
-  const { params, config } = payload || {};
+  const { params, config, reloadSession } = payload || {};
   const queryString = globalThis?.location?.search || "";
   const urlParams = new URLSearchParams(queryString);
   const queryParams = Object.fromEntries(urlParams?.entries());
@@ -24,6 +25,10 @@ export async function handleUrlQuery(payload: {
   if (status === PaymentCallbackStatus.SUCCESS) {
     const paymentDetail = await handlePaymentSuccess({ config, params });
     if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
+
+    if (!config.success.show) {
+      await reloadSession?.();
+    }
   }
 
   if (status === PaymentCallbackStatus.FAIL) {
