@@ -530,11 +530,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         >${$t('cookiePopup.word.cookiePolicy')}</a>`,
       })
     });
-    handleUrlQuery({
-      params,
-      config,
-      reloadSession
-    });
   }
 
   function unmount() {
@@ -549,6 +544,15 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     ZOTLO_GLOBAL.containerId = id;
     refresh();
+
+    handleUrlQuery({
+      params,
+      config,
+      reloadSession: async () => {
+        await reloadSession();
+        await refresh();
+      }
+    });
   }
 
   return {
