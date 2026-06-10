@@ -83,12 +83,13 @@ function preparePayload(payload: {
   }
 
   if (config.design?.businessPurchase?.enabled) {
+    const canUserModify = config.design.businessPurchase?.canUserModify;
+    const businessPurchaseChecked = canUserModify ? !!formData[FORM_ITEMS.BILLING_ACTIVATE.input.name] : true;
     const businessInfo = prepareBillingInfo(formData, config);
-    if (businessInfo) {
-      data = {
-        ...data,
-        businessInfo,
-      }
+    data = {
+      ...data,
+      businessPurchaseChecked,
+      ...(businessInfo && { businessInfo }),
     }
   }
   
