@@ -549,8 +549,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       params,
       config,
       reloadSession: async () => {
-        // Clear subscriber ID for new session for already made a payment with same subscriber ID to prevents subscription conflict
-        params.subscriberId = '';
+        if (config.general?.isCheckoutLink) {
+          // Just reload the page without query parameters
+          const link = new URL(window.location.href);
+          link.search = '';
+          window.location.href = link.href;
+          return
+        }
         await reloadSession();
         await refresh();
       }
