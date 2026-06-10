@@ -134,6 +134,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     return handleFormSubmit(providerKey);
   }
 
+  function handleAutoFill(e: any) {
+    // If the browser/1Password inserts a value, programmatically trigger validation
+    if (!e.isTrusted) {
+      validations?.[e.target.name]?.validate();
+    }
+  }
+
   function hasAnyConfig() {
     return Object.keys(config.settings).length > 0;
   }
@@ -324,6 +331,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const container = ZOTLO_GLOBAL.container;
     const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
     const maskInputs = formElement?.querySelectorAll(wrapper + 'input[data-mask]');
     const ruleInputs = formElement?.querySelectorAll(wrapper + 'input[data-rules]');
     const selectboxes = container?.querySelectorAll(wrapper + '[data-select]');
@@ -467,12 +475,17 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     destroyDiscountEvents = useDiscount({ params, config, syncAllPrices });
 
     formElement?.addEventListener('submit', handleForm);
+    formInputs?.forEach((input) => {
+      input.addEventListener('change', handleAutoFill);
+    });
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
   }
 
   function destroyFormInputs() {
     const container = ZOTLO_GLOBAL.container;
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
     const submitButtons = container?.querySelectorAll('button[data-provider]');
 
     if (submitButtons) {
@@ -498,6 +511,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     for (const [key, item] of Object.entries(selectboxList)) {
       item?.destroy?.();
       delete selectboxList[key];
+    }
+
+    if (formInputs) {
+      for (const input of formInputs as NodeListOf<HTMLInputElement>) {
+        input.removeEventListener('change', handleAutoFill);
+      }
     }
 
     validatorInstance?.clearRules();
