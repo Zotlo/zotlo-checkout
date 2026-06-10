@@ -549,6 +549,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       params,
       config,
       reloadSession: async () => {
+        // Clear subscriber ID for new session for already made a payment with same subscriber ID to prevents subscription conflict
+        params.subscriberId = '';
         await reloadSession();
         await refresh();
       }
