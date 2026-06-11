@@ -1,4 +1,4 @@
-import { createPaymentSuccessForm } from "../lib/create";
+import { createPaymentSuccessForm, prepareButtonSuccessLink } from "../lib/create";
 import { type FormConfig, type IZotloCheckoutParams, type IZotloCardParams, PaymentCallbackStatus } from "../lib/types";
 import { handlePaymentSuccess } from "./sendPayment";
 
@@ -27,6 +27,11 @@ export async function handleUrlQuery(payload: {
     if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
 
     if (!config.success.show) {
+      if (paymentDetail && config.general.isCheckoutLink) {
+        const redirectUrl = prepareButtonSuccessLink({ config, paymentDetail }) || '';
+        if (redirectUrl) window.location.href = redirectUrl;
+      }
+
       await reloadSession?.();
     }
   }
