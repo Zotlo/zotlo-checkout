@@ -549,13 +549,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       params,
       config,
       reloadSession: async () => {
-        if (config.general?.isCheckoutLink) {
-          // Just reload the page without query parameters
-          const link = new URL(window.location.href);
-          link.search = '';
-          window.location.href = link.href;
-          return
-        }
         await reloadSession();
         await refresh();
       }
