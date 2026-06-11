@@ -52,6 +52,11 @@
   align-items: center;
 }
 
+.zotlo-checkout__hint__toggle img {
+  width: 16px;
+  height: 16px;
+}
+
 .zotlo-checkout__hint.error {
   color: #E13023;
 }

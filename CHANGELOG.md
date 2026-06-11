@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.14.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.13.0...v1.14.0)
+
+
+### 🚀 Enhancements
+- **Z3-6182**: hide mnp logo except Russia ([efb1f8d](https://github.com/Zotlo/zotlo-checkout/commit/efb1f8d))
+
+### 🩹 Fixes
+- **Z3-6408:** Fix the issue that cannot pass validation if input is autofilled ([c224157](https://github.com/Zotlo/zotlo-checkout/commit/c224157))
+- **Z3-6278**: update business purchase check to respect user modification permissions ([3c77f7b](https://github.com/Zotlo/zotlo-checkout/commit/3c77f7b))
+- **Z3-6278**: enhance payload preparation with business purchase check ([8f34e92](https://github.com/Zotlo/zotlo-checkout/commit/8f34e92))
+- **Z3-6279**: remove size class from input hint to avoid user class conflicts ([96fd5ac](https://github.com/Zotlo/zotlo-checkout/commit/96fd5ac))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+- omersaritech ([@omersaritech](https://github.com/omersaritech))
+
 ## v1.13.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.12.0...v1.13.0)
