@@ -96,7 +96,8 @@ export class Validator {
 // Common validation rules
 export const ValidationRules = {
   required(value: any) {
-    if (value !== undefined && value !== null && value !== '' && value !== false) {
+    const normalizedValue = typeof value === 'string' ? value.trim() : value;
+    if (normalizedValue !== undefined && normalizedValue !== null && normalizedValue !== '' && normalizedValue !== false) {
       return true;
     }
     return getValidationMessage('required')
