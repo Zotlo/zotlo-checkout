@@ -1,8 +1,8 @@
 import mainHTML from './html/main.html?raw';
-import { generateAttributes, getCDNUrl, useI18n } from '../../../utils'
+import { generateAttributes, generateTabButtons, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
 import { PaymentProvider, type FormConfig, type FormSetting, type FooterInfo } from '../../types';
-import { createButton, createCreditCardForm, createFooter, createPaymentHeader, prepareDiscountSection } from '../../create'
+import { createCreditCardForm, createFooter, createPaymentHeader, prepareDiscountSection } from '../../create'
 import { getPackageName, getQuantityInfo } from '../../../utils/getPackageInfo';
 import { prepareProvider } from './utils';
 
@@ -18,34 +18,7 @@ export function generateThemeMobileApp(params: {
   const { $t } = useI18n(config.general.localization);
   const providerGroups = paymentMethods.filter((_, index) => index > 0);
   const firstProvider = paymentMethods?.[0];
-  let tabButtons = '';
-  
-  if (providerGroups.length > 1) {
-    const theme = {
-      [PaymentProvider.CREDIT_CARD]: { dark: '.png', light: '_black.png' },
-      [PaymentProvider.PAYPAL]: { dark: '_disabled.png', light: '.png' },
-      [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
-      [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' }
-    };
-
-    tabButtons = providerGroups.reduce((acc, item, index) => {
-      const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
-      const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
-
-      return acc + createButton({
-        content: `<img src="${imgSrc}" alt="${item.providerKey}">${
-          item.providerKey === PaymentProvider.CREDIT_CARD ? $t('common.card') : ''
-        }`,
-        className: 'zotlo-checkout__tab__button',
-        attrs: {
-          type: 'button',
-          'data-active': index === 0 ? 'true' : 'false',
-          'data-tab': item.providerKey,
-          'aria-label': item.providerKey
-        }
-      });
-    }, '')
-  }
+  const tabButtons = providerGroups.length > 1 ? generateTabButtons(config, providerGroups) : '';
 
   let primaryProvider = prepareProvider({
     config,

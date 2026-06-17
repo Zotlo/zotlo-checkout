@@ -1,7 +1,8 @@
 import Countries from '../countries.json';
-import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo } from '../lib/types';
-import { createAllCardsModal, createSavedCardItem } from '../lib/create';
+import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, type FormSetting } from '../lib/types';
+import { createAllCardsModal, createSavedCardItem, createButton } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
+import { getCDNUrl } from './getCDNUrl';
 import { useI18n } from './i18n';
 import { template } from "./template";
 import { deleteSession } from './session';
@@ -106,14 +107,52 @@ export function generateAttributes(attrs: Record<string, string | number | boole
 
 export function preparePaymentMethods(config: FormConfig) {
   return config?.settings?.paymentMethodSetting?.filter((item) => {
-    const isAvailable = import.meta.env.VITE_CONSOLE ? true : !!config?.paymentData?.providers?.[item?.providerKey];
-    const isApplePayCanMakePayments = import.meta.env.VITE_CONSOLE ? true : config?.providerConfigs?.applePay?.canMakePayments;
-    const isGooglePayReadyToPay = import.meta.env.VITE_CONSOLE ? true : config?.providerConfigs?.googlePay?.isReadyToPay;
+    const isPanelEditMode = import.meta.env.VITE_CONSOLE;
+    const isAvailable = isPanelEditMode ? true : !!config?.paymentData?.providers?.[item?.providerKey];
+    const isPixAvailable = isPanelEditMode ? !!config.general?.showPix : !!config?.paymentData?.providers?.[PaymentProvider.PIX];
+    const isApplePayCanMakePayments = isPanelEditMode ? true : config?.providerConfigs?.applePay?.canMakePayments;
+    const isGooglePayReadyToPay = isPanelEditMode ? true : config?.providerConfigs?.googlePay?.isReadyToPay;
     if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
     if (item.providerKey === PaymentProvider.GOOGLE_PAY) return isGooglePayReadyToPay && isAvailable;
     if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
+    if (item.providerKey === PaymentProvider.PIX) return isPixAvailable;
     return isAvailable;
   }) || [];
+}
+
+export function isPixAvailable(config: FormConfig) {
+  return preparePaymentMethods(config).some((method) => method.providerKey === PaymentProvider.PIX);
+}
+
+export function generateTabButtons(config: FormConfig, paymentMethods: FormSetting['paymentMethodSetting']) {
+    const { $t } = useI18n(config?.general?.localization);
+    const theme = {
+      [PaymentProvider.CREDIT_CARD]: { dark: '.png', light: '_black.png' },
+      [PaymentProvider.PAYPAL]: { dark: '_disabled.png', light: '.png' },
+      [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
+      [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' },
+      [PaymentProvider.PIX]: { dark: '_white.svg', light: '.svg' }
+    }
+
+    const tabButtons = paymentMethods.reduce((acc, item, index) => {
+      const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
+      const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
+
+      return acc + createButton({
+        content: `<img src="${imgSrc}" alt="${item.providerKey}">${
+          item.providerKey === PaymentProvider.CREDIT_CARD ? $t('common.card') : ''
+        }`,
+        className: 'zotlo-checkout__tab__button',
+        attrs: {
+          type: 'button',
+          'data-active': index === 0 ? 'true' : 'false',
+          'data-tab': item.providerKey,
+          'aria-label': item.providerKey
+        }
+      });
+    }, '');
+
+    return tabButtons;
 }
 
 function disableTabKeyNavigation(formEl: HTMLFormElement, disable:boolean = true) {
@@ -387,6 +426,13 @@ export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
       }
     });
   }, 0);
+}
+
+export function toggleCpfCnpjVisibility(show: boolean) {
+  const fields = ZOTLO_GLOBAL.formElement?.querySelectorAll('[data-cpf-cnpj-field]');
+  fields?.forEach((field) => {
+    (field as HTMLElement).style.display = show ? '' : 'none';
+  });
 }
 
 export function getActiveSavedCardId(params: { providerKey?: PaymentProvider; config: FormConfig; groupName?: SavedCardsGroupName }): number {

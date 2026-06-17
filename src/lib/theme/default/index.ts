@@ -1,8 +1,8 @@
 import mainHTML from './html/main.html?raw'
 import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme, type FooterInfo } from '../../types'
-import { useI18n, getCDNUrl, generateAttributes } from '../../../utils'
+import { generateAttributes, generateTabButtons } from '../../../utils'
 import { template } from "../../../utils/template";
-import { createButton, createCreditCardForm, createProviderButton, createPaymentHeader, createFooter } from '../../create'
+import { createCreditCardForm, createProviderButton, createPaymentHeader, createFooter } from '../../create'
 
 export function generateThemeDefault(params: {
   config: FormConfig;
@@ -12,7 +12,6 @@ export function generateThemeDefault(params: {
   footerInfo: FooterInfo;
 }) {
   const { config, dir, themePreference, paymentMethods, footerInfo } = params;
-  const { $t } = useI18n(config.general.localization);
   const isTabTheme = !config.cardUpdate && config.design.theme === DesignTheme.HORIZONTAL && paymentMethods.length > 1;
   let providerButtons = paymentMethods.map((method, index) => {
     if (method.providerKey !== PaymentProvider.CREDIT_CARD) {
@@ -62,34 +61,7 @@ export function generateThemeDefault(params: {
     }) + providerButtons;
   }
 
-  let tabButtons = '';
-
-  if (isTabTheme) {
-    const theme = {
-      [PaymentProvider.CREDIT_CARD]: { dark: '.png', light: '_black.png' },
-      [PaymentProvider.PAYPAL]: { dark: '_disabled.png', light: '.png' },
-      [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
-      [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' }
-    }
-
-    tabButtons = paymentMethods.reduce((acc, item, index) => {
-      const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
-      const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
-
-      return acc + createButton({
-        content: `<img src="${imgSrc}" alt="${item.providerKey}">${
-          item.providerKey === PaymentProvider.CREDIT_CARD ? $t('common.card') : ''
-        }`,
-        className: 'zotlo-checkout__tab__button',
-        attrs: {
-          type: 'button',
-          'data-active': index === 0 ? 'true' : 'false',
-          'data-tab': item.providerKey,
-          'aria-label': item.providerKey
-        }
-      });
-    }, '');
-  }
+  const tabButtons = isTabTheme ? generateTabButtons(config, paymentMethods) : '';
 
   const paymentHeader = createPaymentHeader({ config });
   const footer = createFooter(footerInfo) || '';
