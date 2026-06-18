@@ -398,7 +398,6 @@ export type FormGeneral = {
   privacyAndTosUrlStatus: boolean;
   isCheckoutLink?: boolean;
   isPolicyRequired: boolean;
-  isZipcodeRequired: boolean;
   appLogo?: string;
   appName?: string;
   productImage?: string;

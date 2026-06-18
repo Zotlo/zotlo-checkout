@@ -23,7 +23,6 @@ export type InitResult = {
   showPaypal: boolean;
   currency: string;
   isPolicyRequired: boolean;
-  isZipcodeRequired: boolean;
   appName?: string;
   appLogo?: string;
   productImage?: string;

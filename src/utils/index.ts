@@ -16,7 +16,6 @@ export const ZOTLO_GLOBAL = {
   cardUpdate: false,
   data: {
     subscriberId: '',
-    zipCode: '',
     discountCode: '',
   },
   checkout: {
@@ -49,7 +48,6 @@ export const ZOTLO_GLOBAL = {
 
   reset() {
     this.data.subscriberId = '';
-    this.data.zipCode = '';
     this.containerId = '';
   }
 }
@@ -181,14 +179,6 @@ export const debounce: any = (func: any, waitFor = 300) => {
   };
 }
 
-function disableCountryInput() {
-  const countryInputs = ZOTLO_GLOBAL.container?.querySelectorAll('input[name="country"]') as NodeListOf<HTMLInputElement>;
-  countryInputs?.forEach(countryInput => {
-    countryInput?.setAttribute('disabled', 'true');
-    countryInput?.parentElement?.classList.add('disabled');
-  });
-}
-
 export function setFormDisabled(disabled = true) {
   const formElement = ZOTLO_GLOBAL.formElement;
   const inputs = formElement?.querySelectorAll('input, select, button') as NodeListOf<HTMLInputElement>;
@@ -207,7 +197,6 @@ export function setFormDisabled(disabled = true) {
       input.removeAttribute('disabled');
     }
   }
-  disableCountryInput();
 }
 
 export function activateDisabledSubscriberIdInputs() {
