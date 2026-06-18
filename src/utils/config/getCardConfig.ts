@@ -105,7 +105,6 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
       privacyUrl: initData?.privacyUrl,
       privacyAndTosUrlStatus: !!+initData?.privacyAndTosUrlStatus,
       isPolicyRequired: false,
-      isZipcodeRequired: false,
       appName: initData?.appName || '',
       subscriberId: initData?.subscriberId || '',
       registerBypass: false,

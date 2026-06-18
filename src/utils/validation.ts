@@ -145,14 +145,6 @@ export const ValidationRules = {
       return getValidationMessage('phone');
     }
     return true;
-  },
-  zipCode(value: string, params: any[]) {
-    const countryCode = params[0];
-    if (countryCode !== 'US') return true;
-    const pattern = /^[\d-]*$/;
-    const isValid = pattern.test(value);
-    if (!isValid) return getValidationMessage('zipCode');
-    return true;
   }
 };
 
@@ -258,11 +250,6 @@ export function validateForm(params: {
   ];
   const sharedFields = [
     FORM_ITEMS.SUBSCRIBER_ID_EMAIL.input.name,
-
-    // Zip code for US
-    ...(config.general.isZipcodeRequired
-      ? [FORM_ITEMS.ZIP_CODE.input.name]
-      : []),
 
     // Billing fields
     FORM_ITEMS.BILLING_BUSINESS_NAME.input.name,

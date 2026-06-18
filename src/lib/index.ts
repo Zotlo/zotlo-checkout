@@ -196,7 +196,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         } else {
           tabSubscriberIdContent?.setAttribute('data-tab-active', 'false');
         }
-        syncInputsOnTabs(tabName, ['subscriberId', 'zipCode', 'discountCode']);
+        syncInputsOnTabs(tabName, ['subscriberId', 'discountCode']);
         initFormInputs();
       } catch (err) {
         Logger.client?.captureException(err);
@@ -442,10 +442,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
                 FORM_ITEMS.SUBSCRIBER_ID_PHONE.input.name
               ].includes(item.name)) {
                 ZOTLO_GLOBAL.data.subscriberId = item.value;
-              }
-
-              if (item.name === FORM_ITEMS.ZIP_CODE.input.name) {
-                ZOTLO_GLOBAL.data.zipCode = item.value;
               }
             }
           });

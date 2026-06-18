@@ -397,7 +397,6 @@ export type FormGeneral = {
   privacyUrl: string;
   privacyAndTosUrlStatus: boolean;
   isPolicyRequired: boolean;
-  isZipcodeRequired: boolean;
   appLogo?: string;
   appName?: string;
   productImage?: string;
