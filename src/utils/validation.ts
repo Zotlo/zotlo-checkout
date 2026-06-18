@@ -27,7 +27,8 @@ const ValidationMessages = {
     card: 'Invalid card format',
     length: 'This field must be 0:{length} long',
     min: 'Minimum 0:{min} characters required',
-    phone: 'Invalid phone number format'
+    phone: 'Invalid phone number format',
+    cpfCnpj: 'Invalid CPF/CNPJ number'
   } as Record<string, string>
 }
 
@@ -146,6 +147,12 @@ export const ValidationRules = {
       return getValidationMessage('phone');
     }
     return true;
+  },
+  cpfCnpj(value: string) {
+    const digits = (value || '').replace(/\D/g, '');
+    // CPF has 11 digits, CNPJ has 14 digits.
+    if (digits.length === 11 || digits.length === 14) return true;
+    return getValidationMessage('cpfCnpj');
   }
 };
 
@@ -259,9 +266,18 @@ export function validateForm(params: {
     FORM_ITEMS.BILLING_TAX_ID.input.name,
   ];
   const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
+  const cpfCnpjField = FORM_ITEMS.CPF_CNPJ.input.name;
 
   for (const validation of Object.values(validations)) {
     const name = validation.name;
+
+    // CPF/CNPJ is only required when paying with PIX, regardless of theme/tab.
+    if (name === cpfCnpjField) {
+      const result = validation.validate(providerKey !== PaymentProvider.PIX);
+      if (!result.isValid) errors.push({ name, result });
+      continue;
+    }
+
     const skipField = skipBillingFields && /^billing/.test(name);
     const shouldSkipValidation = isSavedCardPayment 
       ? creditCardFields.includes(name) && providerKey === PaymentProvider.CREDIT_CARD

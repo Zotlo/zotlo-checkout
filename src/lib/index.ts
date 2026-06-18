@@ -23,7 +23,9 @@ import {
   getActiveSavedCardId,
   ZOTLO_GLOBAL,
   shouldSkipBillingFields,
-  getUserDataForIntegration
+  getUserDataForIntegration,
+  toggleCpfCnpjVisibility,
+  isPixAvailable
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -519,6 +521,24 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       }
     }
 
+    function formatCpfCnpjMask(item: HTMLInputElement, options: IMaskInputOnInput) {
+      const digits = options.value.replace(/\D/g, '').slice(0, 14);
+
+      // The base mask (CNPJ) already formats 12-14 digit values correctly.
+      if (digits.length > 11) return;
+
+      // Apply the CPF pattern (###.###.###-##) for values up to 11 digits.
+      let formatted = digits;
+      if (digits.length > 9) {
+        formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+      } else if (digits.length > 6) {
+        formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+      } else if (digits.length > 3) {
+        formatted = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+      }
+      item.value = formatted;
+    }
+
     function applyMaskAndValidation() {
       if (maskInputs) {
         for (const item of maskInputs as NodeListOf<HTMLInputElement>) {
@@ -527,6 +547,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
             onInput(payload) {
               if (payload.name === FORM_ITEMS.CARD_NUMBER.input.name) {
                 formatCardMask(item, payload);
+              } else if (payload.name === FORM_ITEMS.CPF_CNPJ.input.name) {
+                formatCpfCnpjMask(item, payload);
               }
             }
           });
@@ -598,6 +620,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
     document.addEventListener('sendCAPIInfo', sendCAPIInfo);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
+
+    // CPF/CNPJ is only relevant for PIX. In tabbed layouts show it while the
+    // PIX tab is active; in tab-less layouts show it whenever PIX is available.
+    const activeTab = container
+      ?.querySelector('button[data-tab][data-active="true"]')
+      ?.getAttribute('data-tab');
+    toggleCpfCnpjVisibility(activeTab ? activeTab === PaymentProvider.PIX : isPixAvailable(config));
   }
 
   function destroyFormInputs() {
