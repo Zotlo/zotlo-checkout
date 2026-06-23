@@ -31,7 +31,7 @@ import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
-import { handleUrlQuery, UrlQuery } from "../utils/handleUrlQuery";
+import { getPaymentCallback, handleUrlQuery, UrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { useDiscount } from "../utils/useDiscount";
 import { createPaymentSuccessForm } from "./create";
@@ -275,7 +275,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       const container = ZOTLO_GLOBAL.container;
 
       if (import.meta.env.VITE_SDK_API_URL) {
-        if (ErrorHandler.response) {
+        const { success } = getPaymentCallback({ config });
+
+        if (success && !config.success.show && config.general.isCheckoutLink) {
+          form = `<form id="zotlo-checkout-form" class="zotlo-checkout" style="min-height: 230px">
+            <div class="zotlo-checkout__form-loader"></div>
+          </form>`;
+        } else if (ErrorHandler.response) {
           form = generateEmptyPage({
             config,
             title: config?.general?.localization?.empty?.error?.title || 'An error occured',
