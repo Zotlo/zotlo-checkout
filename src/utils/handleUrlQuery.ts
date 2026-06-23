@@ -8,21 +8,34 @@ export enum UrlQuery {
   ERROR_MESSAGE = "zc_error_message",
 }
 
+export function getPaymentCallback(payload: {
+  config: FormConfig;
+}) {
+  const queryString = globalThis?.location?.search || "";
+  const urlParams = new URLSearchParams(queryString);
+  const queryParams = Object.fromEntries(urlParams?.entries());
+  const status = payload.config.cardUpdate
+    ? queryParams?.[UrlQuery.CARD_STATUS]
+    : queryParams?.[UrlQuery.STATUS];
+  const errorMessage = queryParams?.[UrlQuery.ERROR_MESSAGE] || "";
+
+  return {
+    status,
+    errorMessage,
+    success: status === PaymentCallbackStatus.SUCCESS,
+    fail: status === PaymentCallbackStatus.FAIL,
+  };
+}
+
 export async function handleUrlQuery(payload: {
   params: IZotloCheckoutParams | IZotloCardParams;
   config: FormConfig;
   reloadSession?: () => Promise<void>;
 }) {
   const { params, config, reloadSession } = payload || {};
-  const queryString = globalThis?.location?.search || "";
-  const urlParams = new URLSearchParams(queryString);
-  const queryParams = Object.fromEntries(urlParams?.entries());
-  const status = config.cardUpdate
-    ? queryParams?.[UrlQuery.CARD_STATUS]
-    : queryParams?.[UrlQuery.STATUS];
-  const errorMessage = queryParams?.[UrlQuery.ERROR_MESSAGE] || "";
+  const { errorMessage, success, fail } = getPaymentCallback({ config });
 
-  if (status === PaymentCallbackStatus.SUCCESS) {
+  if (success) {
     const paymentDetail = await handlePaymentSuccess({ config, params });
     if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
 
@@ -36,7 +49,7 @@ export async function handleUrlQuery(payload: {
     }
   }
 
-  if (status === PaymentCallbackStatus.FAIL) {
+  if (fail) {
     params.events?.onFail?.({ message: errorMessage, data: {} });
   }
 }
