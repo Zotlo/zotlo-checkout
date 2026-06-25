@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.15.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.14.0...v1.15.0)
+
+### 🚀 Enhancements
+- **Z3-6346**: remove zip code field and related validation from checkout process ([200a1c6](https://github.com/Zotlo/zotlo-checkout/commit/200a1c6))
+
+### ❤️ Contributors
+
+- omeersari ([@omeersari](https://github.com/omeersari))
+
 ## v1.14.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.13.0...v1.14.0)
