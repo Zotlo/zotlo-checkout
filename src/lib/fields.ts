@@ -64,16 +64,6 @@ export const FORM_ITEMS = {
       'data-mask': '+90 (###)###-####',
     }
   },
-  ZIP_CODE: {
-    label: 'Zip Code',
-    input: {
-      name: 'zipCode',
-      type: 'text',
-      placeholder: 'ZIP CODE',
-      'data-rules': 'required|zipCode',
-      'data-mask': /^[\d-]*$/,
-    }
-  },
   BILLING_ACTIVATE: {
     label: "I'm purchasing as a business",
     className: 'zotlo-checkout__agreement',
