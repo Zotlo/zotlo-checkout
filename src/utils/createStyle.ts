@@ -1,5 +1,19 @@
 import type { FormConfig } from "../lib/types";
 
+function addAlphaToHex(hex: string, alpha: number) {
+  // Remove the '#' if present
+  const cleanHex = hex.replace('#', '');
+  
+  // Clamp the percentage to 0-100, convert to a 0-255 range, then to hex
+  const clampedAlpha = Math.min(100, Math.max(0, alpha));
+  const alphaHex = Math.round((clampedAlpha / 100) * 255)
+      .toString(16)
+      .padStart(2, '0') // Ensures it is always 2 digits (e.g., '0a' instead of 'a')
+      .toUpperCase();
+      
+  return `#${cleanHex}${alphaHex}`;
+}
+
 export function createStyle(config: FormConfig) {
   const { design, success } = config;
   const {
@@ -70,5 +84,12 @@ export function createStyle(config: FormConfig) {
   --zc-success-button-hover-color: ${success?.button?.hover?.color || '#FFFFFF'};
   --zc-success-button-hover-borderColor: ${success?.button?.hover?.borderColor || '#301BA3'};
   --zc-success-button-hover-backgroundColor: ${success?.button?.hover?.backgroundColor || '#301BA3'};
+
+  --zc-priceCard-backgroundColor: ${addAlphaToHex(design?.priceCard?.backgroundColor ?? '#F6F7F9', design?.priceCard?.backgroundOpacity ?? 100)};
+  --zc-priceCard-borderColor: ${design?.priceCard?.borderColor ?? '#E7EAEE'};
+  --zc-priceCard-borderWidth: ${design?.priceCard?.borderWidth ?? 1}px;
+  --zc-priceCard-borderRadius: ${design?.priceCard?.borderRadius ?? 8}px;
+  --zc-priceCard-color: ${design?.priceCard?.color ?? '#0D0626'};
+  --zc-priceCard-secondaryColor: ${design?.priceCard?.secondaryColor ?? '#818A9C'};
 }` : '';
 }

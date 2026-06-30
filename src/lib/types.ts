@@ -248,6 +248,15 @@ export type FormDesign = {
     enabled: boolean;
     canUserModify: boolean;
     defaultSelection: 'checked' | 'unchecked';
+  };
+  priceCard: {
+    backgroundColor: string;
+    backgroundOpacity: number;
+    borderWidth: number;
+    borderColor: string;
+    borderRadius: number;
+    color: string;
+    secondaryColor: string;
   }
 };
 
