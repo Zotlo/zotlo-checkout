@@ -1,5 +1,5 @@
 import Countries from '../countries.json';
-import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, PackageCondition } from '../lib/types';
+import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, PackageType } from '../lib/types';
 import { createAllCardsModal, createPriceTable, createSavedCardItem } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
@@ -298,20 +298,10 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
 
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
-  const packageCondition = config?.packageInfo?.condition || PackageCondition.PACKAGE_WITH_TRIAL;
-  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
-  const isTrialDiscountAllowed = !!config?.paymentData?.discount?.allowTrial || false;
-  const isRecurringDiscountLimited = (config?.paymentData?.discount?.recurringMode === 'limited') || false;
 
-  const discountTrialKey = isTrialDiscountAllowed ? 'allowTrialDiscount' : 'noTrialDiscount';
-  const discountRecurringKey = isRecurringDiscountLimited ? 'recurringLimited' : 'recurringForever';
-  const finalLocalizationKey = isDiscountCodeApplied ? 
-    `footer.priceInfo.discounted.${packageCondition}.${discountTrialKey}.${discountRecurringKey}` : 
-    `footer.priceInfo.${packageCondition}`;
-
-  return template($t(finalLocalizationKey), {
-    ...getPackageTemplateParams(config)
-  });
+  if (config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION) return '';
+  
+  return template($t('footer.legals.oneTimeInfo'), getPackageTemplateParams(config));
 }
 
 export function getSubmitButtonContent(config: FormConfig) {
@@ -347,7 +337,7 @@ export async function handlePriceChanges(config: FormConfig) {
   updateElementsValue<HTMLButtonElement>('[data-card-submit-button]', getSubmitButtonContent(config));
   updateElementsValue<HTMLElement>('[data-original-price]', config?.packageInfo?.discount?.original as string);
   updateElementsValue<HTMLElement>('[data-discount-price]', config?.packageInfo?.discount?.price as string);
-  const footerFullDescription = `${getFooterPriceInfo(config)} ${$t('footer.desc')}`;
+  const footerFullDescription = getFooterPriceInfo(config);
   const priceTable = createPriceTable({config});
   updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
   updateElementsValue<HTMLElement>('[data-price-table]', priceTable);
@@ -407,29 +397,33 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
   const zotloUrls = config?.general?.zotloUrls || {};
   const isRussia = config.general.countryCode === 'RU';
   const PaymentAggregator = 'https://3p-assets.cdnztl.com/docs/2025/09/10/jigle-payment-terms-ru.pdf'
+  const appName = config.general.appName || '';
 
   const footerInfo: FooterInfo = {
     SHOW_FOOTER_DESC: true,
     PRICE_INFO: '',
-    FOOTER_DESC: $t('footer.desc'),
+    FOOTER_DESC: '',
     DISCLAIMER: '',
-    ZOTLO_LEGALS_TEXT: $t('footer.zotlo.legals.alltext', {
+    AGREEMENT_TEXT: $t('footer.legals.agreement', {
+      appName,
       termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
       privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
       zotloTerms: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a>`,
       zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
     }),
+    MOR_INFO: $t('footer.legals.morInfo', { appName }),
+    CHARGE_STATEMENT: $t('footer.legals.chargeStatement', { statementName: 'STATEMENT_NAME' }),
     PAYMENT_AGGREGATOR: isRussia
       ? $t('footer.zotlo.aggregator', {
         here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`
       }) 
       : '',
-    ZOTLO_ADDRESS_TEXT: isRussia ? '' : $t('footer.zotlo.legals.address')
+    ZOTLO_ADDRESS_TEXT: isRussia ? '' : $t('footer.zotlo.legals.address'),
   }
 
   if (ZOTLO_GLOBAL.cardUpdate) {
     footerInfo.FOOTER_DESC = $t('footer.cardUpdate', {
-      projectName: config.general.appName || ''
+      projectName: appName
     });
   } else {
     const footerPriceInfo = getFooterPriceInfo(config);

@@ -688,12 +688,7 @@ export function createPaymentHeader(params: {
 export function createFooter(footerInfo: FooterInfo) {
   return template(footerHTML, {
     SHOW_FOOTER_DESC: !!footerInfo.SHOW_FOOTER_DESC,
-    PRICE_INFO: footerInfo.PRICE_INFO,
-    FOOTER_DESC: footerInfo.FOOTER_DESC,
-    DISCLAIMER: footerInfo.DISCLAIMER,
-    ZOTLO_LEGALS_TEXT: footerInfo.ZOTLO_LEGALS_TEXT,
-    PAYMENT_AGGREGATOR: footerInfo.PAYMENT_AGGREGATOR,
-    ZOTLO_ADDRESS_TEXT: footerInfo.ZOTLO_ADDRESS_TEXT
+    ...(footerInfo || {})
   })
 }
 

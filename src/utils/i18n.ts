@@ -35,7 +35,7 @@ export function useI18n(localization: Record<string, any>) {
     // Apply parameters
     if (params) {
       for (const [key, val] of Object.entries(params)) {
-        value = value.replace(new RegExp(`\\{${key}\\}`, 'gm'), val);
+        value = value?.replace?.(new RegExp(`\\{${key}\\}`, 'gm'), val);
       }
     }
 

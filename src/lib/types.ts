@@ -676,7 +676,9 @@ export type FooterInfo = {
   PRICE_INFO: string;
   FOOTER_DESC: string;
   DISCLAIMER: string;
-  ZOTLO_LEGALS_TEXT: string;
+  AGREEMENT_TEXT: string;
+  MOR_INFO: string;
+  CHARGE_STATEMENT: string;
   PAYMENT_AGGREGATOR: string;
   ZOTLO_ADDRESS_TEXT: string;
 }
