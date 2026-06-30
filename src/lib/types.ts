@@ -376,7 +376,7 @@ export type PackageInfoType = {
   totalPayableAmount: string;
   totalPayableBaseAmount: string;
   currency: string;
-  condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
+  condition: PackageCondition;
   state: keyof FormConfig['design']['button']['text'];
   discount: {
     price: number | string;
@@ -679,4 +679,11 @@ export type FooterInfo = {
   ZOTLO_LEGALS_TEXT: string;
   PAYMENT_AGGREGATOR: string;
   ZOTLO_ADDRESS_TEXT: string;
+}
+
+export enum PackageCondition {
+  PACKAGE_WITH_TRIAL = 'package_with_trial',
+  ONETIME_PAYMENT = 'onetime_payment',
+  PLAN_WITH_NO_TRIAL = 'plan_with_no_trial',
+  PACKAGE_WITH_TRIAL_USED = 'package_with_trial_used'
 }

@@ -9,30 +9,19 @@
     </div>
     <% ENDIF %>
 
+    <% IF(PRICE_TABLE) %>
+    <div data-price-table>{{PRICE_TABLE}}</div>
+    <% ENDIF %>
+
     <table class="zotlo-checkout__package__summary">
+      <% IF(ADDITIONAL_TEXT && !PRICE_TABLE) %>
       <tbody>
-        <% IF(PACKAGE_NAME) %>
-        <tr class="zotlo-checkout__package__summary__head">
-          <td>{{PACKAGE_NAME}}</td>
-          <td class="zotlo-checkout__package__summary__price" data-original-price>{{PACKAGE_PRICE}}</td>
-        </tr>
-        <% ENDIF %>
-
-        <% IF(SHOW_SUBTOTAL===true) %>
-        <tr>
-          <td>{{STATIC_SUBTOTAL}}</td>
-          <td data-original-price>{{PACKAGE_PRICE}}</td>
-        </tr>
-        <% ENDIF %>
-
-        <% IF(ADDITIONAL_TEXT) %>
         <tr>
           <td>{{ADDITIONAL_TEXT}}</td>
           <td data-discount-price>{{ADDITIONAL_PRICE}}</td>
         </tr>
-        <% ENDIF %>
       </tbody>
-
+      <% ENDIF %>
       <tfoot>
         <% IF(DISCOUNT_SECTION) %>
         <tr class="zotlo-checkout__discount-content-row">
@@ -41,14 +30,16 @@
           </td>
         </tr>
         <% ENDIF %>
-        <tr class="zotlo-checkout__package__summary__head">
-          <td>{{STATIC_TOTAL}}</td>
-          <td data-total-price class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
-        </tr>
-        <% IF(QUANTITY_INFO) %>
-          <tr class="zotlo-checkout__total__quantity-info-table-row">
-            <td colspan="2"><div class="zotlo-checkout__total__quantity-info" data-quantity-info>{{QUANTITY_INFO}}</div></td>
+        <% IF(SHOW_TOTAL) %>
+          <tr class="zotlo-checkout__package__summary__head">
+            <td>{{STATIC_TOTAL}}</td>
+            <td data-total-price class="zotlo-checkout__package__summary__price">{{TOTAL_PRICE}}</td>
           </tr>
+          <% IF(QUANTITY_INFO) %>
+            <tr class="zotlo-checkout__total__quantity-info-table-row">
+              <td colspan="2"><div class="zotlo-checkout__total__quantity-info" data-quantity-info>{{QUANTITY_INFO}}</div></td>
+            </tr>
+          <% ENDIF %>
         <% ENDIF %>
       </tfoot>
     </table>

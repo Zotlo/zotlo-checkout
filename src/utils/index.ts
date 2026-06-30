@@ -1,6 +1,6 @@
 import Countries from '../countries.json';
-import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo } from '../lib/types';
-import { createAllCardsModal, createSavedCardItem } from '../lib/create';
+import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, PackageCondition } from '../lib/types';
+import { createAllCardsModal, createPriceTable, createSavedCardItem } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { useI18n } from './i18n';
 import { template } from "./template";
@@ -9,6 +9,7 @@ import { FORM_ITEMS } from '../lib/fields';
 
 export { getCDNUrl } from './getCDNUrl';
 export { useI18n } from './i18n';
+export { calculatePaymentStartDate } from './paymentStartCalculation';
 
 type Country = typeof Countries[0];
 
@@ -297,7 +298,7 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
 
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
-  const packageCondition = config?.packageInfo?.condition || 'package_with_trial';
+  const packageCondition = config?.packageInfo?.condition || PackageCondition.PACKAGE_WITH_TRIAL;
   const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
   const isTrialDiscountAllowed = !!config?.paymentData?.discount?.allowTrial || false;
   const isRecurringDiscountLimited = (config?.paymentData?.discount?.recurringMode === 'limited') || false;
@@ -347,7 +348,9 @@ export async function handlePriceChanges(config: FormConfig) {
   updateElementsValue<HTMLElement>('[data-original-price]', config?.packageInfo?.discount?.original as string);
   updateElementsValue<HTMLElement>('[data-discount-price]', config?.packageInfo?.discount?.price as string);
   const footerFullDescription = `${getFooterPriceInfo(config)} ${$t('footer.desc')}`;
+  const priceTable = createPriceTable({config});
   updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
+  updateElementsValue<HTMLElement>('[data-price-table]', priceTable);
 }
 
 export function getIsDiscountCodeApplied(config: FormConfig): boolean {

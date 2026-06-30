@@ -176,6 +176,93 @@
   text-decoration: none;
 }
 
+.zotlo-checkout__price-table {
+  border: 1px solid #E7EAEE;
+  background-color: #F6F7F9;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.zotlo-checkout__price-table .zotlo-checkout__total__quantity-info {
+  font-size: 10px;
+  text-align: right;
+  color: currentColor;
+  font-weight: normal;
+}
+
+.zotlo-checkout__price-table td:first-child {
+  font-weight: 500 !important;
+  color: #0D0626 !important;
+}
+
+.zotlo-checkout__price-table td:last-child {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #0D0626 !important;
+}
+
+.zotlo-checkout__price-table table {
+  white-space: nowrap;
+}
+
+.zotlo-checkout__price-table table td {
+  border: 0;
+  border-bottom: 1px solid #E7EAEE;
+  padding: 6px !important;
+}
+
+.zotlo-checkout__price-table td.zotlo-checkout__price-table__footer {
+  white-space: normal !important;
+  text-align: left !important;
+  font-weight: normal !important;
+  font-size: 10px !important;
+}
+
+.zotlo-checkout__price-table .zotlo-checkout__price-table__fadeout td {
+  color: #818A9C !important;
+}
+
+.zotlo-checkout__price-table__footer a {
+  color: currentColor;
+  text-decoration: none;
+}
+
+.zotlo-checkout__price-table__footer a:hover {
+  text-decoration: underline;
+}
+
+.zotlo-checkout__price-table table tr:last-child td {
+  border-bottom: 0;
+}
+
+.zotlo-checkout__price-table__overline {
+  text-decoration: line-through;
+  color: #818A9C;
+}
+
+.zotlo-checkout__price-table__subtext {
+  color: #818A9C;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__price-table {
+  border: 1px solid #6B7283;
+  background-color: #303032;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__price-table table td {
+  border-bottom-color: #6B7283;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__price-table td:first-child {
+  color: white !important;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__price-table td:last-child {
+  color: white !important;
+}
+
 .zotlo-checkout__form__col2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -210,7 +297,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin: 16px 0;
+  margin: 8px 0 16px;
 }
 
 .zotlo-checkout__total__price-info {

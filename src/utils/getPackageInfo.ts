@@ -1,4 +1,4 @@
-import { type FormConfig, PackageInfoType, PackageType, TrialPackageType } from "../lib/types";
+import { type FormConfig, PackageCondition, PackageInfoType, PackageType, TrialPackageType } from "../lib/types";
 import { useI18n, getIsDiscountCodeApplied } from "../utils";
 import { template } from "./template";
 
@@ -28,11 +28,16 @@ export function getPackageInfo(config?: FormConfig): PackageInfoType {
   };
 }
 
-export function getQuantityInfo(config: FormConfig) {
+export function getQuantityInfo(config: FormConfig, onlyUnits?: boolean) {
   const { $t } = useI18n(config.general.localization);
   const quantity = config?.settings?.quantitySetting?.quantity || 1;
   const templateParams = getPackageTemplateParams(config);
   if (+quantity <= 1) return "";
+
+  if (onlyUnits) {
+    return template($t('form.quantity.includesNumberUnits'), templateParams)
+  }
+
   return template($t('form.quantity.info'), templateParams);
 }
 
@@ -167,11 +172,11 @@ function getPackageCondition(config?: FormConfig, options?: { isTrialUsed?: bool
   const { isOneTimePayment, isNoTrial, isTrialUsed:isTrialUsedValue } = getPackageTypeConditions(config || {} as FormConfig, { isTrialUsed });
 
   if (isOneTimePayment) {
-    condition = 'onetime_payment';
+    condition = PackageCondition.ONETIME_PAYMENT;
   } else if (isNoTrial) {
-    condition = 'plan_with_no_trial'
+    condition = PackageCondition.PLAN_WITH_NO_TRIAL;
   } else if (isTrialUsedValue) {
-    condition = 'package_with_trial_used';
+    condition = PackageCondition.PACKAGE_WITH_TRIAL_USED;
   }
 
   return condition;
@@ -222,6 +227,7 @@ export function getPackageTemplateParams(config: FormConfig) {
     WEEKLY_PRICE: packageInfo?.weeklyPrice || "",
     PERIOD: period === 0 ? '' : $t(`common.periods.${periodType}`, { count: period }),
     TRIAL_PERIOD: period === 0 ? '' : $t(`common.periods.${trialPeriodType}`, { count: trialPeriod }),
+    DISCOUNT_ALLOW_TRIAL: !!config?.paymentData?.discount?.allowTrial
   };
 }
 
