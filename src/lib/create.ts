@@ -16,7 +16,7 @@ import footerHTML from '../html/footer.html?raw'
 import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable } from "../utils";
 import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
 import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData, type FormPaymentData, type FooterInfo } from './types'
@@ -296,6 +296,7 @@ export function createCreditCardForm(params: {
   const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
   const isPhoneRegister = registerType === 'phoneNumber';
   const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
+  const hasPixMethod = isPixAvailable(config);
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
     if (config.settings.hideSubscriberIdIfAlreadySet) {
@@ -347,6 +348,21 @@ export function createCreditCardForm(params: {
       case "SAVE_CARD_CHECKBOX":
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
         break;
+      case "CPF_CNPJ": {
+        // Only render when PIX is an available payment method. Visibility is then
+        // toggled so the field is shown only while the PIX tab/provider is active.
+        if (!hasPixMethod) break;
+        const cpfCnpjInput = createInput({
+          ...options,
+          label: FORM_ITEMS.CPF_CNPJ.label,
+          input: {
+            ...options.input,
+            placeholder: FORM_ITEMS.CPF_CNPJ.input.placeholder,
+          }
+        });
+        fieldContent = `<div data-cpf-cnpj-field style="display:none;">${cpfCnpjInput}</div>`;
+      }
+        break;
       default:
         fieldContent = createInput(options);
         break;
@@ -391,8 +407,12 @@ export function createProviderButton(params: {
   tabAvailable?: boolean;
 }) {
   const { provider, config, tabAvailable } = params;
-  const canDarkMode = config.design.darkMode && [PaymentProvider.GOOGLE_PAY, PaymentProvider.APPLE_PAY].includes(provider);
-  const postfix = canDarkMode ? '_black' : '';
+  const postfixByProvider: Partial<Record<PaymentProvider, { dark: string; light: string }>> = {
+    [PaymentProvider.GOOGLE_PAY]: { dark: '_black', light: '' },
+    [PaymentProvider.APPLE_PAY]: { dark: '_black', light: '' },
+    [PaymentProvider.PIX]: { dark: '', light: '_white' },
+  };
+  const postfix = (postfixByProvider[provider] ?? { dark: '', light: '' })[config.design.darkMode ? 'dark' : 'light'];
   const buttonsRenderedBySdks = [PaymentProvider.GOOGLE_PAY];
 
   if (import.meta.env.VITE_SDK_API_URL && buttonsRenderedBySdks.includes(provider)) {

@@ -64,6 +64,19 @@ export const FORM_ITEMS = {
       'data-mask': '+90 (###)###-####',
     }
   },
+  CPF_CNPJ: {
+    label: 'CPF/CNPJ',
+    input: {
+      name: 'cpfCnpj',
+      type: 'text',
+      placeholder: 'CPF/CNPJ number',
+      inputmode: 'numeric',
+      'data-rules': 'required|cpfCnpj',
+      // Base mask is the wider CNPJ pattern so digits are never truncated while typing.
+      // The CPF pattern is applied dynamically on input (see formatCpfCnpjMask).
+      'data-mask': '##.###.###/####-##',
+    }
+  },
   BILLING_ACTIVATE: {
     label: "I'm purchasing as a business",
     className: 'zotlo-checkout__agreement',
