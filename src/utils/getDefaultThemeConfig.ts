@@ -132,6 +132,15 @@ export const DefaultThemeConfig: {
       enabled: false,
       canUserModify: false,
       defaultSelection: 'unchecked'
+    },
+    priceCard: {
+      backgroundColor: '#F6F7F9',
+      backgroundOpacity: 100,
+      borderColor: '#E7EAEE',
+      borderWidth: 1,
+      borderRadius: 8,
+      color: '#0D0626',
+      secondaryColor: '#818A9C',
     }
   }
 }

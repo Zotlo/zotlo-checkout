@@ -321,7 +321,6 @@ export function getSubmitButtonContent(config: FormConfig) {
 }
 
 export async function handlePriceChanges(config: FormConfig) {
-  const { $t } = useI18n(config?.general?.localization);
   if (!ZOTLO_GLOBAL.formElement) return;
 
   function updateElementsValue<T extends HTMLElement>(
