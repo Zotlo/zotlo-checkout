@@ -4,7 +4,8 @@ export enum PaymentProvider {
   PAYPAL = 'paypal',
   GOOGLE_PAY = 'googlePay',
   APPLE_PAY = 'applePay',
-  CREDIT_CARD = 'creditCard'
+  CREDIT_CARD = 'creditCard',
+  PIX = 'pix',
 };
 
 export enum PaymentResultStatus {
@@ -389,6 +390,7 @@ export type PackageInfoType = {
 export type FormGeneral = {
   isLive?: boolean;
   showPaypal: boolean;
+  showPix?: boolean;
   language: string;
   countryCode: string;
   currency: string;

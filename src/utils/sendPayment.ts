@@ -30,7 +30,7 @@ function preparePayload(payload: {
   config: FormConfig
 }) {
   const { providerKey, formData, params, config } = payload;
-  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, saveCard, cardId = 0 } = formData || {};
+  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, saveCard, cardId = 0, cpfCnpj } = formData || {};
   const { returnUrl } = params || {};
   const showSavedCards = config.general.showSavedCards;
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
@@ -75,6 +75,14 @@ function preparePayload(payload: {
       ) {
         (data as any).transactionId = (config?.providerConfigs as any)?.[providerKey]?.transactionId || "";
         (data as any)[`${providerKey}Token`] = 'aaaaaa';
+      }
+    }
+      break;
+    case PaymentProvider.PIX: {
+      data = {
+        providerKey,
+        acceptPolicy,
+        ...(cpfCnpj && { identityCardNumber: cpfCnpj.replace(/\D/g, '') }),
       }
     }
       break;
