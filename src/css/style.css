@@ -182,10 +182,41 @@
 .zotlo-checkout__price-table {
   border: var(--zc-priceCard-borderWidth) solid var(--zc-priceCard-borderColor);
   background-color: var(--zc-priceCard-backgroundColor);
-  padding: 2px 6px;
+  padding: 2px 12px;
   border-radius: var(--zc-priceCard-borderRadius);
   font-size: 12px;
   overflow: hidden;
+}
+
+
+/* DISCOUNT CONTENT */
+.zotlo-checkout__price-table .zotlo-checkout__discount-content {
+  margin-top: 0;
+  padding-top: 6px;
+}
+.zotlo-checkout div[data-price-table] div[data-discount-section] {
+  margin-top: 0;
+}
+.zotlo-checkout__price-table .zotlo-checkout__discount-content button[data-discount-toggle],
+.zotlo-checkout__price-table .zotlo-checkout__discount-content__discount-applied {
+  height: auto;
+}
+
+.zotlo-checkout__price-table .zotlo-checkout__discount-content__coupon {
+  background-color: #C6EFFF;
+  color: #008BFF;
+  font-weight: 500;
+}
+
+.zotlo-checkout__price-table .zotlo-checkout__discount-content__price-info--discount {
+  color: #008BFF;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__price-table .zotlo-checkout__discount-content__coupon {
+  background-color: #C6EFFF;
+  color: #008BFF;
 }
 
 .zotlo-checkout__price-table .zotlo-checkout__total__quantity-info {
@@ -213,7 +244,7 @@
 .zotlo-checkout__price-table table td {
   border: 0;
   border-bottom: 1px solid var(--zc-priceCard-borderColor);
-  padding: 6px !important;
+  padding: 6px 0 !important;
 }
 
 .zotlo-checkout__price-table td.zotlo-checkout__price-table__footer {

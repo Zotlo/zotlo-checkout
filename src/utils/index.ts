@@ -313,7 +313,7 @@ export function getSubmitButtonContent(config: FormConfig) {
 
   const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
     ? buttonKey
-    : $t(`form.button.text.${packageState}.${buttonKey}`);
+    : $t(`form.button.state.${packageState}.${buttonKey}`);
   const buttonContent = template(buttonText, {
     ...getPackageTemplateParams(config)
   });

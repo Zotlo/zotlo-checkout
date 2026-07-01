@@ -102,6 +102,8 @@ export function generateThemeMobileApp(params: {
     priceTable = createPriceTable({ config }) || '';
   }
 
+  const isSubscription = config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
+
   return template(mainHTML, {
     DIR: dir,
     DARK_MODE: themePreference,
@@ -111,7 +113,7 @@ export function generateThemeMobileApp(params: {
     }),
     HEADER: paymentHeader || '',
     PRICE_TABLE: priceTable || '',
-    SHOW_TOTAL: config.paymentData?.package?.packageType !== PackageType.SUBSCRIPTION,
+    SHOW_TOTAL: !isSubscription,
     PACKAGE_SUMMARY: !config.cardUpdate,
     PACKAGE_IMAGE: productImage,
     PACKAGE_PRICE: packagePrice,
@@ -121,7 +123,7 @@ export function generateThemeMobileApp(params: {
     ADDITIONAL_PRICE: additionalPrice,
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: getQuantityInfo(config),
-    DISCOUNT_SECTION: prepareDiscountSection({ config }),
+    DISCOUNT_SECTION: isSubscription ? '' : prepareDiscountSection({ config }),
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,

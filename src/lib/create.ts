@@ -277,20 +277,26 @@ export function createCreditCardForm(params: {
     ? businessPurchase?.defaultSelection === 'checked'
     : showBillingForm;
 
+  const isSubscription = config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
+  const showTotal = !isSubscription;
+  const quantityInfo = getQuantityInfo(config);
+  const discountSelection = isSubscription ? '' : prepareDiscountSection({ config });
+  const isVisiblePriceSection = !config.cardUpdate && showPrice && (isSubscription ? (discountSelection || showTotal || quantityInfo) : true);
+
   let newForm = template(formElement, { 
     FORM_TYPE: formType, 
     ATTRIBUTES: attrs, 
     CLASS_NAME: className || '', 
-    SHOW_PRICE: !config.cardUpdate && showPrice,
+    SHOW_PRICE: isVisiblePriceSection,
     SHOW_BILLING_FORM: showBillingForm,
     BILLING_ATTRIBUTES: generateAttributes({
       'data-billing-form': showBillingFields ? 'true' : 'false',
     }),
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
-    QUANTITY_INFO: getQuantityInfo(config),
+    QUANTITY_INFO: quantityInfo,
     COUNTRY_CODE: config.general.countryCode,
-    DISCOUNT_SECTION: prepareDiscountSection({ config }),
-    SHOW_TOTAL: config.paymentData?.package?.packageType !== PackageType.SUBSCRIPTION,
+    DISCOUNT_SECTION: discountSelection,
+    SHOW_TOTAL: showTotal,
   });
 
   let cardTop = '';
@@ -755,14 +761,17 @@ export function createPriceTable(params: {
     LABEL_STARTS_ON_PERIOD: $t('priceTable.startingOn', { date: formatStartDate(paymentStartDate) }),
     ADDITIONAL_TEXT: additionalText,
     ADDITIONAL_PRICE: additionalPrice,
+    DISCOUNT_INPUT: createDiscountInput({ config }),
+    DISCOUNT_LABEL: createAppliedDiscountSection({ config, hideOldPrice: true })
   });
 }
 
 export function prepareDiscountSection(params: { config: FormConfig }) {
   const { config } = params;
   const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
-  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
   if (!isDiscountCodeEntryEnabled) return '';
+
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
   if (isDiscountCodeApplied) return createAppliedDiscountSection({ config });
   return createDiscountInput({ config });
 }
@@ -812,8 +821,8 @@ export function getDiscountInfo(params: { config: FormConfig, discountObject?: F
   return info;
 }
 
-export function createAppliedDiscountSection(params: { config: FormConfig }) {
-  const { config } = params || {};
+export function createAppliedDiscountSection(params: { config: FormConfig, hideOldPrice?: boolean }) {
+  const { config, hideOldPrice } = params || {};
   const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
   const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
   const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
@@ -822,7 +831,7 @@ export function createAppliedDiscountSection(params: { config: FormConfig }) {
   if (isDiscountCodeEntryEnabled && isDiscountCodeApplied) return template(appliedDiscountSection, {
     DISCOUNT_CODE: discountCode,
     DISCOUNT_AMOUNT: discountText,
-    OLD_PRICE: oldPrice,
+    OLD_PRICE: hideOldPrice ? '' : oldPrice,
   });
   return '';
 }

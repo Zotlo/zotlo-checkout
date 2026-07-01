@@ -1,6 +1,13 @@
 <div class="zotlo-checkout__price-table">
   <table>
     <tbody>
+      <% IF(DISCOUNT_LABEL) %>
+      <tr>
+        <td colspan="2">
+          {{DISCOUNT_LABEL}}
+        </td>
+      </tr>
+      <% ENDIF %>
       <% IF(HAS_TRIAL_PERIOD) %>
       <tr>
         <td>{{LABEL_TRIAL}}</td>
@@ -70,3 +77,9 @@
     </tbody>
   </table>
 </div>
+
+<% IF(DISCOUNT_INPUT && !DISCOUNT_LABEL) %>
+<div data-discount-section>
+  {{DISCOUNT_INPUT}}
+</div>
+<% ENDIF %>
