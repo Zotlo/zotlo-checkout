@@ -411,7 +411,7 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
       zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
     }),
     MOR_INFO: $t('footer.legals.morInfo', { appName }),
-    CHARGE_STATEMENT: $t('footer.legals.chargeStatement', { statementName: 'STATEMENT_NAME' }),
+    CHARGE_STATEMENT: $t('footer.legals.chargeStatement', { statementName: config.general.statementName }),
     PAYMENT_AGGREGATOR: isRussia
       ? $t('footer.zotlo.aggregator', {
         here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`

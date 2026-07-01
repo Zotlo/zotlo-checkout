@@ -6,6 +6,7 @@ export type InitResult = {
   registerBypass: boolean;
   language: string;
   countryCode: string;
+  statementName: string;
   settings: {
     design: FormDesign;
     success: FormSuccess;

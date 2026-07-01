@@ -408,6 +408,7 @@ export type FormGeneral = {
   isPolicyRequired: boolean;
   appLogo?: string;
   appName?: string;
+  statementName?: string;
   productImage?: string;
   packageName?: string;
   additionalText?: string;
