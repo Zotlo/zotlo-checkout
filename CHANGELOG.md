@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.16.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.15.0...v1.16.0)
+
+### 🚀 Enhancements
+- **Z3-6350**: feature/Z3-6350: add pix payment process ([a2b3331](https://github.com/Zotlo/zotlo-checkout/commit/a2b3331))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.15.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.14.0...v1.15.0)
