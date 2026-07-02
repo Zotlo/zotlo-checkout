@@ -1,5 +1,8 @@
 <form id="zotlo-checkout-form" class="zotlo-checkout zotlo-checkout--default" dir="{{DIR}}" data-theme="{{DARK_MODE}}" {{ATTRIBUTES}}>
   {{HEADER}}
+  <% IF(PRICE_TABLE) %>
+  <div data-price-table>{{PRICE_TABLE}}</div>
+  <% ENDIF %>
   <% IF(THEME==="horizontal") %>
   <div class="zotlo-checkout__tab">{{TAB_BUTTONS}}</div>
   <% ENDIF %>

@@ -113,6 +113,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       isCheckoutLink: !!initData?.isCheckoutLink,
       appName: initData?.appName || '',
       appLogo: initData?.appLogo || '',
+      statementName: initData?.statementName || '',
       packageName: initData?.packageName || '',
       productImage: initData?.productImage || '',
       additionalText: initData?.additionalText || '',

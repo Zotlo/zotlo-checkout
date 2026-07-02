@@ -1,8 +1,8 @@
 import mainHTML from './html/main.html?raw'
-import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme, type FooterInfo } from '../../types'
+import { type FormSetting, PaymentProvider, type FormConfig, DesignTheme, type FooterInfo, PackageCondition } from '../../types'
 import { generateAttributes, generateTabButtons } from '../../../utils'
 import { template } from "../../../utils/template";
-import { createCreditCardForm, createProviderButton, createPaymentHeader, createFooter } from '../../create'
+import { createCreditCardForm, createProviderButton, createPaymentHeader, createFooter, createPriceTable } from '../../create'
 
 export function generateThemeDefault(params: {
   config: FormConfig;
@@ -65,6 +65,11 @@ export function generateThemeDefault(params: {
 
   const paymentHeader = createPaymentHeader({ config });
   const footer = createFooter(footerInfo) || '';
+  let priceTable = '';
+
+  if (config.packageInfo?.condition !== PackageCondition.ONETIME_PAYMENT) {
+    priceTable = createPriceTable({ config }) || '';
+  }
 
   return template(mainHTML, {
     DIR: dir,
@@ -73,6 +78,7 @@ export function generateThemeDefault(params: {
       ? DesignTheme.HORIZONTAL
       : DesignTheme.VERTICAL,
     HEADER: paymentHeader || '',
+    PRICE_TABLE: priceTable,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,
     FOOTER: footer,

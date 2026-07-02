@@ -249,6 +249,15 @@ export type FormDesign = {
     enabled: boolean;
     canUserModify: boolean;
     defaultSelection: 'checked' | 'unchecked';
+  };
+  priceCard: {
+    backgroundColor: string;
+    backgroundOpacity: number;
+    borderWidth: number;
+    borderColor: string;
+    borderRadius: number;
+    color: string;
+    secondaryColor: string;
   }
 };
 
@@ -377,7 +386,7 @@ export type PackageInfoType = {
   totalPayableAmount: string | number;
   totalPayableBaseAmount: string | number;
   currency: string;
-  condition: 'package_with_trial' | 'onetime_payment' | 'plan_with_no_trial' | 'package_with_trial_used';
+  condition: PackageCondition;
   state: keyof FormConfig['design']['button']['text'];
   discount: {
     price: number | string;
@@ -402,6 +411,7 @@ export type FormGeneral = {
   isPolicyRequired: boolean;
   appLogo?: string;
   appName?: string;
+  statementName?: string;
   productImage?: string;
   packageName?: string;
   additionalText?: string;
@@ -681,7 +691,16 @@ export type FooterInfo = {
   PRICE_INFO: string;
   FOOTER_DESC: string;
   DISCLAIMER: string;
-  ZOTLO_LEGALS_TEXT: string;
+  AGREEMENT_TEXT: string;
+  MOR_INFO: string;
+  CHARGE_STATEMENT: string;
   PAYMENT_AGGREGATOR: string;
   ZOTLO_ADDRESS_TEXT: string;
+}
+
+export enum PackageCondition {
+  PACKAGE_WITH_TRIAL = 'package_with_trial',
+  ONETIME_PAYMENT = 'onetime_payment',
+  PLAN_WITH_NO_TRIAL = 'plan_with_no_trial',
+  PACKAGE_WITH_TRIAL_USED = 'package_with_trial_used'
 }
