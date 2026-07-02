@@ -707,7 +707,7 @@ export function createPriceTable(params: {
   const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
   const showAdditonalText = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'additionalText') ? !!config.design?.product?.additionalText?.show : true;
   const additionalPrice = config.packageInfo?.discount.price;
-  const additionalText = showAdditonalText
+  const additionalText = showAdditonalText && config.design.theme === 'mobileapp'
     ? (
       config.general.additionalText ||
       (
