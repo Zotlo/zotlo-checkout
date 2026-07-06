@@ -257,8 +257,7 @@ export function getPackageTemplateParams(config: FormConfig) {
     PERIOD_NAMING: periodNaming,
     TRIAL_PERIOD: trialPeriodLabel,
     TRIAL_PERIOD_TYPE: trialPeriodType,
-    TRIAL_PERIOD_NAMING: trialPeriodNaming,
-    DISCOUNT_ALLOW_TRIAL: !!config?.paymentData?.discount?.allowTrial
+    TRIAL_PERIOD_NAMING: trialPeriodNaming
   };
 }
 
