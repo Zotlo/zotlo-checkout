@@ -209,6 +209,33 @@ export function getPackageTemplateParams(config: FormConfig) {
   const { period = 0, trialPeriod = 0, periodType, trialPeriodType } = packageInfo || {};
   const { $t } = useI18n(config.general.localization);
 
+  let periodLabel = '';
+  let periodNaming = '';
+  let trialPeriodLabel = '';
+  let trialPeriodNaming = '';
+
+
+  if (period !== 0) {
+    periodLabel = $t(`common.periodBase.${periodType}`, { count: period });
+
+    if (period === 1) {
+      periodNaming = $t(`common.periodNaming.${periodType}`);
+    } else {
+      periodNaming = periodLabel;
+    }
+  }
+
+  if (trialPeriod !== 0) {
+    trialPeriodLabel = $t(`common.periodBase.${trialPeriodType}`, { count: trialPeriod })
+
+    if (trialPeriod === 1) {
+      periodNaming = $t(`common.periodNaming.${trialPeriodType}`);
+    } else {
+      trialPeriodNaming = trialPeriodLabel;
+    }
+  }
+
+
   return {
     QUANTITY: config?.settings?.quantitySetting?.quantity || 1,
     UNIT_PRICE: packageInfo?.totalPayableBaseAmount || "",
@@ -225,8 +252,12 @@ export function getPackageTemplateParams(config: FormConfig) {
     TRIAL_PRICE: packageInfo?.trialPrice || "",
     DAILY_PRICE: packageInfo?.dailyPrice || "",
     WEEKLY_PRICE: packageInfo?.weeklyPrice || "",
-    PERIOD: period === 0 ? '' : $t(`common.periods.${periodType}`, { count: period }),
-    TRIAL_PERIOD: period === 0 ? '' : $t(`common.periods.${trialPeriodType}`, { count: trialPeriod }),
+    PERIOD: periodLabel,
+    PERIOD_TYPE: periodType,
+    PERIOD_NAMING: periodNaming,
+    TRIAL_PERIOD: trialPeriodLabel,
+    TRIAL_PERIOD_TYPE: trialPeriodType,
+    TRIAL_PERIOD_NAMING: trialPeriodNaming,
     DISCOUNT_ALLOW_TRIAL: !!config?.paymentData?.discount?.allowTrial
   };
 }
