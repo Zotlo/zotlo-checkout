@@ -706,7 +706,7 @@ export function createPriceTable(params: {
   const { $t } = useI18n(config.general.localization);
   const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
   const showAdditonalText = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'additionalText') ? !!config.design?.product?.additionalText?.show : true;
-  const additionalPrice = config.packageInfo?.discount.price;
+  const additionalPrice = `0.00 ${config.general.currency}`;
   const additionalText = showAdditonalText && config.design.theme === 'mobileapp'
     ? (
       config.general.additionalText ||
@@ -746,13 +746,23 @@ export function createPriceTable(params: {
     labelEveryPeriod = $t('common.totalDue');
   }
 
+  let discountedRecurringBillingPeriodLabel = '';
+  const periodType = config.packageInfo?.periodType;
+  const recurringPeriod = parseFloat(config.paymentData?.discount?.recurringBillingPeriod || '0');
+
+  if (recurringPeriod !== 0) {
+    discountedRecurringBillingPeriodLabel = $t('priceTable.billingCount', {
+      PERIOD: $t(`common.periodBase.${periodType}`, { count: recurringPeriod })
+    });
+  }
+
   return template(priceTableElement, {
     ...paramList,
     HAS_TRIAL_PERIOD: hasTrialPeriod,
     QUANTITY_INFO: getQuantityInfo(config, true),
     PACKAGE_TYPE: config.paymentData?.package?.packageType,
     LABEL_TRIAL: $t('priceTable.trial', { count: paramList.TRIAL_PERIOD }),
-    LABEL_BILLING_COUNT: $t('priceTable.billingCount', { count: paramList.DISCOUNTED_RECURRING_BILLING_PERIOD }),
+    LABEL_BILLING_COUNT: discountedRecurringBillingPeriodLabel,
     LABEL_EVERY_PERIOD: labelEveryPeriod,
     LABEL_FOOTER_TEXT: $t('priceTable.footerText', {
       link: `<a href="https://account.zotlo.com" target="_blank">account.zotlo.com</a>`
