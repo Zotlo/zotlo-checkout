@@ -56,3 +56,7 @@ export type CardInitResult = {
     cookiePolicy?: string;
   };
 };
+
+export const ErrorCodes = {
+  NO_PROVIDER_AVAILABLE: '404039'
+}

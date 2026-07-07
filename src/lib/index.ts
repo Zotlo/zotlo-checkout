@@ -37,6 +37,7 @@ import { createPaymentSuccessForm } from "./create";
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
 import { getFormValues, loadSelectbox } from "./common";
+import { ErrorCodes } from "../utils/config/types";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   // Load Sentry for error tracking
@@ -237,11 +238,15 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
       if (import.meta.env.VITE_SDK_API_URL) {
         if (ErrorHandler.response) {
-          form = generateEmptyPage({
-            config,
-            title: config?.general?.localization?.empty?.error?.title || 'An error occured',
-            message: ErrorHandler.response?.meta?.message
-          });
+          let title = config?.general?.localization?.empty?.error?.title || 'An error occured';
+          let message = ErrorHandler.response?.meta?.message;
+
+          if (ErrorHandler.response?.meta.errorCode === ErrorCodes.NO_PROVIDER_AVAILABLE) {
+            title = '';
+            message = '';
+          }
+
+          form = generateEmptyPage({ config, title, message });
         }
       }
 
