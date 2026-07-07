@@ -8,7 +8,9 @@
 
   <div>{{MOR_INFO}}</div>
 
+  <% IF(CHARGE_STATEMENT) %>
   <div>{{CHARGE_STATEMENT}}</div>
+  <% ENDIF %>
 
   <% IF(PAYMENT_AGGREGATOR) %>
   <div>{{PAYMENT_AGGREGATOR}}</div>

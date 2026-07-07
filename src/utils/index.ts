@@ -458,6 +458,9 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
   const isRussia = config.general.countryCode === 'RU';
   const PaymentAggregator = 'https://3p-assets.cdnztl.com/docs/2025/09/10/jigle-payment-terms-ru.pdf'
   const appName = config.general.appName || '';
+  const ruName = $t('footer.legals.jigleName');
+  const zotloName = isRussia ? ruName : $t('footer.legals.zotloName');
+  const zotloTitle = isRussia ? ruName : $t('footer.legals.zotloTitle');
 
   const footerInfo: FooterInfo = {
     SHOW_FOOTER_DESC: true,
@@ -466,13 +469,14 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
     DISCLAIMER: '',
     AGREEMENT_TEXT: $t('footer.legals.agreement', {
       appName,
+      zotloName,
       termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
       privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
       zotloTerms: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a>`,
       zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
     }),
-    MOR_INFO: $t('footer.legals.morInfo', { appName }),
-    CHARGE_STATEMENT: $t('footer.legals.chargeStatement', { statementName: config.general.statementName }),
+    MOR_INFO: $t('footer.legals.morInfo', { appName, zotloName, zotloTitle }),
+    CHARGE_STATEMENT: isRussia ? '' : $t('footer.legals.chargeStatement', { statementName: config.general.statementName }),
     PAYMENT_AGGREGATOR: isRussia
       ? $t('footer.zotlo.aggregator', {
         here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`
