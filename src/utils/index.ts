@@ -353,10 +353,25 @@ export function getSubmitButtonContent(config: FormConfig) {
   const buttonText = (typeof buttonKey === 'string' && !!buttonKey)
     ? buttonKey
     : $t(`form.button.state.${packageState}.${buttonKey}`);
-  const buttonContent = template(buttonText, {
-    ...getPackageTemplateParams(config)
-  });
-  return buttonContent;
+
+  let params = getPackageTemplateParams(config);
+
+  if (packageState === 'subscriptionActivationState') {
+    switch(buttonKey) {
+      case 0: case 2:
+      case 3: case 4:
+      case 5: case 6:
+        params.PERIOD = params.PERIOD_NAMING;
+        params.TRIAL_PERIOD = params.TRIAL_PERIOD_NAMING;
+        break;
+      case 1:
+        params.PERIOD = params.PERIOD_TYPE;
+        params.TRIAL_PERIOD = params.TRIAL_PERIOD_TYPE;
+        break;
+    }
+  }
+
+  return template(buttonText, params);
 }
 
 export async function handlePriceChanges(config: FormConfig) {

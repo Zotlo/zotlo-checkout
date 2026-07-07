@@ -323,7 +323,7 @@ enum DiscountType {
   AMOUNT = 'amount'
 }
 
-enum DiscountRecurringType {
+export enum DiscountRecurringType {
   LIMITED = 'limited',
   FOREVER = 'forever'
 }

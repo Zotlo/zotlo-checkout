@@ -39,23 +39,17 @@
           <% ENDIF %>
         </td>
         <td>
-          <% IF(!DISCOUNT_ALLOW_TRIAL) %>
-            <% IF(DISCOUNTED_PRICE && !DISCOUNTED_RECURRING_BILLING_PERIOD) %>
-            <span class="zotlo-checkout__price-table__overline">{{PURE_PRICE}}</span>
+          <% IF(DISCOUNTED_PRICE && !DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+          <span class="zotlo-checkout__price-table__overline">{{PURE_PRICE}}</span>
+          <% ENDIF %>
+          <div>
+            <% IF(DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+            {{PURE_PRICE}}
             <% ENDIF %>
-            <div>
-              <% IF(DISCOUNTED_RECURRING_BILLING_PERIOD) %>
-              {{PURE_PRICE}}
-              <% ENDIF %>
-              <% IF(!DISCOUNTED_RECURRING_BILLING_PERIOD) %>
-              {{PRICE}}
-              <% ENDIF %>
-            </div>
-          <% ENDIF %>
-
-          <% IF(DISCOUNT_ALLOW_TRIAL) %>
-          <div>{{PURE_PRICE}}</div>
-          <% ENDIF %>
+            <% IF(!DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+            {{PRICE}}
+            <% ENDIF %>
+          </div>
           <% IF(QUANTITY_INFO) %>
           <div class="zotlo-checkout__total__quantity-info" data-quantity-info>{{QUANTITY_INFO}}</div>
           <% ENDIF %>

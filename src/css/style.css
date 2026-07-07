@@ -273,6 +273,7 @@
 }
 
 .zotlo-checkout__price-table__overline {
+  font-size: 12px !important;
   text-decoration: line-through;
   color: var(--zc-priceCard-secondaryColor);
 }
