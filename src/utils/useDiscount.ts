@@ -1,4 +1,4 @@
-import { type FormConfig, type IZotloCheckoutParams } from "../lib/types";
+import { PackageType, type FormConfig, type IZotloCheckoutParams } from "../lib/types";
 import {
   setFormDisabled,
   useI18n,
@@ -12,8 +12,9 @@ import { Logger } from '../lib/logger';
 export function useDiscount(payload: { params: IZotloCheckoutParams; config: FormConfig, syncAllPrices: () => Promise<void> }) {
   const { params, config, syncAllPrices } = payload;
   const isMobileAppTheme = config.design.theme === 'mobileapp';
-  const tabList = isMobileAppTheme ? [ZOTLO_GLOBAL.formElement] : ZOTLO_GLOBAL.container?.querySelectorAll('[data-tab-content]');
-  const activeTab = isMobileAppTheme ? ZOTLO_GLOBAL.formElement : ZOTLO_GLOBAL.container?.querySelector('[data-tab-active="true"]');
+  const isSubscription = config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
+  const tabList = isMobileAppTheme || isSubscription ? [ZOTLO_GLOBAL.formElement] : ZOTLO_GLOBAL.container?.querySelectorAll('[data-tab-content]');
+  const activeTab = isMobileAppTheme || isSubscription ? ZOTLO_GLOBAL.formElement : ZOTLO_GLOBAL.container?.querySelector('[data-tab-active="true"]');
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
 
   const destroyList = {

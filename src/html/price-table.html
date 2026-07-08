@@ -1,0 +1,79 @@
+<div class="zotlo-checkout__price-table">
+  <table>
+    <tbody>
+      <% IF(DISCOUNT_LABEL) %>
+      <tr>
+        <td colspan="2">
+          {{DISCOUNT_LABEL}}
+        </td>
+      </tr>
+      <% ENDIF %>
+      <% IF(HAS_TRIAL_PERIOD) %>
+      <tr>
+        <td>{{LABEL_TRIAL}}</td>
+        <td>
+          <% IF(DISCOUNTED_TRIAL_PRICE && DISCOUNTED_TRIAL_PRICE!=PURE_TRIAL_PRICE) %>
+          <span class="zotlo-checkout__price-table__overline">{{PURE_TRIAL_PRICE}}</span>
+          <% ENDIF %>
+          <div>{{TRIAL_PRICE}}</div>
+        </td>
+      </tr>
+      <% ENDIF %>
+      <% IF(DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+      <tr>
+        <td>
+          {{LABEL_BILLING_COUNT}}
+          <div class="zotlo-checkout__price-table__subtext">{{LABEL_STARTS_ON_CYCLE}}</div>
+        </td>
+        <td>
+          <span class="zotlo-checkout__price-table__overline">{{PURE_PRICE}}</span>
+          <div>{{PRICE}}</div>
+        </td>
+      </tr>
+      <% ENDIF %>
+      <tr>
+        <td>
+          {{LABEL_EVERY_PERIOD}}
+          <% IF(PACKAGE_TYPE=="subscription") %>
+          <div class="zotlo-checkout__price-table__subtext">{{LABEL_STARTS_ON_PERIOD}}</div>
+          <% ENDIF %>
+        </td>
+        <td>
+          <% IF(DISCOUNTED_PRICE && !DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+          <span class="zotlo-checkout__price-table__overline">{{PURE_PRICE}}</span>
+          <% ENDIF %>
+          <div>
+            <% IF(DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+            {{PURE_PRICE}}
+            <% ENDIF %>
+            <% IF(!DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+            {{PRICE}}
+            <% ENDIF %>
+          </div>
+          <% IF(QUANTITY_INFO) %>
+          <div class="zotlo-checkout__total__quantity-info" data-quantity-info>{{QUANTITY_INFO}}</div>
+          <% ENDIF %>
+        </td>
+      </tr>
+      <% IF(ADDITIONAL_TEXT) %>
+      <tr class="zotlo-checkout__price-table__fadeout">
+        <td>{{ADDITIONAL_TEXT}}</td>
+        <td data-discount-price>{{ADDITIONAL_PRICE}}</td>
+      </tr>
+      <% ENDIF %>
+      <% IF(PACKAGE_TYPE=="subscription") %>
+      <tr>
+        <td colspan="2" class="zotlo-checkout__price-table__footer">
+          {{LABEL_FOOTER_TEXT}}
+        </td>
+      </tr>
+      <% ENDIF %>
+    </tbody>
+  </table>
+</div>
+
+<% IF(DISCOUNT_INPUT && !DISCOUNT_LABEL) %>
+<div data-discount-section>
+  {{DISCOUNT_INPUT}}
+</div>
+<% ENDIF %>

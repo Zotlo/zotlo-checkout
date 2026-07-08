@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.17.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.16.0...v1.17.0)
+
+### 🚀 Enhancements
+- **Z3-6333:** normalize value in required validation rule ([bc9d786](https://github.com/Zotlo/zotlo-checkout/commit/bc9d786))
+- **Z3-6450:** Implements price table to clear pricing confusions - show trial price and discounts - show billing cycle and start date - show subscription payment and start date ([896d016](https://github.com/Zotlo/zotlo-checkout/commit/896d016))
+- **Z3-6450:** Refactor footer text ([035e5c0](https://github.com/Zotlo/zotlo-checkout/commit/035e5c0))
+- **Z3-6451:** Apply style by config ([e52a715](https://github.com/Zotlo/zotlo-checkout/commit/e52a715))
+- **Z3-6451:** Update default theme config for price-info-card ([82ea1c5](https://github.com/Zotlo/zotlo-checkout/commit/82ea1c5))
+- **Z3-6451:** Update button text path for checkout form ([e97d674](https://github.com/Zotlo/zotlo-checkout/commit/e97d674))
+- **Z3-6450:** Add statement name on footer ([25aa20f](https://github.com/Zotlo/zotlo-checkout/commit/25aa20f))
+- **Z3-6450:** Show additional text only mobileapp theme on price-info-card ([7e9474b](https://github.com/Zotlo/zotlo-checkout/commit/7e9474b))
+- **Z3-6450:** Update button text parameters by item ([e6b2352](https://github.com/Zotlo/zotlo-checkout/commit/e6b2352))
+- **Z3-6450:** Show one-time discount as recurring cycle ([d8235cb](https://github.com/Zotlo/zotlo-checkout/commit/d8235cb))
+- **Z3-6450:** Update footer text by Russia ([f8bb56b](https://github.com/Zotlo/zotlo-checkout/commit/f8bb56b))
+- **Z3-6450:** Update billing logic to handle trial and discount conditions ([8cc2bd0](https://github.com/Zotlo/zotlo-checkout/commit/8cc2bd0))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- omeersari ([@omeersari](https://github.com/omeersari))
+
 ## v1.16.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.15.0...v1.16.0)
