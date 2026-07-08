@@ -47,7 +47,7 @@ export function generateThemeMobileApp(params: {
 
   const totalPrice = config.packageInfo?.totalPayableAmount || '0.00 USD';
   const packagePrice = config.packageInfo?.discount.original;
-  const additionalPrice = config.packageInfo?.discount.price;
+  const additionalPrice = `0.00 ${config.general.currency}`;
 
   if (providerButtons) {
     primaryProvider += `<div class="zotlo-checkout__seperator"><span>${$t('common.orAnotherWay')}</span></div>`

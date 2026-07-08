@@ -23,7 +23,7 @@ export async function getPaymentData(uuid?: string) {
     }
 
     // Show as one-time billing cycle discount if recurring is false
-    if (!paymentInitData.discount?.recurringStatus && paymentInitData.discount?.discountPrice) {
+    if (!paymentInitData.discount?.recurringStatus && paymentInitData.discount?.discountPrice && !paymentInitData.discount?.allowTrial) {
       paymentInitData.discount.recurringMode = DiscountRecurringType.LIMITED;
       paymentInitData.discount.recurringBillingPeriod = '1';
     }
