@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.17.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.17.0...v1.17.1)
+
+### 🩹 Fixes
+
+- **Z3-6502:** Fix the issue that cannot click discount button if form loading state ends ([e88e0a0](https://github.com/Zotlo/zotlo-checkout/commit/e88e0a0))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.17.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.16.0...v1.17.0)
