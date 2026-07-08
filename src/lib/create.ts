@@ -8,6 +8,7 @@ import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
 import paymentDetailsElement from '../html/payment-details.html?raw'
 import paymentHeaderElement from '../html/payment-header.html?raw'
+import priceTableElement from '../html/price-table.html?raw'
 import modalElement from '../html/modal.html?raw'
 import creditCardFieldsElement from '../html/credit-card-fields.html?raw'
 import savedCardItemElement from '../html/saved-card-item.html?raw'
@@ -16,10 +17,11 @@ import footerHTML from '../html/footer.html?raw'
 import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable } from "../utils";
-import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions } from '../utils/getPackageInfo';
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable, calculatePaymentStartDate } from "../utils";
+import type { PaymentPeriodType, PaymentDateInfo } from '../utils/paymentStartCalculation';
+import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions, getPackageTemplateParams } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
-import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData, type FormPaymentData, type FooterInfo } from './types'
+import { DesignTheme, type FormConfig, type FormSuccess, type PaymentDetail, PaymentProvider, SuccessTheme, SavedCardsGroupName, type SavedCreditCardData, type FormPaymentData, type FooterInfo, PackageCondition, PackageType } from './types'
 import { FORM_ITEMS } from './fields'
 import { getCardInfoFromCardNumber } from '../utils/getCardMask';
 
@@ -275,19 +277,26 @@ export function createCreditCardForm(params: {
     ? businessPurchase?.defaultSelection === 'checked'
     : showBillingForm;
 
+  const isSubscription = config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
+  const showTotal = !isSubscription;
+  const quantityInfo = getQuantityInfo(config);
+  const discountSelection = isSubscription ? '' : prepareDiscountSection({ config });
+  const isVisiblePriceSection = !config.cardUpdate && showPrice && (isSubscription ? (discountSelection || showTotal || quantityInfo) : true);
+
   let newForm = template(formElement, { 
     FORM_TYPE: formType, 
     ATTRIBUTES: attrs, 
     CLASS_NAME: className || '', 
-    SHOW_PRICE: !config.cardUpdate && showPrice,
+    SHOW_PRICE: isVisiblePriceSection,
     SHOW_BILLING_FORM: showBillingForm,
     BILLING_ATTRIBUTES: generateAttributes({
       'data-billing-form': showBillingFields ? 'true' : 'false',
     }),
     CREDIT_CARD_SECTION: prepareCreditCardSection({ config }),
-    QUANTITY_INFO: getQuantityInfo(config),
+    QUANTITY_INFO: quantityInfo,
     COUNTRY_CODE: config.general.countryCode,
-    DISCOUNT_SECTION: prepareDiscountSection({ config }),
+    DISCOUNT_SECTION: discountSelection,
+    SHOW_TOTAL: showTotal,
   });
 
   let cardTop = '';
@@ -489,7 +498,7 @@ export function preparePaymentDetailsSection(params: {
   } = paymentDetail?.transaction?.[0] || {};
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
   const planInfoText = isPanelEditMode ? '-' : getPlanInfoText(config);
-  const isOneTimePayment = config.packageInfo?.condition === 'onetime_payment';
+  const isOneTimePayment = config.packageInfo?.condition === PackageCondition.ONETIME_PAYMENT;
   const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
   const zotloAccountUrl = "https://account.zotlo.com/";
 
@@ -705,20 +714,97 @@ export function createPaymentHeader(params: {
 export function createFooter(footerInfo: FooterInfo) {
   return template(footerHTML, {
     SHOW_FOOTER_DESC: !!footerInfo.SHOW_FOOTER_DESC,
-    PRICE_INFO: footerInfo.PRICE_INFO,
-    FOOTER_DESC: footerInfo.FOOTER_DESC,
-    DISCLAIMER: footerInfo.DISCLAIMER,
-    ZOTLO_LEGALS_TEXT: footerInfo.ZOTLO_LEGALS_TEXT,
-    PAYMENT_AGGREGATOR: footerInfo.PAYMENT_AGGREGATOR,
-    ZOTLO_ADDRESS_TEXT: footerInfo.ZOTLO_ADDRESS_TEXT
+    ...(footerInfo || {})
   })
+}
+
+export function createPriceTable(params: {
+  config: FormConfig;
+}) {
+  const { config } = params;
+  const paramList = getPackageTemplateParams(params.config);
+  const { $t } = useI18n(config.general.localization);
+  const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
+  const showAdditonalText = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'additionalText') ? !!config.design?.product?.additionalText?.show : true;
+  const additionalPrice = `0.00 ${config.general.currency}`;
+  const additionalText = showAdditonalText && config.design.theme === 'mobileapp'
+    ? (
+      config.general.additionalText ||
+      (
+        config.design?.product?.additionalText?.text?.[config.general.language] ||
+        config.design?.product?.additionalText?.text?.en || ''
+      )
+    )
+    : '';
+
+  const { recurringBillingStartDate, paymentStartDate } = calculatePaymentStartDate({
+    trialPeriod: config.packageInfo?.trialPeriod || 0,
+    trialPeriodType: (config.packageInfo?.trialPeriodType || 'month') as PaymentPeriodType,
+    period: config.packageInfo?.period || 0,
+    periodType: (config.packageInfo?.periodType || 'month') as PaymentPeriodType,
+    discountedRecurringBillingPeriod: Number(config.paymentData?.discount?.recurringBillingPeriod) || 0,
+  });
+
+  // Format dates in the form's language (e.g. "10 Haz", "Jun 10").
+  const locale = (config.general.language || 'en').replace('_', '-');
+  const formatStartDate = (info: PaymentDateInfo | null) => {
+    if (!info) return '';
+    try {
+      return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(info.date);
+    } catch {
+      return new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short' }).format(info.date);
+    }
+  };
+
+  const paymentData = config.paymentData;
+  const periodType = config.packageInfo?.periodType;
+  const recurringPeriod = parseFloat(config.paymentData?.discount?.recurringBillingPeriod || '0');
+  const hasTrialPeriod = !!config.packageInfo?.trialPeriod;
+  let discountedRecurringBillingPeriodLabel = '';
+  let labelEveryPeriod = hasTrialPeriod
+    ? $t('priceTable.thenEveryPeriods', { period: $t(`priceTable.periods.${config.packageInfo?.periodType}`) })
+    : $t(`subscription.${config.packageInfo?.periodType}`);
+
+  if (paymentData?.package?.packageType !== PackageType.SUBSCRIPTION) {
+    labelEveryPeriod = $t('common.totalDue');
+  } else if (!hasTrialPeriod && !paymentData?.discount?.recurringStatus && paymentData?.discount?.discountPrice) {
+    labelEveryPeriod = $t('priceTable.thenPeriod', {
+      period: $t(`subscription.${config.packageInfo?.periodType}`)
+    });
+  }
+
+  if (recurringPeriod !== 0) {
+    discountedRecurringBillingPeriodLabel = $t('priceTable.billingCount', {
+      PERIOD: $t(`common.periodBase.${periodType}`, { count: recurringPeriod })
+    });
+  }
+
+  return template(priceTableElement, {
+    ...paramList,
+    HAS_TRIAL_PERIOD: hasTrialPeriod,
+    QUANTITY_INFO: getQuantityInfo(config, true),
+    PACKAGE_TYPE: config.paymentData?.package?.packageType,
+    LABEL_TRIAL: $t('priceTable.trial', { count: paramList.TRIAL_PERIOD }),
+    LABEL_BILLING_COUNT: discountedRecurringBillingPeriodLabel,
+    LABEL_EVERY_PERIOD: labelEveryPeriod,
+    LABEL_FOOTER_TEXT: $t('priceTable.footerText', {
+      link: `<a href="https://account.zotlo.com" target="_blank">account.zotlo.com</a>`
+    }),
+    LABEL_STARTS_ON_CYCLE: $t('priceTable.startingOn', { date: formatStartDate(recurringBillingStartDate) }),
+    LABEL_STARTS_ON_PERIOD: $t('priceTable.startingOn', { date: formatStartDate(paymentStartDate) }),
+    ADDITIONAL_TEXT: additionalText,
+    ADDITIONAL_PRICE: additionalPrice,
+    DISCOUNT_INPUT: createDiscountInput({ config }),
+    DISCOUNT_LABEL: createAppliedDiscountSection({ config, hideOldPrice: true })
+  });
 }
 
 export function prepareDiscountSection(params: { config: FormConfig }) {
   const { config } = params;
   const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
-  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
   if (!isDiscountCodeEntryEnabled) return '';
+
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
   if (isDiscountCodeApplied) return createAppliedDiscountSection({ config });
   return createDiscountInput({ config });
 }
@@ -768,8 +854,8 @@ export function getDiscountInfo(params: { config: FormConfig, discountObject?: F
   return info;
 }
 
-export function createAppliedDiscountSection(params: { config: FormConfig }) {
-  const { config } = params || {};
+export function createAppliedDiscountSection(params: { config: FormConfig, hideOldPrice?: boolean }) {
+  const { config, hideOldPrice } = params || {};
   const isDiscountCodeEntryEnabled = !!config.settings.enableDiscountCodeEntry;
   const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
   const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
@@ -778,7 +864,7 @@ export function createAppliedDiscountSection(params: { config: FormConfig }) {
   if (isDiscountCodeEntryEnabled && isDiscountCodeApplied) return template(appliedDiscountSection, {
     DISCOUNT_CODE: discountCode,
     DISCOUNT_AMOUNT: discountText,
-    OLD_PRICE: oldPrice,
+    OLD_PRICE: hideOldPrice ? '' : oldPrice,
   });
   return '';
 }

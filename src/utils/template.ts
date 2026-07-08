@@ -109,20 +109,74 @@ function findConditionalBlocks(text: string) {
 }
 
 function evaluateCondition(condition: string, content: string, data: Record<string, any>): string {
-  const [key, value] = condition.split('===').map(item => item.trim());
-  const dataValue = data[key];
-  const parsedValue = toPrimitive(value);
-  const hasKey = Object.prototype.hasOwnProperty.call(data, key);
-  const hasCondition = (
-    Array.isArray(parsedValue)
-      ? parsedValue.includes(dataValue)
-      : value === undefined
-        ? !!dataValue
-        : dataValue === parsedValue
-  );
+  // If the expression is true, we get the content, otherwise empty string
+  return evaluateExpression(condition.trim(), data) ? content : '';
+}
 
-  // If the condition is true, we get the content, otherwise empty string
-  return (hasKey && hasCondition) ? content : '';
+// Evaluate a (possibly chained) boolean expression. Supports the basic JS
+// logical operators with standard precedence: || (lowest) over && over atoms.
+// Grouping with parentheses is not supported (the block parser captures the
+// condition up to the first ')').
+function evaluateExpression(expr: string, data: Record<string, any>): boolean {
+  const orParts = splitTopLevel(expr, '||');
+  if (orParts.length > 1) {
+    return orParts.some(part => evaluateExpression(part, data));
+  }
+
+  const andParts = splitTopLevel(expr, '&&');
+  if (andParts.length > 1) {
+    return andParts.every(part => evaluateExpression(part, data));
+  }
+
+  return evaluateAtom(expr.trim(), data);
+}
+
+// Evaluate a single comparison/truthiness atom against the data.
+function evaluateAtom(expr: string, data: Record<string, any>): boolean {
+  // Not-equal: KEY != value or KEY !== value (checked before equality so the
+  // shared '=' isn't mis-parsed as an equality comparison)
+  const notEqualMatch = expr.match(/^(.+?)\s*!==?\s*(.+)$/);
+  if (notEqualMatch) {
+    const dataValue = data[notEqualMatch[1].trim()];
+    const parsedValue = resolveValue(notEqualMatch[2].trim(), data);
+    return Array.isArray(parsedValue)
+      ? !parsedValue.includes(dataValue)
+      : dataValue !== parsedValue;
+  }
+
+  // Equal: KEY == value or KEY === value
+  const equalMatch = expr.match(/^(.+?)\s*===?\s*(.+)$/);
+  if (equalMatch) {
+    const dataValue = data[equalMatch[1].trim()];
+    const parsedValue = resolveValue(equalMatch[2].trim(), data);
+    return Array.isArray(parsedValue)
+      ? parsedValue.includes(dataValue)
+      : dataValue === parsedValue;
+  }
+
+  // Negated truthy check: !KEY
+  const notMatch = expr.match(/^!\s*(\w+)$/);
+  if (notMatch) {
+    return !data[notMatch[1]];
+  }
+
+  // Bare truthy check: KEY
+  return !!data[expr];
+}
+
+// Split an expression on a top-level logical operator. (No grouping support, so
+// this is a plain split; quoted operator literals are not expected in templates.)
+function splitTopLevel(expr: string, operator: '||' | '&&'): string[] {
+  return expr.split(operator).map(part => part.trim());
+}
+
+// Resolve a condition's right-hand side: if it's a bare identifier present in
+// data, compare against that variable's value; otherwise treat it as a literal.
+function resolveValue(value: string, data: Record<string, any>) {
+  if (/^\w+$/.test(value) && Object.prototype.hasOwnProperty.call(data, value)) {
+    return data[value];
+  }
+  return toPrimitive(value);
 }
 
 function toPrimitive(val: string) {

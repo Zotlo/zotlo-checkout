@@ -1,14 +1,21 @@
 <div class="zotlo-checkout__footer">
-  <% IF(SHOW_FOOTER_DESC===true) %>
+  <% IF(SHOW_FOOTER_DESC===true && PRICE_INFO || FOOTER_DESC) %>
   <div data-footer-description>{{PRICE_INFO}} {{FOOTER_DESC}}</div>
   <% ENDIF %>
   {{DISCLAIMER}}
-  <div>
-    {{ZOTLO_LEGALS_TEXT}}
-  </div>
+
+  <div>{{AGREEMENT_TEXT}}</div>
+
+  <div>{{MOR_INFO}}</div>
+
+  <% IF(CHARGE_STATEMENT) %>
+  <div>{{CHARGE_STATEMENT}}</div>
+  <% ENDIF %>
+
   <% IF(PAYMENT_AGGREGATOR) %>
   <div>{{PAYMENT_AGGREGATOR}}</div>
   <% ENDIF %>
+
   <% IF(ZOTLO_ADDRESS_TEXT) %>
   <div>{{ZOTLO_ADDRESS_TEXT}}</div>
   <% ENDIF %>

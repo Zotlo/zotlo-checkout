@@ -56,6 +56,13 @@
   --zc-success-button-hover-borderColor: #301BA3;
   --zc-success-button-hover-backgroundColor: #301BA3;
 
+  --zc-priceCard-backgroundColor: #F6F7F9;
+  --zc-priceCard-borderColor: #E7EAEE;
+  --zc-priceCard-borderWidth: 1px;
+  --zc-priceCard-borderRadius: 8;
+  --zc-priceCard-color: #0D0626;
+  --zc-priceCard-secondaryColor: #818A9C;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -102,10 +109,6 @@
 .zotlo-checkout table td {
   border-bottom: 1px solid #EBEBEB;
   padding: 8px 0;
-}
-
-.zotlo-checkout[data-theme="dark"] table td {
-  border-bottom-color: #333333;
 }
 
 .zotlo-checkout table td:last-child {
@@ -176,6 +179,105 @@
   text-decoration: none;
 }
 
+.zotlo-checkout__price-table {
+  border: var(--zc-priceCard-borderWidth) solid var(--zc-priceCard-borderColor);
+  background-color: var(--zc-priceCard-backgroundColor);
+  padding: 2px 12px;
+  border-radius: var(--zc-priceCard-borderRadius);
+  font-size: 12px;
+  overflow: hidden;
+}
+
+
+/* DISCOUNT CONTENT */
+.zotlo-checkout__price-table .zotlo-checkout__discount-content {
+  margin-top: 0;
+  padding-top: 6px;
+}
+.zotlo-checkout div[data-price-table] div[data-discount-section] {
+  margin-top: 0;
+}
+.zotlo-checkout__price-table .zotlo-checkout__discount-content button[data-discount-toggle],
+.zotlo-checkout__price-table .zotlo-checkout__discount-content__discount-applied {
+  height: auto;
+}
+
+.zotlo-checkout__price-table .zotlo-checkout__discount-content__coupon {
+  background-color: #C6EFFF;
+  color: #008BFF;
+  font-weight: 500;
+}
+
+.zotlo-checkout__price-table .zotlo-checkout__discount-content__price-info--discount {
+  color: #008BFF;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.zotlo-checkout[data-theme="dark"] .zotlo-checkout__price-table .zotlo-checkout__discount-content__coupon {
+  background-color: #C6EFFF;
+  color: #008BFF;
+}
+
+.zotlo-checkout__price-table .zotlo-checkout__total__quantity-info {
+  font-size: 10px;
+  text-align: right;
+  color: currentColor;
+  font-weight: normal;
+}
+
+.zotlo-checkout__price-table td:first-child {
+  font-weight: 500 !important;
+  color: var(--zc-priceCard-color) !important;
+}
+
+.zotlo-checkout__price-table td:last-child {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--zc-priceCard-color) !important;
+}
+
+.zotlo-checkout__price-table table {
+  white-space: nowrap;
+}
+
+.zotlo-checkout__price-table table td {
+  border: 0;
+  border-bottom: 1px solid var(--zc-priceCard-borderColor);
+  padding: 6px 0 !important;
+}
+
+.zotlo-checkout__price-table td.zotlo-checkout__price-table__footer {
+  white-space: normal !important;
+  text-align: left !important;
+  font-weight: normal !important;
+  font-size: 10px !important;
+}
+
+.zotlo-checkout__price-table__subtext,
+.zotlo-checkout__price-table .zotlo-checkout__price-table__fadeout td {
+  color: var(--zc-priceCard-secondaryColor) !important;
+}
+
+.zotlo-checkout__price-table__footer a {
+  color: currentColor;
+  text-decoration: none;
+}
+
+.zotlo-checkout__price-table__footer a:hover {
+  text-decoration: underline;
+}
+
+.zotlo-checkout__price-table table tr:last-child td {
+  border-bottom: 0;
+}
+
+.zotlo-checkout__price-table__overline {
+  font-size: 12px !important;
+  text-decoration: line-through;
+  color: var(--zc-priceCard-secondaryColor);
+}
+
 .zotlo-checkout__form__col2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -210,7 +312,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin: 16px 0;
+  margin: 8px 0 16px;
 }
 
 .zotlo-checkout__total__price-info {

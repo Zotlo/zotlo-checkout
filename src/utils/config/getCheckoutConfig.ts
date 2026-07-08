@@ -1,7 +1,7 @@
 import { ErrorHandler } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
-import { DesignTheme, PaymentProvider, SuccessTheme } from "../../lib/types";
+import { DesignTheme, DiscountRecurringType, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
 import { CheckoutAPI } from "../../utils/api";
 import { setSession } from "../session";
@@ -16,8 +16,15 @@ export async function getPaymentData(uuid?: string) {
       ? { headers: { Uuid: uuid || '' } }
       : undefined;
     const paymentRes = await CheckoutAPI.get('/payment/init', config);
-    const paymentInitData = paymentRes?.result || {};
-    return paymentInitData as FormPaymentData;
+    const paymentInitData = (paymentRes?.result || {}) as FormPaymentData;
+
+    // Show as one-time billing cycle discount if recurring is false
+    if (!paymentInitData.discount?.recurringStatus && paymentInitData.discount?.discountPrice && !paymentInitData.discount?.allowTrial) {
+      paymentInitData.discount.recurringMode = DiscountRecurringType.LIMITED;
+      paymentInitData.discount.recurringBillingPeriod = '1';
+    }
+
+    return paymentInitData;
   } catch (e: any) {
     ErrorHandler.response = e;
     Logger.client?.captureException(e);
@@ -107,6 +114,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       isPolicyRequired: initData?.isPolicyRequired,
       appName: initData?.appName || '',
       appLogo: initData?.appLogo || '',
+      statementName: initData?.statementName || '',
       packageName: initData?.packageName || '',
       productImage: initData?.productImage || '',
       additionalText: initData?.additionalText || '',
