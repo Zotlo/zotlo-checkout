@@ -315,7 +315,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   async function syncAllPrices() {
     await refreshPaymentInitData();
     await refreshProviderConfigs();
-    handlePriceChanges(config);
+    await handlePriceChanges(config);
+
+    // Refresh discount events
+    destroyDiscountEvents.discounted?.();
+    destroyDiscountEvents.undiscounted?.();
+    destroyDiscountEvents = useDiscount({ params, config, syncAllPrices });
   }
 
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
