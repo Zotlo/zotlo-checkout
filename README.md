@@ -10,12 +10,12 @@ Add the `zotlo-checkout` package to your project:
 
 #### npm
 ```bash
-npm install --save-dev zotlo-checkout
+npm install --save-dev zotlo-checkout@latest
 ```
 
 #### yarn
 ```bash
-yarn add -D zotlo-checkout
+yarn add -D zotlo-checkout@latest
 ```
 
 ### Initialize Checkout

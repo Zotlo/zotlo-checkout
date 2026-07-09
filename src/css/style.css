@@ -226,6 +226,10 @@
   font-weight: normal;
 }
 
+[dir="rtl"] .zotlo-checkout__price-table .zotlo-checkout__total__quantity-info {
+  text-align: left;
+}
+
 .zotlo-checkout__price-table td:first-child {
   font-weight: 500 !important;
   color: var(--zc-priceCard-color) !important;
@@ -252,6 +256,10 @@
   text-align: left !important;
   font-weight: normal !important;
   font-size: 10px !important;
+}
+
+[dir="rtl"] .zotlo-checkout__price-table td.zotlo-checkout__price-table__footer {
+  text-align: right !important;
 }
 
 .zotlo-checkout__price-table__subtext,
