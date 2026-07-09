@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.17.2
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.17.1...v1.17.2)
+
+### 🩹 Fixes
+
+- **Z3-6506:** Fixes rtl problems on price-table ([ccf7954](https://github.com/Zotlo/zotlo-checkout/commit/ccf7954))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.17.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.17.0...v1.17.1)
