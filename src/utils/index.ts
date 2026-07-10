@@ -1,5 +1,5 @@
 import Countries from '../countries.json';
-import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, type FormSetting, PackageType } from '../lib/types';
+import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, type FormSetting, PackageType, PackageCondition } from '../lib/types';
 import { createAllCardsModal, createPriceTable, createSavedCardItem, createButton } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { getCDNUrl } from './getCDNUrl';
@@ -337,10 +337,26 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
 
 export function getFooterPriceInfo(config: FormConfig) {
   const { $t } = useI18n(config?.general?.localization);
+  const params = getPackageTemplateParams(config);
 
-  if (config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION) return '';
-  
-  return template($t('footer.legals.oneTimeInfo'), getPackageTemplateParams(config));
+  if (config.general.isActiveFTC) {
+    if (config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION) return '';
+    return template($t('footer.legals.oneTimeInfo'), params);
+  }
+
+  const packageCondition = config?.packageInfo?.condition || PackageCondition.PACKAGE_WITH_TRIAL;
+  const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
+  const isTrialDiscountAllowed = !!config?.paymentData?.discount?.allowTrial || false;
+  const isRecurringDiscountLimited = (config?.paymentData?.discount?.recurringMode === 'limited') || false;
+
+  const discountTrialKey = isTrialDiscountAllowed ? 'allowTrialDiscount' : 'noTrialDiscount';
+  const discountRecurringKey = isRecurringDiscountLimited ? 'recurringLimited' : 'recurringForever';
+  const finalLocalizationKey = isDiscountCodeApplied ? 
+    `footer.priceInfo.discounted.${packageCondition}.${discountTrialKey}.${discountRecurringKey}` : 
+    `footer.priceInfo.${packageCondition}`;
+
+  return template($t(finalLocalizationKey), params);
+
 }
 
 export function getSubmitButtonContent(config: FormConfig) {
@@ -389,11 +405,13 @@ export async function handlePriceChanges(config: FormConfig) {
   updateElementsValue<HTMLElement>('[data-total-price]', config?.packageInfo?.totalPayableAmount as string);
   updateElementsValue<HTMLButtonElement>('[data-card-submit-button]', getSubmitButtonContent(config));
   updateElementsValue<HTMLElement>('[data-original-price]', config?.packageInfo?.discount?.original as string);
-  updateElementsValue<HTMLElement>('[data-discount-price]', config?.packageInfo?.discount?.price as string);
   const footerFullDescription = getFooterPriceInfo(config);
-  const priceTable = createPriceTable({config});
   updateElementsValue<HTMLElement>('[data-footer-description]', footerFullDescription);
-  updateElementsValue<HTMLElement>('[data-price-table]', priceTable);
+
+  if (config.general.canViewPriceTable) {
+    const priceTable = createPriceTable({config});
+    updateElementsValue<HTMLElement>('[data-price-table]', priceTable);
+  }
 }
 
 export function getIsDiscountCodeApplied(config: FormConfig): boolean {

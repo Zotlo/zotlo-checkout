@@ -4,9 +4,13 @@
   <% ENDIF %>
   {{DISCLAIMER}}
 
+  <% IF(AGREEMENT_TEXT) %>
   <div>{{AGREEMENT_TEXT}}</div>
+  <% ENDIF %>
 
+  <% IF(MOR_INFO) %>
   <div>{{MOR_INFO}}</div>
+  <% ENDIF %>
 
   <% IF(CHARGE_STATEMENT) %>
   <div>{{CHARGE_STATEMENT}}</div>
