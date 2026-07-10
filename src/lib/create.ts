@@ -277,11 +277,11 @@ export function createCreditCardForm(params: {
     ? businessPurchase?.defaultSelection === 'checked'
     : showBillingForm;
 
-  const isSubscription = config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
-  const showTotal = !isSubscription;
+  const canViewPriceTable = config.general.canViewPriceTable;
+  const showTotal = !canViewPriceTable;
   const quantityInfo = getQuantityInfo(config);
-  const discountSelection = isSubscription ? '' : prepareDiscountSection({ config });
-  const isVisiblePriceSection = !config.cardUpdate && showPrice && (isSubscription ? (discountSelection || showTotal || quantityInfo) : true);
+  const discountSelection = canViewPriceTable ? '' : prepareDiscountSection({ config });
+  const isVisiblePriceSection = !config.cardUpdate && showPrice && (canViewPriceTable ? (discountSelection || showTotal || quantityInfo) : true);
 
   let newForm = template(formElement, { 
     FORM_TYPE: formType, 

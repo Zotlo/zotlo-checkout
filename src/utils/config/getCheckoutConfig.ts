@@ -1,7 +1,7 @@
 import { ErrorHandler } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
-import { DesignTheme, DiscountRecurringType, PaymentProvider, SuccessTheme } from "../../lib/types";
+import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
 import { CheckoutAPI } from "../../utils/api";
 import { setSession } from "../session";
@@ -103,6 +103,8 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     ) as FormSuccess;
 
     config.general = {
+      isActiveFTC: !!initData?.isActiveFTC,
+      canViewPriceTable: !!initData?.isActiveFTC && paymentInitData?.package?.packageType === PackageType.SUBSCRIPTION,
       localization: initData?.localization || config.general.localization,
       showPaypal: !!paymentInitData?.providers?.paypal,
       language: initData?.language,
