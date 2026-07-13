@@ -31,6 +31,7 @@ export type InitResult = {
   packageName?: string;
   customPrice?: string;
   customCurrency?: string;
+  isActiveFTC?: boolean;
   zotloUrls: {
     privacyPolicy?: string;
     termsOfService?: string;

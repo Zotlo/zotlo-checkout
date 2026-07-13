@@ -212,21 +212,24 @@ export type FormDesign = {
     text: {
       /**
        * ```
-       * 0: "Start Trial"
-       * 1: "Start {{TRIAL_PERIOD}} Trial"
+       * 0: "Pay {{TRIAL_PRICE}} & Start My {{TRIAL_PERIOD}} Trial"
+       * 1: "Start {{TRIAL_PERIOD}} Trial for {{TRIAL_PRICE}}"
+       * 2: "Claim My {{TRIAL_PERIOD}} Trial for {{TRIAL_PRICE}}"
+       * 3: "Unlock {{TRIAL_PERIOD}} Access for {{TRIAL_PRICE}}"
+       * 4: "Try {{TRIAL_PERIOD}} for Just {{TRIAL_PRICE}}"
        * ```
       */
-      trialActivationState: 0 | 1 | string;
+      trialActivationState: 0 | 1 | 2 | 3 | 4 | string;
       /**
        * ```
-       * 0: "Start Now"
-       * 1: "Subscribe Now"
-       * 2: "Get Started"
-       * 3: "Activate Now"
-       * 4: "Subscribe for {{PRICE}}"
-       * 5: "Get Started for {{PRICE}}"
-       * 6: "Subscribe Now for {{DAILY_PRICE}} per day"
-       * 7: "Start Now for {{DAILY_PRICE}} per day"
+       * 0: "Start My {{PERIOD}} Subscription for {{PRICE}}"
+       * 1: "Pay {{PRICE}}/every {{PERIOD}} & Start Now"
+       * 2: "Pay {{PRICE}} to Unlock {{PERIOD}} Subscription"
+       * 3: "Pay {{PRICE}} & Start My {{PERIOD}} Subscription"
+       * 4: "Get {{PERIOD}} Subscription Access for {{PRICE}}"
+       * 5: "Unlock {{PERIOD}} Subscription for {{PRICE}}"
+       * 6: "Claim My {{PERIOD}} Access for {{PRICE}}"
+       * 7: "Join Now for Just {{PRICE}}/{{PERIOD}}"
        * ```
        */
       subscriptionActivationState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | string;
@@ -419,6 +422,8 @@ export type FormGeneral = {
   customCurrency?: string;
   subscriberId?: string;
   registerBypass?: boolean;
+  isActiveFTC?: boolean;
+  canViewPriceTable?: boolean;
   zotloUrls?: {
     privacyPolicy?: string;
     termsOfService?: string;

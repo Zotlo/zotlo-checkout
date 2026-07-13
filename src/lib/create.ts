@@ -277,11 +277,11 @@ export function createCreditCardForm(params: {
     ? businessPurchase?.defaultSelection === 'checked'
     : showBillingForm;
 
-  const isSubscription = config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
-  const showTotal = !isSubscription;
+  const canViewPriceTable = config.general.canViewPriceTable;
+  const showTotal = !canViewPriceTable;
   const quantityInfo = getQuantityInfo(config);
-  const discountSelection = isSubscription ? '' : prepareDiscountSection({ config });
-  const isVisiblePriceSection = !config.cardUpdate && showPrice && (isSubscription ? (discountSelection || showTotal || quantityInfo) : true);
+  const discountSelection = canViewPriceTable ? '' : prepareDiscountSection({ config });
+  const isVisiblePriceSection = !config.cardUpdate && showPrice && (canViewPriceTable ? (discountSelection || showTotal || quantityInfo) : true);
 
   let newForm = template(formElement, { 
     FORM_TYPE: formType, 
@@ -737,8 +737,9 @@ export function createPriceTable(params: {
     )
     : '';
 
+  const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
   const { recurringBillingStartDate, paymentStartDate } = calculatePaymentStartDate({
-    trialPeriod: config.packageInfo?.trialPeriod || 0,
+    trialPeriod: isTrialUsed ? 0 : (config.packageInfo?.trialPeriod || 0),
     trialPeriodType: (config.packageInfo?.trialPeriodType || 'month') as PaymentPeriodType,
     period: config.packageInfo?.period || 0,
     periodType: (config.packageInfo?.periodType || 'month') as PaymentPeriodType,
@@ -757,25 +758,35 @@ export function createPriceTable(params: {
   };
 
   const paymentData = config.paymentData;
+  const period = config.packageInfo?.period;
   const periodType = config.packageInfo?.periodType;
-  const recurringPeriod = parseFloat(config.paymentData?.discount?.recurringBillingPeriod || '0');
-  const hasTrialPeriod = !!config.packageInfo?.trialPeriod;
-  let discountedRecurringBillingPeriodLabel = '';
-  let labelEveryPeriod = hasTrialPeriod
-    ? $t('priceTable.thenEveryPeriods', { period: $t(`priceTable.periods.${config.packageInfo?.periodType}`) })
-    : $t(`subscription.${config.packageInfo?.periodType}`);
+  const trialPeriod = config.packageInfo?.trialPeriod;
+  const trialPeriodType = config.packageInfo?.trialPeriodType;
+  const recurringPeriod = parseFloat(paymentData?.discount?.recurringBillingPeriod || '0');
+  const hasTrialPeriod = !!trialPeriod && !isTrialUsed;
+  const isSubscription = paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
+  const hasNonRecurringDiscount = !paymentData?.discount?.recurringStatus && !!paymentData?.discount?.discountPrice;
+  const isMultiPeriod = (period || 0) > 1;
 
-  if (paymentData?.package?.packageType !== PackageType.SUBSCRIPTION) {
-    labelEveryPeriod = $t('common.totalDue');
-  } else if (!hasTrialPeriod && !paymentData?.discount?.recurringStatus && paymentData?.discount?.discountPrice) {
-    labelEveryPeriod = $t('priceTable.thenPeriod', {
-      period: $t(`subscription.${config.packageInfo?.periodType}`)
+  const subscriptionPeriodLabel = $t(`subscription.${periodType}`, { count: period });
+  let discountedRecurringBillingPeriodLabel = '';
+  let labelEveryPeriod = subscriptionPeriodLabel;
+
+  if (hasTrialPeriod) {
+    labelEveryPeriod = $t('priceTable.thenEveryPeriods', {
+      period: isMultiPeriod ? paramList.PERIOD : $t(`priceTable.periods.${periodType}`)
     });
+  } else if (!isSubscription) {
+    labelEveryPeriod = $t('common.totalDue');
+  } else if (hasNonRecurringDiscount && recurringPeriod > 0) {
+    labelEveryPeriod = isMultiPeriod
+      ? $t('priceTable.thenEveryPeriods', { period: paramList.PERIOD })
+      : $t('priceTable.thenPeriod', { period: subscriptionPeriodLabel });
   }
 
   if (recurringPeriod !== 0) {
     discountedRecurringBillingPeriodLabel = $t('priceTable.billingCount', {
-      PERIOD: $t(`common.periodBase.${periodType}`, { count: recurringPeriod })
+      PERIOD: $t(`common.periodBase.${periodType}`, { count: (period || 0) * recurringPeriod })
     });
   }
 
@@ -784,7 +795,11 @@ export function createPriceTable(params: {
     HAS_TRIAL_PERIOD: hasTrialPeriod,
     QUANTITY_INFO: getQuantityInfo(config, true),
     PACKAGE_TYPE: config.paymentData?.package?.packageType,
-    LABEL_TRIAL: $t('priceTable.trial', { count: paramList.TRIAL_PERIOD }),
+    LABEL_TRIAL: $t('priceTable.trial', {
+      count: trialPeriod === 1 && trialPeriodType === 'week'
+        ? paramList.TRIAL_PERIOD_NAMING_WEEKLY
+        : paramList.TRIAL_PERIOD
+    }),
     LABEL_BILLING_COUNT: discountedRecurringBillingPeriodLabel,
     LABEL_EVERY_PERIOD: labelEveryPeriod,
     LABEL_FOOTER_TEXT: $t('priceTable.footerText', {
