@@ -31,7 +31,7 @@ import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
-import { handleUrlQuery, UrlQuery } from "../utils/handleUrlQuery";
+import { getPaymentCallback, handleUrlQuery, UrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { useDiscount } from "../utils/useDiscount";
 import { createPaymentSuccessForm } from "./create";
@@ -45,23 +45,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
-  if (import.meta.env.VITE_SDK_API_URL) {
-    CheckoutAPI.setUseCookie(!!params?.useCookie);
-    config = await getCheckoutConfig({
-      token: params.token,
-      packageId: params.packageId,
-      language: params.language,
-      subscriberId: params.subscriberId,
-      returnUrl: params.returnUrl,
-      style: params.style,
-      customParameters: params.customParameters,
-      useCookie: !!params?.useCookie,
-      showSavedCards: params?.showSavedCards,
-      quantitySetting: params?.quantitySetting,
-      enableDiscountCodeEntry: params?.enableDiscountCodeEntry
-    });
-    await refreshProviderConfigs();
-  }
+  await reloadSession();
 
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
@@ -69,6 +53,28 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   let destroySavedCardsEvents = null as (() => void) | null;
   let destroyBillingFormEvents = null as (() => void) | null;
   let destroyDiscountEvents = { discounted: null, undiscounted: null } as ReturnType<typeof useDiscount>;
+
+  async function reloadSession() {
+    config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
+
+    if (import.meta.env.VITE_SDK_API_URL) {
+      CheckoutAPI.setUseCookie(!!params?.useCookie);
+      config = await getCheckoutConfig({
+        token: params.token,
+        packageId: params.packageId,
+        language: params.language,
+        subscriberId: params.subscriberId,
+        returnUrl: params.returnUrl,
+        style: params.style,
+        customParameters: params.customParameters,
+        useCookie: !!params?.useCookie,
+        showSavedCards: params?.showSavedCards,
+        quantitySetting: params?.quantitySetting,
+        enableDiscountCodeEntry: params?.enableDiscountCodeEntry
+      });
+      await refreshProviderConfigs();
+    }
+  }
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
@@ -269,7 +275,13 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       const container = ZOTLO_GLOBAL.container;
 
       if (import.meta.env.VITE_SDK_API_URL) {
-        if (ErrorHandler.response) {
+        const { success } = getPaymentCallback({ config });
+
+        if (success && !config.success.show && config.general.isCheckoutLink) {
+          form = `<form id="zotlo-checkout-form" class="zotlo-checkout" style="min-height: 230px">
+            <div class="zotlo-checkout__form-loader"></div>
+          </form>`;
+        } else if (ErrorHandler.response) {
           form = generateEmptyPage({
             config,
             title: config?.general?.localization?.empty?.error?.title || 'An error occured',
@@ -695,10 +707,6 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
         >${$t('cookiePopup.word.cookiePolicy')}</a>`,
       })
     });
-    handleUrlQuery({
-      params,
-      config
-    });
   }
 
   function unmount() {
@@ -713,6 +721,15 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
 
     ZOTLO_GLOBAL.containerId = id;
     refresh();
+
+    handleUrlQuery({
+      params,
+      config,
+      reloadSession: async () => {
+        await reloadSession();
+        await refresh();
+      }
+    });
   }
 
   return {

@@ -17,6 +17,7 @@ export type InitResult = {
   allowSubscriberIdEditingOnRegisterPayment: string;
   hideSubscriberIdIfAlreadySet: string;
   privacyAndTosUrlStatus: number;
+  isCheckoutLink: boolean;
   privacyUrl: string;
   tosUrl: string;
   localization: Record<string, any>;
