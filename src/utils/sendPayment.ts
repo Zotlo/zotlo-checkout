@@ -1,10 +1,10 @@
-import { handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
-import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs } from "../lib/types";
+import { getUserDataForIntegration, handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
+import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
 import { getGooglePayClient } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
-import { deleteSession } from "./session";
+import { deleteSession, getSession } from "./session";
 import { Logger } from "../lib/logger";
-import { COOKIE } from "./cookie";
+import { COOKIE, getCookie } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
 
 function prepareBillingInfo(formData: Record<string, any>, config: FormConfig) {
@@ -150,6 +150,124 @@ function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, mess
   Logger.client?.captureException(error);
 }
 
+async function sendPurchaseEvents(payload: { config: FormConfig; result: PaymentDetail }) {
+  const { config, result } = payload;
+  const {
+    transaction_id: transactionId = ' ',
+    currency = ' ',
+    price = '0.00',
+    provider_name: paymentMethod = ''
+  } = result?.transaction?.[0] || {};
+  const packageData = result?.payment.package || {};
+  const app = result.application;
+  const priceValue = parseFloat(price || "0");
+  const utmInfo = getCookie('utmInfo');
+  const utmSource = (utmInfo ?  JSON.parse(utmInfo) : {})?.utm_source || '';
+  const contents = [{
+    content_id: packageData.packageId,
+    content_name: packageData.name,
+    price: priceValue,
+    quantity: 1
+  }];
+
+  const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+    registerType: config.settings.registerType,
+    subscriberId: result.client.subscriberId || config.general.subscriberId
+  });
+
+  window?.GTM?.push({
+    event: 'success',
+    successType: 'Payment'
+  });
+
+  window?.GA4?.gtag('event', 'success', {
+    successType: 'Payment'
+  });
+
+  const gtmObj = {
+    transaction_id: transactionId,
+    value: price,
+    currency,
+    coupon: ' ',
+    subscriber_id: result.client.subscriberId || '',
+    items: [
+      {
+        item_id: packageData.packageId,
+        item_name: packageData.name,
+        affiliation: utmSource,
+        coupon: ' ',
+        index: 1,
+        item_brand: app.name || ' ',
+        item_category: packageData.periodType || ' ',
+        price,
+        quantity: 1
+      }
+    ]
+  }
+
+  const subscriptionStarted = {
+    subscriber_id: gtmObj.subscriber_id,
+    transaction_id: gtmObj.transaction_id
+  }
+
+  window?.GTM?.push({ event: 'subscription_started', ...subscriptionStarted });
+  window?.GA4?.gtag('event', 'subscription_started', subscriptionStarted);
+  window?.GTM?.push({ event: 'purchase', payment_method: paymentMethod, ecommerce: gtmObj });
+  window?.GA4?.gtag('event', 'purchase', { payment_method: paymentMethod, ...gtmObj, });
+
+  if (window?.GA4?.options.googleAds.isActive) {
+    window?.GA4?.gtag('event', 'conversion', {
+      send_to: window?.GA4?.getConversionLabel(),
+      value: gtmObj.value,
+      currency: gtmObj.currency,
+      transaction_id: gtmObj.transaction_id
+    })
+  }
+
+  window?.Facebook?.purchase?.({
+    value: priceValue,
+    currency,
+    userData: fbSiteData,
+    otherData: {
+      order_id: transactionId,
+      packageId: packageData.packageId,
+    }
+  });
+
+  window?.Tiktok?.identify?.(tiktokContext);
+  window?.Tiktok?.purchase?.({
+    value: priceValue,
+    currency,
+    description: app.name || ' ',
+    content_id: packageData.packageId,
+    orderID: transactionId,
+    context: tiktokContext,
+    contents
+  });
+
+  if (packageData.packageType === PackageType.SUBSCRIPTION) {
+    const eventName = packageData.trialPackageType === TrialPackageType.NO ? 'Subscribe' : 'StartTrial';
+    const fbObj = {
+      value: priceValue,
+      currency,
+      packageId: packageData.packageId,
+      ...fbSiteData
+    };
+
+    const ttObj = {
+      value: priceValue,
+      currency,
+      content_type: 'product',
+      contents,
+      quantity: 1,
+      ...tiktokContext
+    }
+
+    window?.Facebook?.track(eventName, fbObj);
+    window?.Tiktok?.track(eventName, ttObj);
+  }
+}
+
 export async function handlePaymentSuccess(payload: { config: FormConfig; params: IZotloCheckoutParams | IZotloCardParams; }) {
   try {
     setFormLoading(true);
@@ -174,13 +292,17 @@ export async function handlePaymentSuccess(payload: { config: FormConfig; params
       }
     }
 
+    await sendPurchaseEvents({ config, result });
+
+    params.events?.onSuccess?.({
+      ...result,
+      sessionId: getSession({ key: ZOTLO_GLOBAL.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID })?.id || '',
+      cardUpdate: ZOTLO_GLOBAL.cardUpdate
+    });
+
     deleteSession({
       useCookie: !!params.useCookie,
       key: config.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID
-    });
-    params.events?.onSuccess?.({
-      ...result,
-      cardUpdate: ZOTLO_GLOBAL.cardUpdate
     });
     return result;
   } catch (e) {

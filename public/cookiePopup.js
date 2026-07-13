@@ -24,9 +24,13 @@
       show: { type: Boolean, default: false },
       text: { type: String, default: '' }
     },
+    data() {
+      return { content_id: '' }
+    },
     methods: {
-      toggle(show) {
+      toggle(show, content_id = '') {
         this._.props.show = !!show;
+        this._.data.content_id = content_id;
       },
       updateText(text) {
         this._.props.text = text;
@@ -63,11 +67,19 @@
           // Init other integrations
           if (granted) {
             window.Integration.meta();
-            window.Facebook.track('AddToCart');
+            window.Integration.tiktok();
+
+            const myEvent = new CustomEvent('cookieConsent', {
+              detail: { consent: granted },
+              bubbles: true, 
+              cancelable: true
+            });
+
+            document.dispatchEvent(myEvent);
           }
         }
 
-        this.toggle(false);
+        this.toggle(false, this._.data.content_id);
 
         // Clear instances
         window.VueCookieApp._.appContext.app.unmount();

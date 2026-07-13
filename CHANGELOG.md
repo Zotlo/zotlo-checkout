@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.18.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.17.2...v1.18.0)
+
+### 🚀 Enhancements
+
+- **Z3-6265:** Prevent sending InitiateCheckout event if payment success ([f2b3cb6](https://github.com/Zotlo/zotlo-checkout/commit/f2b3cb6))
+- **Z3-6265:** Fix the issue that cannot get session id on integration.js if session is started with cookie ([b9ba76a](https://github.com/Zotlo/zotlo-checkout/commit/b9ba76a))
+- **Z3-6518:** Show price table view by a flag ([957e07f](https://github.com/Zotlo/zotlo-checkout/commit/957e07f))
+- **Z3-6518:** Fix translations for multiple periods ([35cb7a1](https://github.com/Zotlo/zotlo-checkout/commit/35cb7a1))
+- **Z3-6518:** Fix the issue that  first-billing-cycle calculation on label ([a2dfebd](https://github.com/Zotlo/zotlo-checkout/commit/a2dfebd))
+- **Z3-6518:** Show 7-day instead of 1-week for trial on price-table ([78be752](https://github.com/Zotlo/zotlo-checkout/commit/78be752))
+- **Z3-6518:** Hide trial info on price-table if user already used before. ([53299dc](https://github.com/Zotlo/zotlo-checkout/commit/53299dc))
+
+### 🩹 Fixes
+
+- **Z3-6415:** Redirect to deep link for checkout link if payment success screen is hidden ([035e387](https://github.com/Zotlo/zotlo-checkout/commit/035e387))
+- **Z3-6465:** Fix the issue that cannot hide form if there is no available payment method ([0d1de13](https://github.com/Zotlo/zotlo-checkout/commit/0d1de13))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.17.2
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.17.1...v1.17.2)

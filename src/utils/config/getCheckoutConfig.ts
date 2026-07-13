@@ -1,13 +1,13 @@
 import { ErrorHandler } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
-import { DesignTheme, DiscountRecurringType, PaymentProvider, SuccessTheme } from "../../lib/types";
+import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
 import { CheckoutAPI } from "../../utils/api";
 import { setSession } from "../session";
 import { getPackageInfo } from "../getPackageInfo";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
-import { InitResult } from "./types";
+import { ErrorCodes, type InitResult } from "./types";
 
 export async function getPaymentData(uuid?: string) {
   try {
@@ -17,6 +17,10 @@ export async function getPaymentData(uuid?: string) {
       : undefined;
     const paymentRes = await CheckoutAPI.get('/payment/init', config);
     const paymentInitData = (paymentRes?.result || {}) as FormPaymentData;
+
+    if (paymentRes.meta.errorCode === ErrorCodes.NO_PROVIDER_AVAILABLE) {
+      ErrorHandler.response = paymentRes;
+    }
 
     // Show as one-time billing cycle discount if recurring is false
     if (!paymentInitData.discount?.recurringStatus && paymentInitData.discount?.discountPrice && !paymentInitData.discount?.allowTrial) {
@@ -102,7 +106,14 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       params.style?.success || {}
     ) as FormSuccess;
 
+    if (window?.Integration) {
+      window.Integration.data.ia = initData?.ia || '';
+      window.Integration.data.countryCode = config.general.countryCode || '';
+    }
+
     config.general = {
+      isActiveFTC: !!initData?.isActiveFTC,
+      canViewPriceTable: !!initData?.isActiveFTC && paymentInitData?.package?.packageType === PackageType.SUBSCRIPTION,
       localization: initData?.localization || config.general.localization,
       showPaypal: !!paymentInitData?.providers?.paypal,
       language: initData?.language,
@@ -112,6 +123,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       privacyUrl: initData?.privacyUrl,
       privacyAndTosUrlStatus: !!+initData?.privacyAndTosUrlStatus,
       isPolicyRequired: initData?.isPolicyRequired,
+      isCheckoutLink: !!initData?.isCheckoutLink,
       appName: initData?.appName || '',
       appLogo: initData?.appLogo || '',
       statementName: initData?.statementName || '',

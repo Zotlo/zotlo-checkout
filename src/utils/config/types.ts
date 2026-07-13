@@ -7,6 +7,7 @@ export type InitResult = {
   language: string;
   countryCode: string;
   statementName: string;
+  ia: string;
   settings: {
     design: FormDesign;
     success: FormSuccess;
@@ -16,6 +17,7 @@ export type InitResult = {
   allowSubscriberIdEditingOnRegisterPayment: string;
   hideSubscriberIdIfAlreadySet: string;
   privacyAndTosUrlStatus: number;
+  isCheckoutLink: boolean;
   privacyUrl: string;
   tosUrl: string;
   localization: Record<string, any>;
@@ -29,6 +31,7 @@ export type InitResult = {
   packageName?: string;
   customPrice?: string;
   customCurrency?: string;
+  isActiveFTC?: boolean;
   zotloUrls: {
     privacyPolicy?: string;
     termsOfService?: string;
@@ -57,3 +60,7 @@ export type CardInitResult = {
     cookiePolicy?: string;
   };
 };
+
+export const ErrorCodes = {
+  NO_PROVIDER_AVAILABLE: '404039'
+}

@@ -2,18 +2,18 @@ import { type FormConfig, PackageCondition, PackageInfoType, PackageType, TrialP
 import { useI18n, getIsDiscountCodeApplied } from "../utils";
 import { template } from "./template";
 
-export function getPackageInfo(config?: FormConfig): PackageInfoType {
+export function getPackageInfo(config?: FormConfig, numberOnly?: boolean): PackageInfoType {
   if (!config) return {} as PackageInfoType;
 
   const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
 
   const periodsInfo = getPackagePeriodsInfo(config);
-  const pricesInfo = getPackagePrices(config);
-  const totalPayableAmount = getTotalPayableAmount(config, { isTrialUsed });
-  const totalPayableBaseAmount = getTotalPayableAmount(config, { isTrialUsed, useBasePrices: true });
+  const pricesInfo = getPackagePrices(config, numberOnly);
+  const totalPayableAmount = getTotalPayableAmount(config, { isTrialUsed, numberOnly });
+  const totalPayableBaseAmount = getTotalPayableAmount(config, { isTrialUsed, useBasePrices: true, numberOnly });
   const condition = getPackageCondition(config, { isTrialUsed });
   const state = getPackageState(config, { isTrialUsed });
-  const discount = getDiscountPrices(config, totalPayableAmount);
+  const discount = getDiscountPrices(config, totalPayableAmount, numberOnly);
   const isProviderRefreshNecessary = getIsProviderRefreshNecessary(config, { isTrialUsed });
 
   return {
@@ -41,20 +41,26 @@ export function getQuantityInfo(config: FormConfig, onlyUnits?: boolean) {
   return template($t('form.quantity.info'), templateParams);
 }
 
-export function getDiscountPrices(config?: FormConfig, defaultPrice?: string) {
+export function getDiscountPrices(config?: FormConfig, defaultPrice?: string | number, numberOnly?: boolean) {
   const { discountPrice, originalPrice, totalPrice } = config?.paymentData?.discount || {};
   let currency = config?.paymentData?.selectedPrice?.currency || '';
 
-  defaultPrice = (defaultPrice || `0.00 ${currency}`);
+  defaultPrice = (defaultPrice || (numberOnly ? 0 : `0.00 ${currency}`));
 
   return {
-    price: `${discountPrice || '0.00'} ${currency}`,
-    original: originalPrice ? `${originalPrice} ${currency}` : defaultPrice,
-    total: totalPrice ? `${totalPrice} ${currency}` : defaultPrice,
+    price: numberOnly
+      ? (discountPrice ? parseFloat(''+discountPrice) : 0)
+      : `${discountPrice || '0.00'} ${currency}`,
+    original: originalPrice
+      ? numberOnly ? parseFloat(''+originalPrice) : `${originalPrice} ${currency}`
+      : defaultPrice,
+    total: totalPrice
+      ? numberOnly ? parseFloat(''+totalPrice) : `${totalPrice} ${currency}`
+      : defaultPrice,
   }
 }
 
-export function getPackagePrices(config?: FormConfig) {
+export function getPackagePrices(config?: FormConfig, numberOnly?: boolean) {
   const { paymentData } = config || {};
   const { packageType, trialPackageType } = paymentData?.package || {};
   const { price, currency = '', trialPrice = '', dailyPrice, weeklyPrice, basePrice, baseTrialPrice } = paymentData?.selectedPrice || {};
@@ -72,6 +78,10 @@ export function getPackagePrices(config?: FormConfig) {
   const weeklyPriceValue = isDiscountCodeApplied ? discountedWeeklyPrice : weeklyPrice;
 
   function formatPrice(value?: string | number) {
+    if (numberOnly) {
+      return value ? parseFloat((+value).toFixed(2)) : '';
+    }
+
     return value ? `${(+value)?.toFixed(2)} ${currencyValue}` : '';
   }
 
@@ -133,7 +143,7 @@ export function getPackagePeriodsInfo(config?: FormConfig) {
   }
 }
 
-export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUsed?: boolean, useBasePrices?: boolean }): string {
+export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUsed?: boolean, useBasePrices?: boolean, numberOnly?: boolean }): string | number {
   const { paymentData } = config || {};
   if (!paymentData?.package?.packageId) return '0.00 USD';
   const { isTrialUsed = false, useBasePrices = false } = options || {};
@@ -142,16 +152,16 @@ export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUs
     packageType,
     trialPackageType,
   } = paymentData?.package || {};
-  const { price, trialPrice, basePrice, baseTrialPrice, currency } = getPackagePrices(config);
+  const { price, trialPrice, basePrice, baseTrialPrice, currency } = getPackagePrices(config, options?.numberOnly);
 
-  if (isDiscountCodeApplied && !useBasePrices) return getDiscountPrices(config).total;
+  if (isDiscountCodeApplied && !useBasePrices) return getDiscountPrices(config, undefined, options?.numberOnly).total;
   
   let finalAmount = useBasePrices ? basePrice : price;
   const trialPriceValue = useBasePrices ? baseTrialPrice : trialPrice;
   if (packageType === PackageType.SUBSCRIPTION && !isTrialUsed) {
     switch (trialPackageType) {
       case TrialPackageType.FREE_TRIAL: {
-        finalAmount = `0.00 ${currency}`;
+        finalAmount = options?.numberOnly ? 0 : `0.00 ${currency}`;
         break;
       }
       case TrialPackageType.STARTING_PRICE: {
@@ -162,7 +172,7 @@ export function getTotalPayableAmount(config?: FormConfig, options?: { isTrialUs
         break;
     }
   }
-  return `${finalAmount}`;
+  return options?.numberOnly ? parseFloat(''+finalAmount) : `${finalAmount}`;
 }
 
 function getPackageCondition(config?: FormConfig, options?: { isTrialUsed?: boolean }):PackageInfoType['condition'] {
@@ -213,6 +223,7 @@ export function getPackageTemplateParams(config: FormConfig) {
   let periodNaming = '';
   let trialPeriodLabel = '';
   let trialPeriodNaming = '';
+  let trialPeriodWeekly = '';
 
 
   if (period !== 0) {
@@ -230,6 +241,10 @@ export function getPackageTemplateParams(config: FormConfig) {
 
     if (trialPeriod === 1) {
       periodNaming = $t(`common.periodNaming.${trialPeriodType}`);
+
+      if (trialPeriodType === 'week') {
+        trialPeriodWeekly = $t('common.periodBase.day', { count: 7 })
+      }
     } else {
       trialPeriodNaming = trialPeriodLabel;
     }
@@ -257,7 +272,8 @@ export function getPackageTemplateParams(config: FormConfig) {
     PERIOD_NAMING: periodNaming,
     TRIAL_PERIOD: trialPeriodLabel,
     TRIAL_PERIOD_TYPE: trialPeriodType,
-    TRIAL_PERIOD_NAMING: trialPeriodNaming
+    TRIAL_PERIOD_NAMING: trialPeriodNaming,
+    TRIAL_PERIOD_NAMING_WEEKLY: trialPeriodWeekly,
   };
 }
 

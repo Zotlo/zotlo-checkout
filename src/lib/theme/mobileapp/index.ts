@@ -1,7 +1,7 @@
 import mainHTML from './html/main.html?raw';
 import { generateAttributes, generateTabButtons, useI18n } from '../../../utils'
 import { template } from "../../../utils/template";
-import { PaymentProvider, type FormConfig, type FormSetting, type FooterInfo, PackageType, PackageCondition } from '../../types';
+import { PaymentProvider, type FormConfig, type FormSetting, type FooterInfo } from '../../types';
 import { createCreditCardForm, createFooter, createPaymentHeader, createPriceTable, prepareDiscountSection } from '../../create'
 import { getQuantityInfo } from '../../../utils/getPackageInfo';
 import { prepareProvider } from './utils';
@@ -70,12 +70,11 @@ export function generateThemeMobileApp(params: {
   const paymentHeader = createPaymentHeader({ config });
   const footer = createFooter(footerInfo) || '';
   let priceTable = '';
+  const canViewPriceTable = !!config.general?.canViewPriceTable;
   
-  if (config.packageInfo?.condition !== PackageCondition.ONETIME_PAYMENT) {
+  if (canViewPriceTable) {
     priceTable = createPriceTable({ config }) || '';
   }
-
-  const isSubscription = config.paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
 
   return template(mainHTML, {
     DIR: dir,
@@ -86,7 +85,7 @@ export function generateThemeMobileApp(params: {
     }),
     HEADER: paymentHeader || '',
     PRICE_TABLE: priceTable || '',
-    SHOW_TOTAL: !isSubscription,
+    SHOW_TOTAL: !canViewPriceTable,
     PACKAGE_SUMMARY: !config.cardUpdate,
     PACKAGE_IMAGE: productImage,
     PACKAGE_PRICE: packagePrice,
@@ -96,7 +95,7 @@ export function generateThemeMobileApp(params: {
     ADDITIONAL_PRICE: additionalPrice,
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: getQuantityInfo(config),
-    DISCOUNT_SECTION: isSubscription ? '' : prepareDiscountSection({ config }),
+    DISCOUNT_SECTION: canViewPriceTable ? '' : prepareDiscountSection({ config }),
     PRIMARY_PROVIDER: primaryProvider,
     TAB_BUTTONS: tabButtons,
     PROVIDERS: providerButtons,

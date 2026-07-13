@@ -212,21 +212,24 @@ export type FormDesign = {
     text: {
       /**
        * ```
-       * 0: "Start Trial"
-       * 1: "Start {{TRIAL_PERIOD}} Trial"
+       * 0: "Pay {{TRIAL_PRICE}} & Start My {{TRIAL_PERIOD}} Trial"
+       * 1: "Start {{TRIAL_PERIOD}} Trial for {{TRIAL_PRICE}}"
+       * 2: "Claim My {{TRIAL_PERIOD}} Trial for {{TRIAL_PRICE}}"
+       * 3: "Unlock {{TRIAL_PERIOD}} Access for {{TRIAL_PRICE}}"
+       * 4: "Try {{TRIAL_PERIOD}} for Just {{TRIAL_PRICE}}"
        * ```
       */
-      trialActivationState: 0 | 1 | string;
+      trialActivationState: 0 | 1 | 2 | 3 | 4 | string;
       /**
        * ```
-       * 0: "Start Now"
-       * 1: "Subscribe Now"
-       * 2: "Get Started"
-       * 3: "Activate Now"
-       * 4: "Subscribe for {{PRICE}}"
-       * 5: "Get Started for {{PRICE}}"
-       * 6: "Subscribe Now for {{DAILY_PRICE}} per day"
-       * 7: "Start Now for {{DAILY_PRICE}} per day"
+       * 0: "Start My {{PERIOD}} Subscription for {{PRICE}}"
+       * 1: "Pay {{PRICE}}/every {{PERIOD}} & Start Now"
+       * 2: "Pay {{PRICE}} to Unlock {{PERIOD}} Subscription"
+       * 3: "Pay {{PRICE}} & Start My {{PERIOD}} Subscription"
+       * 4: "Get {{PERIOD}} Subscription Access for {{PRICE}}"
+       * 5: "Unlock {{PERIOD}} Subscription for {{PRICE}}"
+       * 6: "Claim My {{PERIOD}} Access for {{PRICE}}"
+       * 7: "Join Now for Just {{PRICE}}/{{PERIOD}}"
        * ```
        */
       subscriptionActivationState: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | string;
@@ -367,24 +370,24 @@ export type FormPaymentData = {
 }
 
 export type PackageInfoType = {
-  price: string;
-  basePrice: string;
-  baseTrialPrice: string;
-  trialPrice: string;
-  dailyPrice: string;
-  weeklyPrice: string;
+  price: string | number;
+  basePrice: string | number;
+  baseTrialPrice: string | number;
+  trialPrice: string | number;
+  dailyPrice: string | number;
+  weeklyPrice: string | number;
   trialPeriod: number;
   trialPeriodType: string;
   period: number;
   periodType: string;
-  purePrice: string;
-  pureTrialPrice: string;
-  discountedPackagePrice: string;
-  discountedPackageTrialPrice: string;
-  discountedDailyPrice: string;
-  discountedWeeklyPrice: string;
-  totalPayableAmount: string;
-  totalPayableBaseAmount: string;
+  purePrice: string | number;
+  pureTrialPrice: string | number;
+  discountedPackagePrice: string | number;
+  discountedPackageTrialPrice: string | number;
+  discountedDailyPrice: string | number;
+  discountedWeeklyPrice: string | number;
+  totalPayableAmount: string | number;
+  totalPayableBaseAmount: string | number;
   currency: string;
   condition: PackageCondition;
   state: keyof FormConfig['design']['button']['text'];
@@ -407,6 +410,7 @@ export type FormGeneral = {
   tosUrl: string;
   privacyUrl: string;
   privacyAndTosUrlStatus: boolean;
+  isCheckoutLink?: boolean;
   isPolicyRequired: boolean;
   appLogo?: string;
   appName?: string;
@@ -418,6 +422,8 @@ export type FormGeneral = {
   customCurrency?: string;
   subscriberId?: string;
   registerBypass?: boolean;
+  isActiveFTC?: boolean;
+  canViewPriceTable?: boolean;
   zotloUrls?: {
     privacyPolicy?: string;
     termsOfService?: string;
@@ -604,6 +610,7 @@ export type TransactionDetail = {
 export type PaymentDetail = {
   cardUpdate?: boolean;
   isSandbox: boolean;
+  sessionId: string;
   application: {
     id: number;
     name: string;
@@ -665,6 +672,7 @@ export interface IFormLoad {
   integrations: FormConfig['integrations'];
   backgroundColor: string;
   cookieText: string;
+  packageId: string;
 }
 
 export interface IFormInvalid {
