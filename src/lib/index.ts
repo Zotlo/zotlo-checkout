@@ -23,9 +23,9 @@ import {
   getActiveSavedCardId,
   ZOTLO_GLOBAL,
   shouldSkipBillingFields,
-  getUserDataForIntegration,
   toggleCpfCnpjVisibility,
-  isPixAvailable
+  isPixAvailable,
+  getUserDataForIntegration
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -648,8 +648,8 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function destroyFormInputs() {
-    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const container = ZOTLO_GLOBAL.container;
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const formElement = ZOTLO_GLOBAL.formElement;
     const formInputs = formElement?.querySelectorAll(wrapper + 'input');
     const submitButtons = container?.querySelectorAll('button[data-provider]');
