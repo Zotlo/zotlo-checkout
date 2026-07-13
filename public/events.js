@@ -48,14 +48,20 @@ window.EventActions = {
       }
     },
 
-    loadGTMClickEvents() {
+    loadGTMClickEvents(content_id) {
       const buttons = document.querySelectorAll('.zotlo-checkout__button');
 
       for (const button of buttons) {
         button.addEventListener('click', EventActions.payment.onClickButtons);
       }
 
-      window.Facebook.track('AddToCart');
+      const myEvent = new CustomEvent('cookieConsent', {
+        detail: { consent: window?.getCookie('cookieConsent') },
+        bubbles: true, 
+        cancelable: true
+      });
+
+      document.dispatchEvent(myEvent);
       EventActions.general.pageView('Payment');
     },
 
@@ -99,75 +105,6 @@ window.EventActions = {
 
     complete(result) {
       EventActions.success.loadClickEvents();
-
-      if (result.cardUpdate) return;
-
-      const app = result.application || {};
-      const packageData = result.payment.package || {};
-      const utmSource = (window.getCookie('utmInfo') || {})?.utm_source || '';
-
-      const {
-        transaction_id: transactionId = ' ',
-        currency = ' ',
-        price = '0.00',
-        provider_name: paymentMethod = ''
-      } = result?.transaction?.[0] || {};
-
-      window.GTM.push({
-        event: 'success',
-        successType: 'Payment'
-      });
-
-      window.GA4.gtag('event', 'success', {
-        successType: 'Payment'
-      });
-
-      const gtmObj = {
-        transaction_id: transactionId,
-        value: price,
-        currency,
-        coupon: ' ',
-        subscriber_id: result.client.subscriberId || '',
-        items: [
-          {
-            item_id: packageData.packageId,
-            item_name: packageData.name,
-            affiliation: utmSource,
-            coupon: ' ',
-            index: 1,
-            item_brand: app.name || ' ',
-            item_category: packageData.periodType || ' ',
-            price,
-            quantity: 1
-          }
-        ]
-      }
-
-      const subscriptionStarted = {
-        subscriber_id: gtmObj.subscriber_id,
-        transaction_id: gtmObj.transaction_id
-      }
-
-      window.GTM.push({ event: 'subscription_started', ...subscriptionStarted });
-      window.GA4.gtag('event', 'subscription_started', subscriptionStarted);
-      window.GTM.push({ event: 'purchase', payment_method: paymentMethod, ecommerce: gtmObj });
-      window.GA4.gtag('event', 'purchase', { payment_method: paymentMethod, ...gtmObj, });
-
-      if (window.GA4.options.googleAds.isActive) {
-        window.GA4.gtag('event', 'conversion', {
-          send_to: window.GA4.getConversionLabel(),
-          value: gtmObj.value,
-          currency: gtmObj.currency,
-          transaction_id: gtmObj.transaction_id
-        })
-      }
-
-      window.Facebook.purchase({
-        value: price,
-        currency,
-        orderID: transactionId,
-        eventID: transactionId,
-      });
     }
   },
 }

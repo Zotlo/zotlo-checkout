@@ -1,4 +1,4 @@
-import { DesignTheme, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
+import { DesignTheme, PaymentCallbackStatus, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
 import { generateEmptyPage, generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, updateValidationMessages, validatorInstance, checkboxValidation, inputValidation, validateForm, detectAndValidateForm } from "../utils/validation";
@@ -24,13 +24,14 @@ import {
   ZOTLO_GLOBAL,
   shouldSkipBillingFields,
   toggleCpfCnpjVisibility,
-  isPixAvailable
+  isPixAvailable,
+  getUserDataForIntegration
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
-import { handleUrlQuery } from "../utils/handleUrlQuery";
+import { handleUrlQuery, UrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { useDiscount } from "../utils/useDiscount";
 import { createPaymentSuccessForm } from "./create";
@@ -79,6 +80,26 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     config.packageInfo = getPackageInfo(config);
   }
 
+  function getEventData() {
+    const selectedPackage = config.paymentData?.package;
+    const packageInfo = getPackageInfo(config, true);
+
+    return {
+      content_id: selectedPackage?.packageId,
+      content_type: 'product',
+      quantity: 1,
+      description: config.general.appName,
+      value: packageInfo.totalPayableAmount,
+      currency: packageInfo.currency,
+      contents: [{
+        content_id: selectedPackage?.packageId,
+        content_name: selectedPackage?.name,
+        price: packageInfo.totalPayableAmount,
+        quantity: 1
+      }]
+    };
+  }
+
   async function handleFormSubmit(providerKey: PaymentProvider = PaymentProvider.CREDIT_CARD) {
     // Reset form validations
     for (const validation of Object.values(validations)) {
@@ -99,6 +120,18 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       const result = getFormValues(config);
       const cardId = getActiveSavedCardId({ providerKey, config });
       params.events?.onSubmit?.();
+
+      const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+        registerType: config.settings.registerType,
+        subscriberId: result.subscriberId || config.general.subscriberId
+      });
+      
+      window?.Facebook?.track('AddToCart', fbSiteData);
+      window?.Tiktok?.track('AddToCart', {
+        ...getEventData(),
+        ...tiktokContext
+      });
+
       try {
         setFormLoading(true);
         await sendPayment({
@@ -334,6 +367,87 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     return destroy;
   }
 
+  async function onFormInputChange() {
+    const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+      registerType: config.settings.registerType,
+      subscriberId: config.general.subscriberId
+    });
+
+    // Send events to FB and Tiktok when user starts filling the form
+    window?.Facebook?.track('AddPaymentInfo', {
+      pageType: 'Payment',
+      pageSlug: globalThis?.location?.pathname,
+      ...fbSiteData
+    });
+    window?.Tiktok?.track('AddPaymentInfo', {
+      pageType: 'Payment',
+      pageSlug: globalThis?.location?.pathname,
+      ...tiktokContext
+    });
+
+    // Bind AddPaymentInfo event to BE
+    CheckoutAPI.post('/payment/eventInfo', {
+      eventName: 'AddPaymentInfo',
+      payload: {
+        pageType: 'Payment',
+        pageSlug: globalThis?.location?.pathname,
+      }
+    });
+
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
+    const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
+
+    formInputs?.forEach((input) => {
+      input.removeEventListener('change', onFormInputChange);
+    });
+  }
+
+  async function onCookieConsentGranted(e: any) {
+    const queryString = globalThis?.location?.search || "";
+    const urlParams = new URLSearchParams(queryString);
+    const queryParams = Object.fromEntries(urlParams?.entries());
+    const hasConsent = !!e?.detail?.consent;
+
+    if (
+      hasConsent &&
+      queryParams[UrlQuery.STATUS] === PaymentCallbackStatus.SUCCESS &&
+      queryParams?.transactionId
+    ) {
+      return;
+    }
+
+    const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+      registerType: config.settings.registerType,
+      subscriberId: config.general.subscriberId
+    });
+
+    window?.Facebook?.track('InitiateCheckout', fbSiteData);
+    window?.Tiktok?.track('InitiateCheckout', {
+      ...getEventData(),
+      ...tiktokContext
+    });
+  }
+
+  async function sendCAPIInfo(e: any) {
+    const data = e?.detail || {}
+    const params = data?.params || {};
+    const payload: Record<string, string> = {}
+
+    if (data.integration === 'FB' && params.fbclid) {
+      payload.fbclid = params.fbclid || '';
+    }
+
+    if (data.integration === 'TT' && params.ttclid) {
+      payload.ttclid = params.ttclid || '';
+    }
+
+    if (Object.keys(payload).length === 0) return;
+
+    // Bind to BE
+    CheckoutAPI.post('/clickId', payload);
+  }
+
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const container = ZOTLO_GLOBAL.container;
@@ -500,7 +614,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     formElement?.addEventListener('submit', handleForm);
     formInputs?.forEach((input) => {
       input.addEventListener('change', handleAutoFill);
+      input.addEventListener('change', onFormInputChange, { once: true });
     });
+    document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
+    document.addEventListener('sendCAPIInfo', sendCAPIInfo);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
 
     // CPF/CNPJ is only relevant for PIX. In tabbed layouts show it while the
@@ -546,8 +663,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     if (formInputs) {
       for (const input of formInputs as NodeListOf<HTMLInputElement>) {
         input.removeEventListener('change', handleAutoFill);
+        input.removeEventListener('change', onFormInputChange);
       }
     }
+
+    document.removeEventListener('cookieConsent', onCookieConsentGranted);
+    document.removeEventListener('sendCAPIInfo', sendCAPIInfo);
 
     validatorInstance?.clearRules();
     destroySavedCardsEvents?.();
@@ -562,6 +683,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
     const { $t } = useI18n(config.general.localization);
 
     params.events?.onLoad?.({
+      packageId: params.packageId,
       sandbox: !!config?.paymentData?.sandboxPayment,
       countryCode: config.general.countryCode || '',
       integrations: config.integrations,

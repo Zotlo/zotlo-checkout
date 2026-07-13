@@ -7,6 +7,7 @@ export type InitResult = {
   language: string;
   countryCode: string;
   statementName: string;
+  ia: string;
   settings: {
     design: FormDesign;
     success: FormSuccess;

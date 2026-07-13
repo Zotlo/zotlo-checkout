@@ -367,24 +367,24 @@ export type FormPaymentData = {
 }
 
 export type PackageInfoType = {
-  price: string;
-  basePrice: string;
-  baseTrialPrice: string;
-  trialPrice: string;
-  dailyPrice: string;
-  weeklyPrice: string;
+  price: string | number;
+  basePrice: string | number;
+  baseTrialPrice: string | number;
+  trialPrice: string | number;
+  dailyPrice: string | number;
+  weeklyPrice: string | number;
   trialPeriod: number;
   trialPeriodType: string;
   period: number;
   periodType: string;
-  purePrice: string;
-  pureTrialPrice: string;
-  discountedPackagePrice: string;
-  discountedPackageTrialPrice: string;
-  discountedDailyPrice: string;
-  discountedWeeklyPrice: string;
-  totalPayableAmount: string;
-  totalPayableBaseAmount: string;
+  purePrice: string | number;
+  pureTrialPrice: string | number;
+  discountedPackagePrice: string | number;
+  discountedPackageTrialPrice: string | number;
+  discountedDailyPrice: string | number;
+  discountedWeeklyPrice: string | number;
+  totalPayableAmount: string | number;
+  totalPayableBaseAmount: string | number;
   currency: string;
   condition: PackageCondition;
   state: keyof FormConfig['design']['button']['text'];
@@ -604,6 +604,7 @@ export type TransactionDetail = {
 export type PaymentDetail = {
   cardUpdate?: boolean;
   isSandbox: boolean;
+  sessionId: string;
   application: {
     id: number;
     name: string;
@@ -665,6 +666,7 @@ export interface IFormLoad {
   integrations: FormConfig['integrations'];
   backgroundColor: string;
   cookieText: string;
+  packageId: string;
 }
 
 export interface IFormInvalid {
