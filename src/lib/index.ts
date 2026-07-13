@@ -316,7 +316,10 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
             config,
             title,
             message,
-            showRetryButton: ErrorHandler.response?.meta.errorCode === ErrorCodes.USER_NOT_FOUND
+            showRetryButton: [
+              ErrorCodes.USER_NOT_FOUND,
+              ErrorCodes.USER_NOT_EXIST
+            ].includes(ErrorHandler.response?.meta?.errorCode!)
           });
         }
       }
