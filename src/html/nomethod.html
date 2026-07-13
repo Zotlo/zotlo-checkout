@@ -55,6 +55,9 @@
       </svg>
       <div class="zotlo-checkout__noMethod__title">{{TITLE}}</div>
       <span class="zotlo-checkout__noMethod__desc">{{DESC}}</span>
+      <% IF(SHOW_RETRY_BUTTON) %>
+      <button class="zotlo-checkout__noMethod__action" type="button" data-retry-action>Retry</button>
+      <% ENDIF %>
     </div>
   </div>
 </form>

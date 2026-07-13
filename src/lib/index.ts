@@ -38,6 +38,8 @@ import { createPaymentSuccessForm } from "./create";
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
 import { getFormValues, loadSelectbox } from "./common";
+import { deleteSession } from "../utils/session";
+import { COOKIE } from "../utils/cookie";
 import { ErrorCodes } from "../utils/config/types";
 
 async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
@@ -188,7 +190,26 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   function handleTabView() {
-    if (!hasAnyConfig()) return;
+    if (!hasAnyConfig()) {
+      const showRetryButton = ZOTLO_GLOBAL.formElement?.querySelector('[data-retry-action]');
+      if (!showRetryButton) return;
+
+      async function retryAction() {
+        ErrorHandler.response = null;
+        setFormLoading(true);
+        deleteSession({
+          useCookie: !!params.useCookie,
+          key: COOKIE.UUID
+        });
+        await reloadSession();
+        await refresh();
+
+        showRetryButton?.removeEventListener('click', retryAction);
+      }
+
+      showRetryButton?.addEventListener('click', retryAction);
+      return;
+    }
 
     const paymentMethods = preparePaymentMethods(config);
 
@@ -291,7 +312,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
             message = '';
           }
 
-          form = generateEmptyPage({ config, title, message });
+          form = generateEmptyPage({
+            config,
+            title,
+            message,
+            showRetryButton: ErrorHandler.response?.meta.errorCode === ErrorCodes.USER_NOT_FOUND
+          });
         }
       }
 
