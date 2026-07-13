@@ -783,7 +783,7 @@ export function createPriceTable(params: {
 
   if (recurringPeriod !== 0) {
     discountedRecurringBillingPeriodLabel = $t('priceTable.billingCount', {
-      PERIOD: $t(`common.periodBase.${periodType}`, { count: period })
+      PERIOD: $t(`common.periodBase.${periodType}`, { count: (period || 0) * recurringPeriod })
     });
   }
 
