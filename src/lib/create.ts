@@ -757,25 +757,33 @@ export function createPriceTable(params: {
   };
 
   const paymentData = config.paymentData;
+  const period = config.packageInfo?.period;
   const periodType = config.packageInfo?.periodType;
-  const recurringPeriod = parseFloat(config.paymentData?.discount?.recurringBillingPeriod || '0');
+  const recurringPeriod = parseFloat(paymentData?.discount?.recurringBillingPeriod || '0');
   const hasTrialPeriod = !!config.packageInfo?.trialPeriod;
-  let discountedRecurringBillingPeriodLabel = '';
-  let labelEveryPeriod = hasTrialPeriod
-    ? $t('priceTable.thenEveryPeriods', { period: $t(`priceTable.periods.${config.packageInfo?.periodType}`) })
-    : $t(`subscription.${config.packageInfo?.periodType}`);
+  const isSubscription = paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
+  const hasNonRecurringDiscount = !paymentData?.discount?.recurringStatus && !!paymentData?.discount?.discountPrice;
+  const isMultiPeriod = (period || 0) > 1;
 
-  if (paymentData?.package?.packageType !== PackageType.SUBSCRIPTION) {
-    labelEveryPeriod = $t('common.totalDue');
-  } else if (!hasTrialPeriod && !paymentData?.discount?.recurringStatus && paymentData?.discount?.discountPrice) {
-    labelEveryPeriod = $t('priceTable.thenPeriod', {
-      period: $t(`subscription.${config.packageInfo?.periodType}`)
+  const subscriptionPeriodLabel = $t(`subscription.${periodType}`, { count: period });
+  let discountedRecurringBillingPeriodLabel = '';
+  let labelEveryPeriod = subscriptionPeriodLabel;
+
+  if (hasTrialPeriod) {
+    labelEveryPeriod = $t('priceTable.thenEveryPeriods', {
+      period: isMultiPeriod ? paramList.PERIOD : $t(`priceTable.periods.${periodType}`)
     });
+  } else if (!isSubscription) {
+    labelEveryPeriod = $t('common.totalDue');
+  } else if (hasNonRecurringDiscount && recurringPeriod > 0) {
+    labelEveryPeriod = isMultiPeriod
+      ? $t('priceTable.thenEveryPeriods', { period: paramList.PERIOD })
+      : $t('priceTable.thenPeriod', { period: subscriptionPeriodLabel });
   }
 
   if (recurringPeriod !== 0) {
     discountedRecurringBillingPeriodLabel = $t('priceTable.billingCount', {
-      PERIOD: $t(`common.periodBase.${periodType}`, { count: recurringPeriod })
+      PERIOD: $t(`common.periodBase.${periodType}`, { count: (period || 0) * recurringPeriod })
     });
   }
 
