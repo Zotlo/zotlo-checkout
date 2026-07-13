@@ -213,6 +213,7 @@ export function getPackageTemplateParams(config: FormConfig) {
   let periodNaming = '';
   let trialPeriodLabel = '';
   let trialPeriodNaming = '';
+  let trialPeriodWeekly = '';
 
 
   if (period !== 0) {
@@ -230,6 +231,10 @@ export function getPackageTemplateParams(config: FormConfig) {
 
     if (trialPeriod === 1) {
       periodNaming = $t(`common.periodNaming.${trialPeriodType}`);
+
+      if (trialPeriodType === 'week') {
+        trialPeriodWeekly = $t('common.periodBase.day', { count: 7 })
+      }
     } else {
       trialPeriodNaming = trialPeriodLabel;
     }
@@ -257,7 +262,8 @@ export function getPackageTemplateParams(config: FormConfig) {
     PERIOD_NAMING: periodNaming,
     TRIAL_PERIOD: trialPeriodLabel,
     TRIAL_PERIOD_TYPE: trialPeriodType,
-    TRIAL_PERIOD_NAMING: trialPeriodNaming
+    TRIAL_PERIOD_NAMING: trialPeriodNaming,
+    TRIAL_PERIOD_NAMING_WEEKLY: trialPeriodWeekly,
   };
 }
 

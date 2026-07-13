@@ -759,8 +759,10 @@ export function createPriceTable(params: {
   const paymentData = config.paymentData;
   const period = config.packageInfo?.period;
   const periodType = config.packageInfo?.periodType;
+  const trialPeriod = config.packageInfo?.trialPeriod;
+  const trialPeriodType = config.packageInfo?.trialPeriodType;
   const recurringPeriod = parseFloat(paymentData?.discount?.recurringBillingPeriod || '0');
-  const hasTrialPeriod = !!config.packageInfo?.trialPeriod;
+  const hasTrialPeriod = !!trialPeriod;
   const isSubscription = paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
   const hasNonRecurringDiscount = !paymentData?.discount?.recurringStatus && !!paymentData?.discount?.discountPrice;
   const isMultiPeriod = (period || 0) > 1;
@@ -792,7 +794,11 @@ export function createPriceTable(params: {
     HAS_TRIAL_PERIOD: hasTrialPeriod,
     QUANTITY_INFO: getQuantityInfo(config, true),
     PACKAGE_TYPE: config.paymentData?.package?.packageType,
-    LABEL_TRIAL: $t('priceTable.trial', { count: paramList.TRIAL_PERIOD }),
+    LABEL_TRIAL: $t('priceTable.trial', {
+      count: trialPeriod === 1 && trialPeriodType === 'week'
+        ? paramList.TRIAL_PERIOD_NAMING_WEEKLY
+        : paramList.TRIAL_PERIOD
+    }),
     LABEL_BILLING_COUNT: discountedRecurringBillingPeriodLabel,
     LABEL_EVERY_PERIOD: labelEveryPeriod,
     LABEL_FOOTER_TEXT: $t('priceTable.footerText', {
