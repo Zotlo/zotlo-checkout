@@ -7,7 +7,7 @@ import { CheckoutAPI } from "../../utils/api";
 import { setSession } from "../session";
 import { getPackageInfo } from "../getPackageInfo";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
-import { InitResult } from "./types";
+import { ErrorCodes, type InitResult } from "./types";
 
 export async function getPaymentData(uuid?: string) {
   try {
@@ -17,6 +17,10 @@ export async function getPaymentData(uuid?: string) {
       : undefined;
     const paymentRes = await CheckoutAPI.get('/payment/init', config);
     const paymentInitData = (paymentRes?.result || {}) as FormPaymentData;
+
+    if (paymentRes.meta.errorCode === ErrorCodes.NO_PROVIDER_AVAILABLE) {
+      ErrorHandler.response = paymentRes;
+    }
 
     // Show as one-time billing cycle discount if recurring is false
     if (!paymentInitData.discount?.recurringStatus && paymentInitData.discount?.discountPrice && !paymentInitData.discount?.allowTrial) {
