@@ -737,8 +737,9 @@ export function createPriceTable(params: {
     )
     : '';
 
+  const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
   const { recurringBillingStartDate, paymentStartDate } = calculatePaymentStartDate({
-    trialPeriod: config.packageInfo?.trialPeriod || 0,
+    trialPeriod: isTrialUsed ? 0 : (config.packageInfo?.trialPeriod || 0),
     trialPeriodType: (config.packageInfo?.trialPeriodType || 'month') as PaymentPeriodType,
     period: config.packageInfo?.period || 0,
     periodType: (config.packageInfo?.periodType || 'month') as PaymentPeriodType,
@@ -762,7 +763,7 @@ export function createPriceTable(params: {
   const trialPeriod = config.packageInfo?.trialPeriod;
   const trialPeriodType = config.packageInfo?.trialPeriodType;
   const recurringPeriod = parseFloat(paymentData?.discount?.recurringBillingPeriod || '0');
-  const hasTrialPeriod = !!trialPeriod;
+  const hasTrialPeriod = !!trialPeriod && !isTrialUsed;
   const isSubscription = paymentData?.package?.packageType === PackageType.SUBSCRIPTION;
   const hasNonRecurringDiscount = !paymentData?.discount?.recurringStatus && !!paymentData?.discount?.discountPrice;
   const isMultiPeriod = (period || 0) > 1;
