@@ -332,12 +332,17 @@ async function handleCheckoutResponse(payload: {
   }
 
   if (meta.httpStatus === 200) {
+    if (actions?.completeAction) actions.completeAction();
     handleResponseRedirection({
       response: checkoutResponse,
       params
     });
   }
 }
+
+// WebKit allows a single active Apple Pay session per page; a second session.begin()
+// throws "Page already has an active payment session." (e.g. double-tap in in-app browsers)
+let isApplePaySessionActive = false;
 
 async function handleApplePayPayment(payload: {
   formPayload: Record<string, any>;
@@ -355,6 +360,9 @@ async function handleApplePayPayment(payload: {
     subscriberId,
     refreshProviderConfigsFunction
   } = payload;
+
+  if (isApplePaySessionActive) return;
+
   try {
     const providerKey = PaymentProvider.APPLE_PAY;
 
@@ -379,18 +387,31 @@ async function handleApplePayPayment(payload: {
 
     const session = new ApplePaySession(2, paymentRequestPayload);
 
-    session.onvalidatemerchant = async (event: any) => {
-      const sessionUrl = event.validationURL;
-      const { result, meta } = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
-      if (meta?.errorCode) {
-        return params.events?.onFail?.({ message: meta?.message, data: meta });
+    const endSession = (abort = false) => {
+      isApplePaySessionActive = false;
+      if (abort) {
+        try { session.abort(); } catch { /* session already closed */ }
       }
-      const sessionData = result?.sessionData;
-      session.completeMerchantValidation(sessionData);
+    };
+
+    session.onvalidatemerchant = async (event: any) => {
+      try {
+        const sessionUrl = event.validationURL;
+        const { result, meta } = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
+        if (meta?.errorCode) {
+          endSession(true);
+          return params.events?.onFail?.({ message: meta?.message, data: meta });
+        }
+        const sessionData = result?.sessionData;
+        session.completeMerchantValidation(sessionData);
+      } catch (e) {
+        endSession(true);
+        handlePaymentErrorMessage(e, params, "Apple Pay payment process failed");
+      }
     };
 
     session.oncancel = () => {
-      // Handle cancel event
+      isApplePaySessionActive = false;
     };
 
     session.onpaymentauthorized = async (event: any) => {
@@ -409,16 +430,17 @@ async function handleApplePayPayment(payload: {
           actions: {
             completeAction: () => {
               session.completePayment(ApplePaySession.STATUS_SUCCESS);
+              isApplePaySessionActive = false;
             },
             errorAction: () => {
               session.completePayment(ApplePaySession.STATUS_FAILURE);
-              session.abort();
+              endSession(true);
             },
           },
         });
       } catch (e) {
         session.completePayment(ApplePaySession.STATUS_FAILURE);
-        session.abort();
+        endSession(true);
         Logger.client?.captureException(e || 'Apple Pay checkout error -> onpaymentauthorized');
       }
     };
@@ -428,6 +450,7 @@ async function handleApplePayPayment(payload: {
 
     // Show apple pay modal
     session.begin();
+    isApplePaySessionActive = true;
   } catch (error: any) {
     handlePaymentErrorMessage(error, params, "Apple Pay payment process failed");
   }
