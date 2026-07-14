@@ -163,15 +163,20 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
   return config;
 }
 
-export async function getProviderConfig(providerKey: PaymentProvider, returnUrl: string) {
+export async function getProviderConfig(providerKey: PaymentProvider, returnUrl: string): Promise<Record<string, any>> {
   try {
     const res = await CheckoutAPI.post('/payment/init', { providerKey, returnUrl });
     const data = res?.result || {};
-    return data;
+    if (res?.meta?.errorCode) {
+      Logger.client?.captureException(
+        new Error(`Provider init failed for ${providerKey} (${res.meta.errorCode}): ${res.meta.message || ''}`)
+      );
+    }
+    return { ...data, initMeta: res?.meta };
   } catch (e: any) {
     ErrorHandler.response = e;
     Logger.client?.captureException(e);
-    return {};
+    return { initMeta: e?.meta || { message: e?.message || 'Provider init request failed' } };
   }
 }
 
@@ -184,18 +189,21 @@ export async function getProvidersConfigData(paymentInitData:FormPaymentData, re
   const results = await Promise.all(promises);
   const reducedObj = results.reduce((acc, result, index) => {
     const key = providerKeys?.[index];
-    const returnObj = { 
+    const returnObj = {
+      ...acc,
       ...result,
       configs: {
         ...acc.configs,
         [key]: {
           ...result?.configs?.[key],
           transactionId: result?.transactionId,
+          initMeta: result?.initMeta,
         },
       },
     } as any;
-    // transactionId is different for each provider in configs key
+    // transactionId and initMeta are different for each provider in configs key
     delete returnObj?.transactionId;
+    delete returnObj?.initMeta;
     return returnObj;
   }, {configs: {}} as Record<string, any>);
   return reducedObj;
@@ -243,6 +251,7 @@ export async function getProvidersConfig(paymentInitData: FormPaymentData, retur
         }
       },
       transactionId: applePayConfig?.transactionId,
+      initMeta: applePayConfig?.initMeta,
     },
     [PaymentProvider.GOOGLE_PAY]: {
       isReadyToPayRequest: {
@@ -261,6 +270,7 @@ export async function getProvidersConfig(paymentInitData: FormPaymentData, retur
       },
       tokenization: googlePayTokenizationSpecification,
       transactionId: googlePayConfig?.transactionId,
+      initMeta: googlePayConfig?.initMeta,
     },
   } as ProviderConfigs
 }

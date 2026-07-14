@@ -1,6 +1,6 @@
 {
   "name": "zotlo-checkout",
-  "version": "1.18.0",
+  "version": "1.18.2",
   "type": "module",
   "scripts": {
     "dev": "vite",

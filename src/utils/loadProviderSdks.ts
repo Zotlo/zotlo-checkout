@@ -67,7 +67,10 @@ export function getGooglePayClient() {
   if (googlePayClient === null) {
     const googlePay = (globalThis as any)?.google;
     if (googlePay) {
-      googlePayClient = new googlePay.payments.api.PaymentsClient({ environment: googlePayEnvironment });
+      const PaymentsClient = googlePay?.payments?.api?.PaymentsClient;
+      if (PaymentsClient) {
+        googlePayClient = new PaymentsClient({ environment: googlePayEnvironment });
+      }
     }
   }
   return googlePayClient;
@@ -87,7 +90,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
       allowedPaymentMethods
     }));
     const client = getGooglePayClient();
-    return client?.createButton({...payload, onClick: () => {}});
+    return client?.createButton?.({...payload, onClick: () => {}});
   } catch (e) {
     Logger.client?.captureException(e);
     return null;
@@ -97,25 +100,37 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
 export function renderGooglePayButton(config: FormConfig) {
   const googlePayConfig = config?.providerConfigs?.googlePay || {} as ProviderConfigs["googlePay"];
   const wrapper = document.getElementById('googlePay-button');
-  const hasExistingButton = wrapper?.querySelector('button');
-  const googlePayButton = getGooglePayButton(googlePayConfig, { 
-    buttonColor: config?.design?.darkMode ? 'white' : 'black' 
+  const hasExistingButton = wrapper?.querySelector('button[data-provider]');
+  const googlePayButton = getGooglePayButton(googlePayConfig, {
+    buttonColor: config?.design?.darkMode ? 'white' : 'black'
   });
-  const innerButton = googlePayButton?.querySelector('button');
-  innerButton?.setAttribute('data-provider', PaymentProvider.GOOGLE_PAY);
-  if (config.design.theme === DesignTheme.HORIZONTAL) {
-    innerButton?.setAttribute('type', 'submit');
-  } else {
-    innerButton?.setAttribute('type', 'button');
-  }
 
-  if (!hasExistingButton && googlePayButton) wrapper?.appendChild(googlePayButton);
+  if (hasExistingButton || !googlePayButton || !wrapper) return;
+
+  // Google Pay re-renders its inner button asynchronously (dynamic card-info
+  // button, possibly iframe-based), dropping any attribute/listener attached to
+  // it — taps then skip form validation entirely. Keep Google's button purely
+  // visual and capture all interaction with an overlay button that goes through
+  // the same validation/submit pipeline as the other providers.
+  googlePayButton.style.pointerEvents = 'none';
+  googlePayButton.setAttribute('aria-hidden', 'true');
+  googlePayButton.querySelector('button')?.setAttribute('tabindex', '-1');
+
+  const overlay = document.createElement('button');
+  overlay.setAttribute('data-provider', PaymentProvider.GOOGLE_PAY);
+  overlay.setAttribute('type', config.design.theme === DesignTheme.HORIZONTAL ? 'submit' : 'button');
+  overlay.setAttribute('aria-label', 'Google Pay');
+  overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;margin:0;padding:0;border:0;background:transparent;cursor:pointer;z-index:1;';
+
+  wrapper.style.position = 'relative';
+  wrapper.appendChild(googlePayButton);
+  wrapper.appendChild(overlay);
 }
 
 function prefetchGooglePaymentData(providerConfigs?: ProviderConfigs) {
   try {
     const payload = JSON.parse(JSON.stringify(providerConfigs?.googlePay?.paymentDataRequest));
-    getGooglePayClient()?.prefetchPaymentData(payload);
+    getGooglePayClient()?.prefetchPaymentData?.(payload);
   } catch (e) {
     Logger.client?.captureException(e);
   }
@@ -125,7 +140,7 @@ export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs
   if (import.meta.env.VITE_CONSOLE) return true;
   try {
     const isReadyToPayRequest = JSON.parse(JSON.stringify((providerConfigs?.googlePay?.isReadyToPayRequest || {})));
-    const response = await getGooglePayClient()?.isReadyToPay(isReadyToPayRequest);
+    const response = await getGooglePayClient()?.isReadyToPay?.(isReadyToPayRequest);
     return !!response?.result;
   } catch (e) {
     Logger.client?.captureException(e);
@@ -143,6 +158,20 @@ export function canMakeApplePayPayments() {
   }
 }
 
+export function hasValidApplePayConfig(applePayConfig?: ProviderConfigs["applePay"]) {
+  if (import.meta.env.VITE_CONSOLE) return true;
+  // These fields come from the /payment/init response; if that call fails or returns a partial
+  // config, ApplePaySession rejects the request payload (e.g. missing merchantCapabilities)
+  const requestPayload = applePayConfig?.requestPayload || {};
+  return (
+    Array.isArray(requestPayload.merchantCapabilities) && requestPayload.merchantCapabilities.length > 0 &&
+    Array.isArray(requestPayload.supportedNetworks) && requestPayload.supportedNetworks.length > 0 &&
+    !!requestPayload.countryCode &&
+    !!requestPayload.currencyCode &&
+    !!applePayConfig?.transactionId
+  );
+}
+
 export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
   [providerConfigs] = await Promise.all([
@@ -150,8 +179,9 @@ export async function prepareProviders(config: FormConfig, returnUrl: string) {
     loadProviderSDKs({ paymentInitData: config?.paymentData })
   ]);
 
-  const canAppleMakePayments = canMakeApplePayPayments();
-  const isGoogleReadyToPay = await canMakeGooglePayPayments(providerConfigs);
+  const canAppleMakePayments = canMakeApplePayPayments() && hasValidApplePayConfig(providerConfigs?.applePay);
+  const isGooglePayEnabled = !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY];
+  const isGoogleReadyToPay = isGooglePayEnabled && await canMakeGooglePayPayments(providerConfigs);
 
   if (isGoogleReadyToPay) prefetchGooglePaymentData(providerConfigs);
 
