@@ -1,6 +1,6 @@
 import { getUserDataForIntegration, handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
-import { getGooglePayClient } from "./loadProviderSdks";
+import { getGooglePayClient, hasValidApplePayConfig } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
 import { deleteSession, getSession } from "./session";
 import { Logger } from "../lib/logger";
@@ -357,6 +357,22 @@ async function handleApplePayPayment(payload: {
   } = payload;
   try {
     const providerKey = PaymentProvider.APPLE_PAY;
+
+    if (!hasValidApplePayConfig(providerConfig)) {
+      const initMeta = providerConfig?.initMeta;
+      const initInfo = initMeta?.errorCode
+        ? ` (init error ${initMeta.errorCode}: ${initMeta.message || ''})`
+        : initMeta?.message
+          ? ` (init: ${initMeta.message})`
+          : '';
+      await refreshProviderConfigsFunction();
+      return handlePaymentErrorMessage(
+        new Error(`Apple Pay provider config is missing or incomplete${initInfo}`),
+        params,
+        "Apple Pay payment process failed"
+      );
+    }
+
     const paymentRequestPayload = JSON.parse(JSON.stringify(providerConfig?.requestPayload));
     const transactionId = providerConfig?.transactionId;
     const ApplePaySession = (globalThis as any)?.ApplePaySession;
@@ -439,12 +455,12 @@ async function handleGooglePayPayment(payload: {
     const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
     if (registerResponse?.meta?.errorCode) return;
 
-    const googleClientResponse = await getGooglePayClient()?.loadPaymentData(paymentDataRequest);
+    const googleClientResponse = await getGooglePayClient()?.loadPaymentData?.(paymentDataRequest);
     const transactionId = providerConfig?.transactionId;
     const checkoutPayload = {
       ...formPayload,
       transactionId,
-      googlePayToken: JSON.stringify(googleClientResponse),
+      googlePayToken: JSON.stringify(googleClientResponse || '{}'),
     }
 
     const checkoutResponse = await CheckoutAPI.post("/payment/checkout", checkoutPayload);

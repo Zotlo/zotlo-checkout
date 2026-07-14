@@ -503,6 +503,7 @@ export type ProviderConfigs = {
     canMakePayments?: boolean;
     transactionId?: string;
     requestPayload: Record<string, any>;
+    initMeta?: Record<string, any>;
   },
   googlePay?: {
     isReadyToPay?: boolean;
@@ -527,6 +528,7 @@ export type ProviderConfigs = {
         merchantId?: string;
       };
     };
+    initMeta?: Record<string, any>;
   },
 }
 

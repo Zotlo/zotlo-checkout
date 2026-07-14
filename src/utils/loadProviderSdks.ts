@@ -67,7 +67,10 @@ export function getGooglePayClient() {
   if (googlePayClient === null) {
     const googlePay = (globalThis as any)?.google;
     if (googlePay) {
-      googlePayClient = new googlePay.payments.api.PaymentsClient({ environment: googlePayEnvironment });
+      const PaymentsClient = googlePay?.payments?.api?.PaymentsClient;
+      if (PaymentsClient) {
+        googlePayClient = new PaymentsClient({ environment: googlePayEnvironment });
+      }
     }
   }
   return googlePayClient;
@@ -87,7 +90,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
       allowedPaymentMethods
     }));
     const client = getGooglePayClient();
-    return client?.createButton({...payload, onClick: () => {}});
+    return client?.createButton?.({...payload, onClick: () => {}});
   } catch (e) {
     Logger.client?.captureException(e);
     return null;
@@ -115,7 +118,7 @@ export function renderGooglePayButton(config: FormConfig) {
 function prefetchGooglePaymentData(providerConfigs?: ProviderConfigs) {
   try {
     const payload = JSON.parse(JSON.stringify(providerConfigs?.googlePay?.paymentDataRequest));
-    getGooglePayClient()?.prefetchPaymentData(payload);
+    getGooglePayClient()?.prefetchPaymentData?.(payload);
   } catch (e) {
     Logger.client?.captureException(e);
   }
@@ -125,7 +128,7 @@ export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs
   if (import.meta.env.VITE_CONSOLE) return true;
   try {
     const isReadyToPayRequest = JSON.parse(JSON.stringify((providerConfigs?.googlePay?.isReadyToPayRequest || {})));
-    const response = await getGooglePayClient()?.isReadyToPay(isReadyToPayRequest);
+    const response = await getGooglePayClient()?.isReadyToPay?.(isReadyToPayRequest);
     return !!response?.result;
   } catch (e) {
     Logger.client?.captureException(e);
@@ -143,6 +146,20 @@ export function canMakeApplePayPayments() {
   }
 }
 
+export function hasValidApplePayConfig(applePayConfig?: ProviderConfigs["applePay"]) {
+  if (import.meta.env.VITE_CONSOLE) return true;
+  // These fields come from the /payment/init response; if that call fails or returns a partial
+  // config, ApplePaySession rejects the request payload (e.g. missing merchantCapabilities)
+  const requestPayload = applePayConfig?.requestPayload || {};
+  return (
+    Array.isArray(requestPayload.merchantCapabilities) && requestPayload.merchantCapabilities.length > 0 &&
+    Array.isArray(requestPayload.supportedNetworks) && requestPayload.supportedNetworks.length > 0 &&
+    !!requestPayload.countryCode &&
+    !!requestPayload.currencyCode &&
+    !!applePayConfig?.transactionId
+  );
+}
+
 export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
   [providerConfigs] = await Promise.all([
@@ -150,8 +167,9 @@ export async function prepareProviders(config: FormConfig, returnUrl: string) {
     loadProviderSDKs({ paymentInitData: config?.paymentData })
   ]);
 
-  const canAppleMakePayments = canMakeApplePayPayments();
-  const isGoogleReadyToPay = await canMakeGooglePayPayments(providerConfigs);
+  const canAppleMakePayments = canMakeApplePayPayments() && hasValidApplePayConfig(providerConfigs?.applePay);
+  const isGooglePayEnabled = !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY];
+  const isGoogleReadyToPay = isGooglePayEnabled && await canMakeGooglePayPayments(providerConfigs);
 
   if (isGoogleReadyToPay) prefetchGooglePaymentData(providerConfigs);
 
