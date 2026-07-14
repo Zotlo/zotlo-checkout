@@ -128,16 +128,16 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       const cardId = getActiveSavedCardId({ providerKey, config });
       params.events?.onSubmit?.();
 
-      const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
+      getUserDataForIntegration({
         registerType: config.settings.registerType,
         subscriberId: result.subscriberId || config.general.subscriberId
-      });
-      
-      window?.Facebook?.track('AddToCart', fbSiteData);
-      window?.Tiktok?.track('AddToCart', {
-        ...getEventData(),
-        ...tiktokContext
-      });
+      }).then(({ user_data: fbSiteData, context: tiktokContext }) => {
+        window?.Facebook?.track('AddToCart', fbSiteData);
+        window?.Tiktok?.track('AddToCart', {
+          ...getEventData(),
+          ...tiktokContext
+        });
+      }).catch(e => Logger.client?.captureException(e));
 
       try {
         setFormLoading(true);
@@ -278,7 +278,7 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
       if (import.meta.env.VITE_SDK_API_URL) {
         const { success } = getPaymentCallback({ config });
 
-        if (success && !config.success.show && config.general.isCheckoutLink) {
+        if (success && !config?.success?.show && config?.general?.isCheckoutLink) {
           form = `<form id="zotlo-checkout-form" class="zotlo-checkout" style="min-height: 230px">
             <div class="zotlo-checkout__form-loader"></div>
           </form>`;

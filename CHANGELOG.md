@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.18.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.0...v1.18.1)
+
+### 🩹 Fixes
+
+- Harden Apple Pay and Google Pay flows against missing provider configs ([474f000](https://github.com/Zotlo/zotlo-checkout/commit/474f000))
+
+### 🏡 Chore
+
+- Bump to v1.18.1 ([fa42c50](https://github.com/Zotlo/zotlo-checkout/commit/fa42c50))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.18.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.17.2...v1.18.0)
