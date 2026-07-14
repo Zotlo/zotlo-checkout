@@ -62,5 +62,7 @@ export type CardInitResult = {
 };
 
 export const ErrorCodes = {
-  NO_PROVIDER_AVAILABLE: '404039'
+  NO_PROVIDER_AVAILABLE: '404039',
+  USER_NOT_EXIST: '403105',
+  USER_NOT_FOUND: '403130',
 }
