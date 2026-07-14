@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.18.2
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.1...v1.18.2)
+
+### 🩹 Fixes
+
+- **Z3-6533:** Apple Pay session lifecycle and Google Pay mobile validation bypass ([298f8d6](https://github.com/Zotlo/zotlo-checkout/commit/298f8d6))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.18.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.0...v1.18.1)
