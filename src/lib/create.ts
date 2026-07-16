@@ -17,7 +17,7 @@ import footerHTML from '../html/footer.html?raw'
 import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable, calculatePaymentStartDate } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable, isDLocalEnabled, calculatePaymentStartDate } from "../utils";
 import type { PaymentPeriodType, PaymentDateInfo } from '../utils/paymentStartCalculation';
 import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions, getPackageTemplateParams } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
@@ -305,7 +305,8 @@ export function createCreditCardForm(params: {
   const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
   const isPhoneRegister = registerType === 'phoneNumber';
   const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
-  const hasPixMethod = isPixAvailable(config);
+  const dLocalEnabled = isDLocalEnabled(config);
+  const hasCpfCnpjField = dLocalEnabled || isPixAvailable(config);
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
     if (config.settings.hideSubscriberIdIfAlreadySet) {
@@ -358,9 +359,11 @@ export function createCreditCardForm(params: {
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
         break;
       case "CPF_CNPJ": {
-        // Only render when PIX is an available payment method. Visibility is then
-        // toggled so the field is shown only while the PIX tab/provider is active.
-        if (!hasPixMethod) break;
+        // Render when dLocal is enabled (applies to all payment methods) or when
+        // PIX is an available payment method. With dLocal the field is always
+        // visible; otherwise its visibility is toggled so it shows only while the
+        // PIX tab/provider is active.
+        if (!hasCpfCnpjField) break;
         const cpfCnpjInput = createInput({
           ...options,
           label: FORM_ITEMS.CPF_CNPJ.label,
@@ -369,7 +372,8 @@ export function createCreditCardForm(params: {
             placeholder: FORM_ITEMS.CPF_CNPJ.input.placeholder,
           }
         });
-        fieldContent = `<div data-cpf-cnpj-field style="display:none;">${cpfCnpjInput}</div>`;
+        const styleAttr = dLocalEnabled ? '' : ' style="display:none;"';
+        fieldContent = `<div data-cpf-cnpj-field${styleAttr}>${cpfCnpjInput}</div>`;
       }
         break;
       default:
