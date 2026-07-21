@@ -1,6 +1,6 @@
 import { type FormPaymentData, PaymentProvider, type FormConfig, type ProviderConfigs, DesignTheme } from "../lib/types";
 import { getProvidersConfig } from "../utils/config/getCheckoutConfig";
-import { Logger } from "../lib/logger";
+import { Logger, toCapturableError } from "../lib/logger";
 
 export type GooglePayButtonOptions = {
   buttonColor?: 'default' | 'black' | 'white';
@@ -92,7 +92,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
     const client = getGooglePayClient();
     return client?.createButton?.({...payload, onClick: () => {}});
   } catch (e) {
-    Logger.client?.captureException(e);
+    Logger.client?.captureException(toCapturableError(e));
     return null;
   }
 }
@@ -132,7 +132,7 @@ function prefetchGooglePaymentData(providerConfigs?: ProviderConfigs) {
     const payload = JSON.parse(JSON.stringify(providerConfigs?.googlePay?.paymentDataRequest));
     getGooglePayClient()?.prefetchPaymentData?.(payload);
   } catch (e) {
-    Logger.client?.captureException(e);
+    Logger.client?.captureException(toCapturableError(e));
   }
 }
 
@@ -143,7 +143,7 @@ export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs
     const response = await getGooglePayClient()?.isReadyToPay?.(isReadyToPayRequest);
     return !!response?.result;
   } catch (e) {
-    Logger.client?.captureException(e);
+    Logger.client?.captureException(toCapturableError(e));
     return false;
   }
 }
@@ -172,6 +172,20 @@ export function hasValidApplePayConfig(applePayConfig?: ProviderConfigs["applePa
   );
 }
 
+export function hasValidGooglePayConfig(googlePayConfig?: ProviderConfigs["googlePay"]) {
+  if (import.meta.env.VITE_CONSOLE) return true;
+  // These fields come from the /payment/init response; if that call fails or returns a partial
+  // config, pay.js throws DEVELOPER_ERROR (e.g. "currencyCode in transactionInfo must be set!")
+  const paymentDataRequest = googlePayConfig?.paymentDataRequest;
+  const transactionInfo = paymentDataRequest?.transactionInfo;
+  return (
+    !!transactionInfo?.currencyCode &&
+    !!transactionInfo?.totalPrice &&
+    Array.isArray(paymentDataRequest?.allowedPaymentMethods) && paymentDataRequest.allowedPaymentMethods.length > 0 &&
+    !!googlePayConfig?.transactionId
+  );
+}
+
 export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
   [providerConfigs] = await Promise.all([
@@ -180,7 +194,7 @@ export async function prepareProviders(config: FormConfig, returnUrl: string) {
   ]);
 
   const canAppleMakePayments = canMakeApplePayPayments() && hasValidApplePayConfig(providerConfigs?.applePay);
-  const isGooglePayEnabled = !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY];
+  const isGooglePayEnabled = !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY] && hasValidGooglePayConfig(providerConfigs?.googlePay);
   const isGoogleReadyToPay = isGooglePayEnabled && await canMakeGooglePayPayments(providerConfigs);
 
   if (isGoogleReadyToPay) prefetchGooglePaymentData(providerConfigs);

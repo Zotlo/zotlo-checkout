@@ -17,7 +17,7 @@ import { FORM_ITEMS } from "./fields";
 import { handlePaymentSuccess } from "../utils/sendPayment";
 import { updateCard } from "../utils/updateCard";
 
-async function ZotloCard(params: IZotloCardParams) {
+async function createZotloCard(params: IZotloCardParams) {
   // Load Sentry for error tracking
   await Logger.loadSentry();
 
@@ -360,10 +360,12 @@ async function ZotloCard(params: IZotloCardParams) {
   }
 
   return {
-    mount,
-    unmount,
-    refresh
+    mount: Logger.wrap(mount),
+    unmount: Logger.wrap(unmount),
+    refresh: Logger.wrap(refresh)
   }
 }
+
+const ZotloCard = Logger.wrap(createZotloCard);
 
 export { ZotloCard }
