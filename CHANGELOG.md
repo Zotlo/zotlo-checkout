@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.18.4
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.3...v1.18.4)
+
+### 🩹 Fixes
+
+- **Z3-6542:** Capture SDK entry point errors in Sentry via Logger.wrap ([d20786a](https://github.com/Zotlo/zotlo-checkout/commit/d20786a))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.18.3
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.2...v1.18.3)

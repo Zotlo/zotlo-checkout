@@ -131,6 +131,33 @@ export const Logger = {
     this.scope = scope;
   },
 
+  // Wraps an SDK entry point so errors thrown inside it are reported to Sentry
+  // before propagating to the caller. This keeps capturing opt-in per function
+  // instead of patching page globals (see zotlo-sentry.ts).
+  wrap<T extends (...args: any[]) => any>(fn: T): T {
+    const capture = (err: unknown) => {
+      this.client?.captureException(err);
+    };
+
+    return function (this: unknown, ...args: Parameters<T>) {
+      try {
+        const result = fn.apply(this, args);
+
+        if (result instanceof Promise) {
+          return result.catch((err: unknown) => {
+            capture(err);
+            throw err;
+          });
+        }
+
+        return result;
+      } catch (err) {
+        capture(err);
+        throw err;
+      }
+    } as T;
+  },
+
   async loadSentry() {
     if (this.getEnv() === 'development' || !import.meta.env.VITE_SDK_API_URL) {
       return false;

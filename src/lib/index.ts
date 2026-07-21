@@ -40,7 +40,7 @@ import { Logger } from './logger';
 import { getFormValues, loadSelectbox } from "./common";
 import { ErrorCodes } from "../utils/config/types";
 
-async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
+async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
   // Load Sentry for error tracking
   await Logger.loadSentry();
 
@@ -740,10 +740,12 @@ async function ZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloChecko
   }
 
   return {
-    mount,
-    refresh,
-    unmount
+    mount: Logger.wrap(mount),
+    refresh: Logger.wrap(refresh),
+    unmount: Logger.wrap(unmount)
   }
 }
+
+const ZotloCheckout = Logger.wrap(createZotloCheckout);
 
 export { ZotloCheckout }
