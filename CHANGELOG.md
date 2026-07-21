@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.18.4
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.3...v1.18.5)
+
+### 🩹 Fixes
+
+- **Z3-6542:** Capture SDK entry point errors in Sentry via Logger.wrap ([92073c7](https://github.com/Zotlo/zotlo-checkout/commit/92073c7))
+- **Z3-6542:** Handle Google Pay plain-object errors and guard partial config ([fb98297](https://github.com/Zotlo/zotlo-checkout/commit/fb98297))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
+## v1.18.3
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.2...v1.18.3)
+
+### 🩹 Fixes
+
+- **Z3-6542:** Seperate sentry integrations as a new file ([b495ce0](https://github.com/Zotlo/zotlo-checkout/commit/b495ce0))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.18.2
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.1...v1.18.2)

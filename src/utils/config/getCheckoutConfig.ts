@@ -167,11 +167,6 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
   try {
     const res = await CheckoutAPI.post('/payment/init', { providerKey, returnUrl });
     const data = res?.result || {};
-    if (res?.meta?.errorCode) {
-      Logger.client?.captureException(
-        new Error(`Provider init failed for ${providerKey} (${res.meta.errorCode}): ${res.meta.message || ''}`)
-      );
-    }
     return { ...data, initMeta: res?.meta };
   } catch (e: any) {
     ErrorHandler.response = e;
