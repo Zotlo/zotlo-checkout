@@ -9,16 +9,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const modeParam = process.argv.find((arg) => arg === '--mode');
 const mode = modeParam ? process.argv[process.argv.indexOf(modeParam) + 1] : 'production';
-const entryPoints = [
+const entryPoints: { entry: string; name: string; formats?: ('es' | 'umd' | 'iife')[] }[] = [
   { entry: 'src/zotlo-checkout.ts', name: 'ZotloCheckout'},
-  { entry: 'src/zotlo-card.ts', name: 'ZotloCard'}
+  { entry: 'src/zotlo-card.ts', name: 'ZotloCard'},
+  // Isolated Sentry chunk, loaded on demand by Logger.loadSentry()
+  { entry: 'src/zotlo-sentry.ts', name: '__zotloSentry', formats: ['iife'] }
 ];
 
 for await (const [index, item] of Object.entries(entryPoints)) {
   await build({
     define: {
       __APP_VERSION__: JSON.stringify(packageJson.version),
-      __APP_NAME__: JSON.stringify(packageJson.name)
+      __APP_NAME__: JSON.stringify(packageJson.name),
+      // Strip Sentry SDK debug-logging code from the zotlo-sentry chunk
+      __SENTRY_DEBUG__: 'false'
     },
     mode,
     build: {
@@ -37,7 +41,7 @@ for await (const [index, item] of Object.entries(entryPoints)) {
               return `${entryName}.${format}.js`;
           }
         },
-        formats: ['es', 'umd', 'iife'],
+        formats: item.formats ?? ['es', 'umd', 'iife'],
       },
       emptyOutDir: index === '0',
       copyPublicDir: index === '0',

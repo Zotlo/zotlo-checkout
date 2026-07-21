@@ -11,7 +11,7 @@ const applePaySdkUrl = 'https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-
 let googlePayClient: any = null;
 
 function loadScript(src: string, id?: string): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<void>((resolve) => {
     // Prevent loading the same script multiple times based on src
     const isScriptExist = Array.from(document.getElementsByTagName('script')).find(
       (script) => script.src === src
@@ -44,7 +44,7 @@ function loadScript(src: string, id?: string): Promise<void> {
     script.onerror = () => {
       const err = new Error(`Failed to load script: ${src}`);
       Logger.client?.captureException(err);
-      reject(err);
+      resolve()
     };
 
     document.head.appendChild(script);

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.18.3
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.2...v1.18.3)
+
+### 🩹 Fixes
+
+- **Z3-6542:** Seperate sentry integrations as a new file ([b495ce0](https://github.com/Zotlo/zotlo-checkout/commit/b495ce0))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.18.2
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.1...v1.18.2)
