@@ -3,6 +3,19 @@ import type * as SentryChunk from '../zotlo-sentry';
 
 const SENTRY_CHUNK_FILE = 'zotlo-sentry.min.js';
 
+// Google Pay's pay.js rejects with a plain { statusCode, statusMessage } object
+// instead of an Error, which Sentry titles "Object captured as exception with
+// keys: statusCode, statusMessage". Convert it so the issue title and grouping
+// carry the actual message (e.g. "DEVELOPER_ERROR: currencyCode in
+// transactionInfo must be set!").
+export function toCapturableError(err: unknown): unknown {
+  const e = err as { statusCode?: unknown; statusMessage?: unknown } | null;
+  if (err instanceof Error || !e?.statusMessage) return err;
+  const error = new Error(String(e.statusMessage));
+  error.name = String(e.statusCode || 'PaymentsError');
+  return error;
+}
+
 // Captured at module evaluation: in iife/umd builds Rollup rewrites import.meta.url
 // to document.currentScript.src, which is only reliable during synchronous execution.
 const SCRIPT_URL = import.meta.url;

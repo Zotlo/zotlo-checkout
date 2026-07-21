@@ -3,7 +3,7 @@ import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotl
 import { getGooglePayClient, hasValidApplePayConfig } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
 import { deleteSession, getSession } from "./session";
-import { Logger } from "../lib/logger";
+import { Logger, toCapturableError } from "../lib/logger";
 import { COOKIE, getCookie } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
 
@@ -147,7 +147,7 @@ function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, mess
     message,
     data: typeof error !== 'string' ? error : {}
   });
-  Logger.client?.captureException(error);
+  Logger.client?.captureException(toCapturableError(error));
 }
 
 async function sendPurchaseEvents(payload: { config: FormConfig; result: PaymentDetail }) {
@@ -493,8 +493,8 @@ async function handleGooglePayPayment(payload: {
       refreshProviderConfigsFunction,
     });
   } catch (error: any) {
-    // Prevent user closing form error
-    if (error?.toString()?.includes("AbortError")) return;
+    // Prevent user closing form error (pay.js rejects with { statusCode: "CANCELED" })
+    if (error?.toString()?.includes("AbortError") || error?.statusCode === "CANCELED") return;
     handlePaymentErrorMessage(error, params, "Google Pay payment process failed");
   }
 }
