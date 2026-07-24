@@ -141,13 +141,16 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
   }
 }
 
-function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, messageFallback?: string) {
+function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, messageFallback?: string, response?: any) {
   const message = (typeof error === 'string' ? error : error?.meta?.message) || messageFallback;
   params.events?.onFail?.({
     message,
     data: typeof error !== 'string' ? error : {}
   });
-  Logger.client?.captureException(toCapturableError(error));
+  Logger.client?.captureException(
+    toCapturableError(error),
+    response !== undefined ? { captureContext: { extra: { response } } } : undefined
+  );
 }
 
 async function sendPurchaseEvents(payload: { config: FormConfig; result: PaymentDetail }) {
@@ -395,9 +398,11 @@ async function handleApplePayPayment(payload: {
     };
 
     session.onvalidatemerchant = async (event: any) => {
+      let response;
       try {
         const sessionUrl = event.validationURL;
-        const { result, meta } = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
+        response = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
+        const { result, meta } = response;
         if (meta?.errorCode) {
           endSession(true);
           return params.events?.onFail?.({ message: meta?.message, data: meta });
@@ -406,7 +411,7 @@ async function handleApplePayPayment(payload: {
         session.completeMerchantValidation(sessionData);
       } catch (e) {
         endSession(true);
-        handlePaymentErrorMessage(e, params, "Apple Pay payment process failed");
+        handlePaymentErrorMessage(e, params, "Apple Pay payment process failed", response);
       }
     };
 
