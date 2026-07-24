@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.18.5
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.4...v1.18.5)
+
+### 🏡 Chore
+
+- Handle service response on apple merchant validation error ([2979e4a](https://github.com/Zotlo/zotlo-checkout/commit/2979e4a))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.18.4
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.3...v1.18.5)
