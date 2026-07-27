@@ -724,17 +724,19 @@ export function createPriceTable(params: {
   const { config } = params;
   const paramList = getPackageTemplateParams(params.config);
   const { $t } = useI18n(config.general.localization);
+  const lang = config.general.language || 'en';
   const hasProductConfig = Object.prototype.hasOwnProperty.call(config.design, 'product');
   const showAdditonalText = hasProductConfig && Object.prototype.hasOwnProperty.call(config.design.product, 'additionalText') ? !!config.design?.product?.additionalText?.show : true;
   const additionalPrice = `0.00 ${config.general.currency}`;
   const additionalText = showAdditonalText && config.design.theme === 'mobileapp'
     ? (
       config.general.additionalText ||
-      (
-        config.design?.product?.additionalText?.text?.[config.general.language] ||
-        config.design?.product?.additionalText?.text?.en || ''
-      )
+      config.design?.product?.additionalText?.text?.[lang] || ''
     )
+    : '';
+
+  const descriptionText = config.design?.priceCard?.descriptionText?.show
+    ? config.design?.priceCard?.descriptionText?.text?.[lang] || ''
     : '';
 
   const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
@@ -747,7 +749,7 @@ export function createPriceTable(params: {
   });
 
   // Format dates in the form's language (e.g. "10 Haz", "Jun 10").
-  const locale = (config.general.language || 'en').replace('_', '-');
+  const locale = (lang || 'en').replace('_', '-');
   const formatStartDate = (info: PaymentDateInfo | null) => {
     if (!info) return '';
     try {
@@ -807,6 +809,7 @@ export function createPriceTable(params: {
     }),
     LABEL_STARTS_ON_CYCLE: $t('priceTable.startingOn', { date: formatStartDate(recurringBillingStartDate) }),
     LABEL_STARTS_ON_PERIOD: $t('priceTable.startingOn', { date: formatStartDate(paymentStartDate) }),
+    DESCRIPTION_TEXT: descriptionText,
     ADDITIONAL_TEXT: additionalText,
     ADDITIONAL_PRICE: additionalPrice,
     DISCOUNT_INPUT: createDiscountInput({ config }),

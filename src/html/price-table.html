@@ -8,8 +8,13 @@
         </td>
       </tr>
       <% ENDIF %>
+      <% IF(DESCRIPTION_TEXT) %>
+      <tr class="zotlo-checkout__price-table__description">
+        <td colspan="2">{{DESCRIPTION_TEXT}}</td>
+      </tr>
+      <% ENDIF %>
       <% IF(HAS_TRIAL_PERIOD) %>
-      <tr>
+      <tr class="zotlo-checkout__price-table__trial">
         <td>{{LABEL_TRIAL}}</td>
         <td>
           <% IF(DISCOUNTED_TRIAL_PRICE && DISCOUNTED_TRIAL_PRICE!=PURE_TRIAL_PRICE) %>

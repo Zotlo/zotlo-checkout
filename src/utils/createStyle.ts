@@ -22,6 +22,9 @@ export function createStyle(config: FormConfig) {
   } = design || {}
 
   const opacity = config.design.darkMode ? '4A' : '1A';
+  const priceCardText = design?.priceCard?.textStyle;
+  const priceCardDescription = design?.priceCard?.descriptionText;
+  const priceCardDefaultColor = config.design.darkMode ? '#FFFFFF' : '#0D0626';
 
   return design ? `
 .zotlo-checkout${config.cardUpdate ? '[data-type="card"]' : ''} {
@@ -89,7 +92,18 @@ export function createStyle(config: FormConfig) {
   --zc-priceCard-borderColor: ${design?.priceCard?.borderColor ?? '#E7EAEE'};
   --zc-priceCard-borderWidth: ${design?.priceCard?.borderWidth ?? 1}px;
   --zc-priceCard-borderRadius: ${design?.priceCard?.borderRadius ?? 8}px;
-  --zc-priceCard-color: ${design?.priceCard?.color ?? '#0D0626'};
-  --zc-priceCard-secondaryColor: ${design?.priceCard?.secondaryColor ?? '#818A9C'};
+  --zc-priceCard-color: ${priceCardDefaultColor};
+  --zc-priceCard-secondaryColor: #818A9C;
+  --zc-priceCard-description-color: ${priceCardDescription?.color ?? priceCardDefaultColor};
+  --zc-priceCard-description-fontSize: ${priceCardDescription?.fontSize ?? 12}px;
+  --zc-priceCard-description-fontWeight: ${priceCardDescription?.style?.bold ? '700' : '500'};
+  --zc-priceCard-description-fontStyle: ${priceCardDescription?.style?.italic ? 'italic' : 'normal'};
+  --zc-priceCard-description-textDecoration: ${priceCardDescription?.style?.underline ? 'underline' : 'none'};
+  --zc-priceCard-trialText-fontSize: ${priceCardText?.trialText?.fontSize ?? 12}px;
+  --zc-priceCard-trialText-color: ${priceCardText?.trialText?.color ?? priceCardDefaultColor};
+  --zc-priceCard-trialPrice-fontSize: ${priceCardText?.trialPrice?.fontSize ?? 14}px;
+  --zc-priceCard-trialPrice-color: ${priceCardText?.trialPrice?.color ?? priceCardDefaultColor};
+  --zc-priceCard-price-fontSize: ${priceCardText?.price?.fontSize ?? 14}px;
+  --zc-priceCard-price-textFontSize: ${priceCardText?.price?.textFontSize ?? 12}px;
 }` : '';
 }

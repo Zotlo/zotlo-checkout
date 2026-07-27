@@ -139,8 +139,34 @@ export const DefaultThemeConfig: {
       borderColor: '#E7EAEE',
       borderWidth: 1,
       borderRadius: 8,
-      color: '#0D0626',
-      secondaryColor: '#818A9C',
+      descriptionText: {
+        show: false,
+        text: {
+          en: ''
+        },
+        color: '#0D0626',
+        fontSize: 12,
+        style: {
+          bold: false,
+          italic: false,
+          underline: false
+        }
+      },
+      textStyle: {
+        mergeRenewalIntoDesc: false,
+        trialText: {
+          fontSize: 12,
+          color: '#0D0626'
+        },
+        trialPrice: {
+          fontSize: 14,
+          color: '#0D0626'
+        },
+        price: {
+          fontSize: 14,
+          textFontSize: 12
+        }
+      }
     }
   }
 }
