@@ -149,13 +149,16 @@ async function registerPaymentUserIfNecessary(subscriberId: string, config: Form
   }
 }
 
-function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, messageFallback?: string) {
+function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, messageFallback?: string, extra?: Record<string, any>) {
   const message = (typeof error === 'string' ? error : error?.meta?.message) || messageFallback;
   params.events?.onFail?.({
     message,
     data: typeof error !== 'string' ? error : {}
   });
-  Logger.client?.captureException(toCapturableError(error));
+  Logger.client?.captureException(
+    toCapturableError(error),
+    extra ? { captureContext: { extra } } : undefined
+  );
 }
 
 async function sendPurchaseEvents(payload: { config: FormConfig; result: PaymentDetail }) {
@@ -394,6 +397,7 @@ async function handleApplePayPayment(payload: {
     const ApplePaySession = (globalThis as any)?.ApplePaySession;
 
     const session = new ApplePaySession(2, paymentRequestPayload);
+    let isSessionCancelled = false;
 
     const endSession = (abort = false) => {
       isApplePaySessionActive = false;
@@ -403,9 +407,16 @@ async function handleApplePayPayment(payload: {
     };
 
     session.onvalidatemerchant = async (event: any) => {
+      let response;
+      const validationStart = Date.now();
       try {
         const sessionUrl = event.validationURL;
-        const { result, meta } = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
+        response = await CheckoutAPI.post("/payment/session", { providerKey, sessionUrl, transactionId, returnUrl: params?.returnUrl || '' });
+        // User dismissed the sheet while the session request was in flight;
+        // the session is dead and completeMerchantValidation would throw
+        // InvalidAccessError.
+        if (isSessionCancelled) return;
+        const { result, meta } = response;
         if (meta?.errorCode) {
           endSession(true);
           return params.events?.onFail?.({ message: meta?.message, data: meta });
@@ -413,12 +424,17 @@ async function handleApplePayPayment(payload: {
         const sessionData = result?.sessionData;
         session.completeMerchantValidation(sessionData);
       } catch (e) {
+        if (isSessionCancelled) return;
         endSession(true);
-        handlePaymentErrorMessage(e, params, "Apple Pay payment process failed");
+        handlePaymentErrorMessage(e, params, "Apple Pay payment process failed", {
+          response,
+          validationElapsedMs: Date.now() - validationStart,
+        });
       }
     };
 
     session.oncancel = () => {
+      isSessionCancelled = true;
       isApplePaySessionActive = false;
     };
 
