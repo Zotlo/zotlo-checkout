@@ -153,7 +153,7 @@ export const DefaultThemeConfig: {
         }
       },
       textStyle: {
-        mergeRenewalIntoDesc: false,
+        inlineRenewalDetails: false,
         trialText: {
           fontSize: 12,
           color: '#0D0626'
@@ -162,9 +162,13 @@ export const DefaultThemeConfig: {
           fontSize: 14,
           color: '#0D0626'
         },
+        period: {
+          fontSize: 12,
+          color: '#0D0626'
+        },
         price: {
           fontSize: 14,
-          textFontSize: 12
+          color: '#0D0626'
         }
       }
     }

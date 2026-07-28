@@ -92,8 +92,8 @@ export function createStyle(config: FormConfig) {
   --zc-priceCard-borderColor: ${design?.priceCard?.borderColor ?? '#E7EAEE'};
   --zc-priceCard-borderWidth: ${design?.priceCard?.borderWidth ?? 1}px;
   --zc-priceCard-borderRadius: ${design?.priceCard?.borderRadius ?? 8}px;
-  --zc-priceCard-color: ${priceCardDefaultColor};
   --zc-priceCard-secondaryColor: #818A9C;
+  --zc-priceCard-defaultColor: ${priceCardDefaultColor};
   --zc-priceCard-description-color: ${priceCardDescription?.color ?? priceCardDefaultColor};
   --zc-priceCard-description-fontSize: ${priceCardDescription?.fontSize ?? 12}px;
   --zc-priceCard-description-fontWeight: ${priceCardDescription?.style?.bold ? '700' : '500'};
@@ -103,7 +103,10 @@ export function createStyle(config: FormConfig) {
   --zc-priceCard-trialText-color: ${priceCardText?.trialText?.color ?? priceCardDefaultColor};
   --zc-priceCard-trialPrice-fontSize: ${priceCardText?.trialPrice?.fontSize ?? 14}px;
   --zc-priceCard-trialPrice-color: ${priceCardText?.trialPrice?.color ?? priceCardDefaultColor};
+  --zc-priceCard-period-fontSize: ${priceCardText?.period?.fontSize ?? 12}px;
+  --zc-priceCard-period-color: ${priceCardText?.period?.color ?? priceCardDefaultColor};
+  --zc-priceCard-period-subtextColor: ${addAlphaToHex(priceCardText?.period?.color ?? priceCardDefaultColor, 50)};
   --zc-priceCard-price-fontSize: ${priceCardText?.price?.fontSize ?? 14}px;
-  --zc-priceCard-price-textFontSize: ${priceCardText?.price?.textFontSize ?? 12}px;
+  --zc-priceCard-price-color: ${priceCardText?.price?.color ?? priceCardDefaultColor};
 }` : '';
 }

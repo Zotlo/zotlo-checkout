@@ -274,7 +274,7 @@ export type FormDesign = {
     };
     textStyle: {
       /* show all price text into one single text */
-      mergeRenewalIntoDesc: boolean;
+      inlineRenewalDetails: boolean;
 
       // Trial text style
       trialText: {
@@ -288,11 +288,17 @@ export type FormDesign = {
         color: string;
       };
 
+      // Period text style
+      period: {
+        fontSize: number;
+        color: string;
+      };
+
       // Price text style
       price: {
         fontSize: number;
-        textFontSize: number;
-      }
+        color: string;
+      };
     }
   }
 };
