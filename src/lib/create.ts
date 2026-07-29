@@ -792,6 +792,57 @@ export function createPriceTable(params: {
     });
   }
 
+  // Inline renewal details: billing cycle and final pricing rows are hidden and
+  // summarized as a single sentence prepended to the footer text instead.
+  // Trial-less packages ignore the flag: hiding the pricing rows would leave
+  // the card without any visible price row.
+  const showInlineRenewalDetails = isSubscription && hasTrialPeriod && !!config.design?.priceCard?.textStyle?.inlineRenewalDetails;
+  let inlineRenewalText = '';
+
+  if (showInlineRenewalDetails) {
+    // Periods, prices and dates are emphasized; connector words stay regular.
+    const bold = (text?: string | number) => `<strong>${text ?? ''}</strong>`;
+
+    // Discounted amounts use dedicated sentence keys ("... {price} instead of
+    // {originalPrice} ...") so each language can place "instead of" naturally.
+    const isPriceDiscounted = !!paramList.PURE_PRICE && paramList.PURE_PRICE !== paramList.PRICE;
+
+    // "every {period}" naming: "month" for a single period, "2 months" for multi.
+    const inlinePeriodLabel = isMultiPeriod
+      ? $t(`common.periodBase.${periodType}`, { count: period })
+      : $t(`common.periodNaming.${periodType}`);
+
+    const segments: string[] = [];
+
+    if (recurringPeriod !== 0) {
+      // "First {period} period at {price} [instead of {originalPrice}] starting on {date}"
+      segments.push($t(`priceTable.inlineRenewal.${isPriceDiscounted ? 'firstCycleDiscounted' : 'firstCycle'}`, {
+        period: bold($t(`common.periodBase.${periodType}`, { count: (period || 0) * recurringPeriod })),
+        price: bold(paramList.PRICE),
+        originalPrice: bold(paramList.PURE_PRICE),
+        date: bold(formatStartDate(recurringBillingStartDate)),
+      }));
+    }
+
+    // After discounted cycles the price returns to the original amount; otherwise
+    // a recurring discount keeps applying to every renewal.
+    const isThenPriceDiscounted = recurringPeriod === 0 && !!paramList.DISCOUNTED_PRICE && isPriceDiscounted;
+
+    // "Then {price} [instead of {originalPrice}] every {period} starting on {date}"
+    segments.push($t(`priceTable.inlineRenewal.${isThenPriceDiscounted ? 'thenDiscounted' : 'then'}`, {
+      price: recurringPeriod !== 0 ? bold(paramList.PURE_PRICE) : bold(paramList.PRICE),
+      originalPrice: bold(paramList.PURE_PRICE),
+      period: bold(inlinePeriodLabel),
+      date: bold(formatStartDate(paymentStartDate)),
+    }));
+
+    // "Includes {QUANTITY} units"
+    const inlineQuantityInfo = getQuantityInfo(config, true);
+    if (inlineQuantityInfo) segments.push(inlineQuantityInfo);
+
+    inlineRenewalText = segments.join('. ');
+  }
+
   return template(priceTableElement, {
     ...paramList,
     HAS_TRIAL_PERIOD: hasTrialPeriod,
@@ -809,6 +860,8 @@ export function createPriceTable(params: {
     }),
     LABEL_STARTS_ON_CYCLE: $t('priceTable.startingOn', { date: formatStartDate(recurringBillingStartDate) }),
     LABEL_STARTS_ON_PERIOD: $t('priceTable.startingOn', { date: formatStartDate(paymentStartDate) }),
+    INLINE_RENEWAL_DETAILS: showInlineRenewalDetails,
+    INLINE_RENEWAL_TEXT: inlineRenewalText,
     DESCRIPTION_TEXT: descriptionText,
     ADDITIONAL_TEXT: additionalText,
     ADDITIONAL_PRICE: additionalPrice,

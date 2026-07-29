@@ -307,6 +307,10 @@
   text-align: right !important;
 }
 
+.zotlo-checkout__price-table__footer [data-inline-renewal-details] strong {
+  font-weight: 600;
+}
+
 .zotlo-checkout__price-table__footer a {
   color: currentColor;
   text-decoration: none;
