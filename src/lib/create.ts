@@ -740,7 +740,7 @@ export function createPriceTable(params: {
     : '';
 
   const descriptionText = config.design?.priceCard?.descriptionText?.show
-    ? config.design?.priceCard?.descriptionText?.text?.[lang] || ''
+    ? config.design?.priceCard?.descriptionText?.text?.[lang]?.trim() || ''
     : '';
 
   const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;

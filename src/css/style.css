@@ -267,6 +267,9 @@
 }
 
 .zotlo-checkout__price-table tr.zotlo-checkout__price-table__description td {
+  white-space: normal !important;
+  overflow-wrap: break-word;
+  word-break: break-word;
   text-align: center !important;
   font-size: var(--zc-priceCard-description-fontSize) !important;
   font-weight: var(--zc-priceCard-description-fontWeight) !important;
