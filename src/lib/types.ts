@@ -259,8 +259,47 @@ export type FormDesign = {
     borderWidth: number;
     borderColor: string;
     borderRadius: number;
-    color: string;
-    secondaryColor: string;
+    descriptionText: {
+      show: boolean;
+      /** Language ISO code and its translation. (eg. `{ en: "Your premium plan" }`) */
+      text: Record<string, string>;
+
+      color: string;
+      fontSize: number;
+      style: {
+        bold?: boolean;
+        italic?: boolean;
+        underline?: boolean;
+      };
+    };
+    textStyle: {
+      /* show all price text into one single text */
+      inlineRenewalDetails: boolean;
+
+      // Trial text style
+      trialText: {
+        fontSize: number;
+        color: string;
+      };
+
+      // Trial price text style
+      trialPrice: {
+        fontSize: number;
+        color: string;
+      };
+
+      // Period text style
+      period: {
+        fontSize: number;
+        color: string;
+      };
+
+      // Price text style
+      price: {
+        fontSize: number;
+        color: string;
+      };
+    }
   }
 };
 

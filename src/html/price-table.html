@@ -1,6 +1,11 @@
 <div class="zotlo-checkout__price-table">
   <table>
     <tbody>
+      <% IF(DESCRIPTION_TEXT) %>
+      <tr class="zotlo-checkout__price-table__description">
+        <td colspan="2">{{DESCRIPTION_TEXT}}</td>
+      </tr>
+      <% ENDIF %>
       <% IF(DISCOUNT_LABEL) %>
       <tr>
         <td colspan="2">
@@ -9,7 +14,7 @@
       </tr>
       <% ENDIF %>
       <% IF(HAS_TRIAL_PERIOD) %>
-      <tr>
+      <tr class="zotlo-checkout__price-table__trial">
         <td>{{LABEL_TRIAL}}</td>
         <td>
           <% IF(DISCOUNTED_TRIAL_PRICE && DISCOUNTED_TRIAL_PRICE!=PURE_TRIAL_PRICE) %>
@@ -19,7 +24,7 @@
         </td>
       </tr>
       <% ENDIF %>
-      <% IF(DISCOUNTED_RECURRING_BILLING_PERIOD) %>
+      <% IF(DISCOUNTED_RECURRING_BILLING_PERIOD && !INLINE_RENEWAL_DETAILS) %>
       <tr>
         <td>
           {{LABEL_BILLING_COUNT}}
@@ -31,6 +36,7 @@
         </td>
       </tr>
       <% ENDIF %>
+      <% IF(!INLINE_RENEWAL_DETAILS) %>
       <tr>
         <td>
           {{LABEL_EVERY_PERIOD}}
@@ -55,6 +61,7 @@
           <% ENDIF %>
         </td>
       </tr>
+      <% ENDIF %>
       <% IF(ADDITIONAL_TEXT) %>
       <tr class="zotlo-checkout__price-table__fadeout">
         <td>{{ADDITIONAL_TEXT}}</td>
@@ -64,7 +71,7 @@
       <% IF(PACKAGE_TYPE=="subscription") %>
       <tr>
         <td colspan="2" class="zotlo-checkout__price-table__footer">
-          {{LABEL_FOOTER_TEXT}}
+          <% IF(INLINE_RENEWAL_TEXT) %><span data-inline-renewal-details>{{INLINE_RENEWAL_TEXT}}.</span> <% ENDIF %>{{LABEL_FOOTER_TEXT}}
         </td>
       </tr>
       <% ENDIF %>
