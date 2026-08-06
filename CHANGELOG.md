@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.19.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.6...v1.19.0)
+
+### 🚀 Enhancements
+
+- **Z3-6514:** Add new style properties for price-info-card ([6056ecc](https://github.com/Zotlo/zotlo-checkout/commit/6056ecc))
+- **Z3-6514:** Update price card styles and configuration for better readability ([b55df79](https://github.com/Zotlo/zotlo-checkout/commit/b55df79))
+- **Z3-6514:** Add inline renewal details and update price table footer styling ([cb2c8b0](https://github.com/Zotlo/zotlo-checkout/commit/cb2c8b0))
+- **Z3-6514:** Hide price-card-info description if there is only space chars ([379a09b](https://github.com/Zotlo/zotlo-checkout/commit/379a09b))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.18.6
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.5...v1.18.6)
