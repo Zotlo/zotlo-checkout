@@ -1,6 +1,10 @@
 export enum COOKIE {
   UUID = "zc_uuid",
   CARD_UUID = "zc_card_uuid",
+  FBCLICK_ID = '_fbc',
+  FBBROWSER_ID = '_fbp',
+  TTCLICK_ID = 'ttclid',
+  TTBROWSER_ID = '_ttp',
 }
 
 export function setCookie(

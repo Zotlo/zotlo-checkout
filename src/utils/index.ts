@@ -7,6 +7,8 @@ import { useI18n } from './i18n';
 import { template } from "./template";
 import { deleteSession } from './session';
 import { FORM_ITEMS } from '../lib/fields';
+import { COOKIE, getCookie } from './cookie';
+import { CheckoutAPI } from './api';
 
 export { getCDNUrl } from './getCDNUrl';
 export { useI18n } from './i18n';
@@ -561,6 +563,20 @@ async function sha256(message: string) {
   return hashHex;
 }
 
+export function parseQueryString(query: string) {
+  const list = (query ? (query.charAt(0) === '?' ? query.slice(1) : query) : '').split('#');
+  const qStr = list[0] || '';
+
+  return qStr.split('&').reduce((acc, str) => {
+    const [ key, value ] = str.split('=');
+
+    if (key && !Object.prototype.hasOwnProperty.call(acc, key)) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {} as Record<string, any>);
+}
+
 export async function getUserDataForIntegration(payload: {
   registerType: string;
   subscriberId?: string;
@@ -584,4 +600,66 @@ export async function getUserDataForIntegration(payload: {
     user_data: userData,
     context
   }
+}
+
+export function sendIntegrationCAPIInfo() {
+  const tiktokParams = prepareTiktokCAPIParams(window.location.href);
+  const fbParams = prepareFBCAPIParams(window.location.href);
+  const hasAnyTiktokValue = !!Object.values(tiktokParams).filter(Boolean).length;
+  const hasAnyFbValue = !!Object.values(fbParams).filter(Boolean).length;
+  const payload = {} as Record<'ttclid' | 'fbclid', string>;
+
+  if (hasAnyTiktokValue) {
+    payload.ttclid = tiktokParams[COOKIE.TTCLICK_ID] || '';
+  }
+
+  if (hasAnyFbValue) {
+    payload.fbclid = fbParams[COOKIE.FBCLICK_ID] || '';
+  }
+
+  if (Object.keys(payload).length === 0) return;
+
+  CheckoutAPI.post('/clickId', payload);
+}
+
+function prepareTiktokCAPIParams(siteUrl: string, ttParams?: Record<string, string>) {
+  ttParams = ttParams || {
+    [COOKIE.TTCLICK_ID]: getCookie(COOKIE.TTCLICK_ID) || '',
+    [COOKIE.TTBROWSER_ID]: getCookie(COOKIE.TTBROWSER_ID) || ''
+  };
+
+  const location = new URL(`${siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`}`);
+  const { ttclid } = parseQueryString(location?.search || '');
+
+  if (!ttParams[COOKIE.TTCLICK_ID] && ttclid) {
+    // const subdomainIndex = 1;
+    /* let subdomainIndex = location.host.split('.').length - 1;
+    if (subdomainIndex > 2) subdomainIndex = 2;
+    if (subdomainIndex < 0) subdomainIndex = 0; */
+
+    ttParams[COOKIE.TTCLICK_ID] = ttclid || '';
+  }
+
+  return ttParams;
+}
+
+function prepareFBCAPIParams(siteUrl: string, fbParams?: Record<string, string>) {
+  fbParams = fbParams || {
+    [COOKIE.FBCLICK_ID]: getCookie(COOKIE.FBCLICK_ID) || '',
+    [COOKIE.FBBROWSER_ID]: getCookie(COOKIE.FBBROWSER_ID) || ''
+  };
+
+  const location = new URL(`${siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`}`);
+  const { fbclid } = parseQueryString(location?.search || '');
+
+  if (!fbParams[COOKIE.FBCLICK_ID] && fbclid) {
+    const subdomainIndex = 1;
+    /* let subdomainIndex = location.host.split('.').length - 1;
+    if (subdomainIndex > 2) subdomainIndex = 2;
+    if (subdomainIndex < 0) subdomainIndex = 0; */
+
+    fbParams[COOKIE.FBCLICK_ID] = `fb.${subdomainIndex}.${Date.now()}.${fbclid || ''}`;
+  }
+
+  return fbParams;
 }
