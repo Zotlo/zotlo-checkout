@@ -3,7 +3,7 @@ import { ErrorHandler, getCardConfig } from "../utils/config";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { checkboxValidation, detectAndValidateForm, inputValidation, validateForm, validateInput, validatorInstance } from "../utils/validation";
 import { Logger } from './logger';
-import { DesignTheme, PaymentProvider, PaymentResultStatus, type FormConfig, type IZotloCardParams } from './types';
+import { DesignTheme, PaymentProvider, PaymentResultStatus, type FormConfig, type IZotloCardParams, type PaymentDetail } from './types';
 import { getFormValues, loadSelectbox } from "./common";
 import { updateValidationMessages } from "../utils/validation";
 import { loadFontsOnPage } from "../utils/fonts";
@@ -332,10 +332,10 @@ async function createZotloCard(params: IZotloCardParams) {
       init();
 
       if (import.meta.env.VITE_CONSOLE) {
-        if ((config as any).render === 'after-payment')  {
+        if (config.render === 'after-payment')  {
           createPaymentSuccessForm({
             config,
-            paymentDetail: (config as any).paymentDetail as any
+            paymentDetail: config.paymentDetail as PaymentDetail
           })
         }
       }

@@ -1,4 +1,4 @@
-import { DesignTheme, PaymentCallbackStatus, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type ProviderConfigs } from "./types"
+import { DesignTheme, PaymentCallbackStatus, PaymentProvider, type FormConfig, type IZotloCheckoutParams, type IZotloCheckoutReturn, type PaymentDetail, type ProviderConfigs } from "./types"
 import { generateEmptyPage, generateTheme } from "./theme";
 import { IMaskInputOnInput, maskInput } from "../utils/inputMask";
 import { validateInput, updateValidationMessages, validatorInstance, checkboxValidation, inputValidation, validateForm, detectAndValidateForm } from "../utils/validation";
@@ -34,7 +34,7 @@ import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
 import { getPaymentCallback, handleUrlQuery, UrlQuery } from "../utils/handleUrlQuery";
 import { prepareProviders, renderGooglePayButton } from "../utils/loadProviderSdks";
 import { useDiscount } from "../utils/useDiscount";
-import { createPaymentSuccessForm } from "./create";
+import { createPaymentSuccessForm, createPostPaymentOffersPage } from "./create";
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
 import { getFormValues, loadSelectbox } from "./common";
@@ -120,9 +120,9 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       validations,
       skipBillingFields
     });
-    
+
     if (!validation.isValid) return;
-    
+
     if (import.meta.env.VITE_SDK_API_URL) {
       const result = getFormValues(config);
       const cardId = getActiveSavedCardId({ providerKey, config });
@@ -144,8 +144,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         await sendPayment({
           providerKey,
           formData: {
-            packageId: params.packageId, 
-            ...result, 
+            packageId: params.packageId,
+            ...result,
             ...(cardId && { cardId }),
           },
           params,
@@ -300,11 +300,13 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       init();
 
       if (import.meta.env.VITE_CONSOLE) {
-        if ((config as any).render === 'after-payment')  {
+        if (config.render === 'after-payment')  {
           createPaymentSuccessForm({
             config,
-            paymentDetail: (config as any).paymentDetail as any
+            paymentDetail: config.paymentDetail as PaymentDetail
           })
+        } else if (config.render === 'post-payment-offers') {
+          createPostPaymentOffersPage({ config })
         }
       }
     } catch (err) {
@@ -478,7 +480,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
 
     function updatePhoneMask(code: string, input: HTMLInputElement) {
       const country = getCountryByCode(code);
-  
+
       if (country) {
         const mask = getMaskByCode(country);
         input.setAttribute('data-mask', mask);
@@ -508,7 +510,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
 
       // Update input value
       updateValue();
-      
+
       // Update CVV mask and validation
       const cvvLength = currentMask.name === 'American Express' ? 4 : 3;
       const cvvName = FORM_ITEMS.SECURITY_CODE.input.name;
@@ -577,7 +579,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
           }
         }
       }
-  
+
       if (ruleInputs) {
         for (const item of ruleInputs as NodeListOf<HTMLInputElement>) {
           validations[item.name] = validateInput(item, {

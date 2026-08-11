@@ -6,6 +6,7 @@ import tooltipElement from '../html/tooltip.html?raw'
 import selectElement from '../html/select.html?raw'
 import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
+import postPaymentOffersElement from '../html/post-payment-offers.html?raw'
 import paymentDetailsElement from '../html/payment-details.html?raw'
 import paymentHeaderElement from '../html/payment-header.html?raw'
 import priceTableElement from '../html/price-table.html?raw'
@@ -116,7 +117,7 @@ export function createInput(payload: {
 
   let select = '';
   let tag = 'label';
-  
+
   const defaultCountry = Countries.find((item, index) => {
     if (payload.defaultCountryCode) {
       return item.iso === payload.defaultCountryCode;
@@ -283,10 +284,10 @@ export function createCreditCardForm(params: {
   const discountSelection = canViewPriceTable ? '' : prepareDiscountSection({ config });
   const isVisiblePriceSection = !config.cardUpdate && showPrice && (canViewPriceTable ? (discountSelection || showTotal || quantityInfo) : true);
 
-  let newForm = template(formElement, { 
-    FORM_TYPE: formType, 
-    ATTRIBUTES: attrs, 
-    CLASS_NAME: className || '', 
+  let newForm = template(formElement, {
+    FORM_TYPE: formType,
+    ATTRIBUTES: attrs,
+    CLASS_NAME: className || '',
     SHOW_PRICE: isVisiblePriceSection,
     SHOW_BILLING_FORM: showBillingForm,
     BILLING_ATTRIBUTES: generateAttributes({
@@ -339,7 +340,7 @@ export function createCreditCardForm(params: {
     }
 
     let fieldContent = '';
-    
+
     switch (key) {
       case "BILLING_ACTIVATE": {
         if (showBillingForm && businessPurchase?.canUserModify) {
@@ -393,7 +394,7 @@ export function createCreditCardForm(params: {
   if (isVerticalTheme && (seperator === 'top' || seperator === 'both')) {
     cardTop = seperatorText + `<div class="zotlo-checkout__card-title">${$t('form.payWithCreditCard')}</div>`;
   }
-  
+
   if (isVerticalTheme && (seperator === 'bottom' || seperator === 'both')) {
     cardBottom = seperatorText;
   }
@@ -485,7 +486,7 @@ export function preparePaymentDetailsSection(params: {
 
   const { $t } = useI18n(config.general.localization);
   const productName = paymentDetail?.application?.name || '-';
-  const { 
+  const {
     purchase_date:purchaseDate = '-',
     expire_date:expireDate = '-',
     provider_key_translation:paymentMethod = '-',
@@ -557,7 +558,7 @@ export function createPaymentSuccessForm(params: {
   paymentDetail: PaymentDetail;
 }) {
   if (!params.config?.success?.show) return false;
-  
+
   const { config, paymentDetail } = params;
   const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
   const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
@@ -640,7 +641,7 @@ export function createPaymentSuccessForm(params: {
     for (const item of itemsExceptHeader) {
       (item as HTMLDivElement).style.display = 'none';
     }
-    
+
     form?.appendChild(doc.body.firstChild as HTMLElement);
 
     // Remove close button
@@ -652,6 +653,77 @@ export function createPaymentSuccessForm(params: {
       }
     }
   }
+}
+
+export function createPostPaymentOffersPage(params: {
+  config: FormConfig;
+}) {
+  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
+  const { config } = params;
+  const offers = config?.postPaymentOffers;
+
+  if (!offers?.show) return false;
+
+  const container = ZOTLO_GLOBAL.container;
+  const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
+
+  if (!container || !form) return false;
+
+  const { $t } = useI18n(config.general.localization);
+  const language = config.general.language || 'en';
+
+  // TODO: Price will be offer packages price when implemented. For now, it will be 0.00 USD for testing purposes.
+  const textParams = {
+    PRICE: isPanelEditMode ? '0.00 USD' : '',
+  }
+
+  function getLocalizedText(field?: { text?: Record<string, string> }) {
+    return field?.text?.[language] || field?.text?.en || '';
+  }
+
+  function getButtonText(key: 'acceptButton' | 'declineButton') {
+    const value = offers?.[key]?.text;
+    // if custom text entered
+    if (typeof value === 'string' && !!value) return template(value, textParams);
+
+    const index = Number(value) || 0;
+    return template($t(`postPaymentOffers.${key}.textOptions.${index}`), textParams);
+  }
+
+  const title = getLocalizedText(offers.title);
+  const subtitle = getLocalizedText(offers.subtitle);
+  const imageUrl = offers.offerImage?.url || '';
+  const priceText = template($t('postPaymentOffers.priceText.oneTimeOffer'), textParams);
+  // TODO: Description will be implemented later. For now, it will be "Standard Price: 0.00 USD" for testing purposes.
+  const descriptionText = "Standard Price: 0.00 USD";
+
+  const htmlText = template(postPaymentOffersElement, {
+    INFO_TEXT: $t('postPaymentOffers.successfullMessageInfo'),
+    SHOW_TITLE: !!offers.title?.show && !!title?.trim(),
+    TITLE: title,
+    SHOW_SUBTITLE: !!offers.subtitle?.show && !!subtitle?.trim(),
+    SUBTITLE: subtitle,
+    SHOW_IMAGE: !!offers.offerImage?.show && !!imageUrl,
+    IMAGE_URL: imageUrl,
+    SHOW_DESCRIPTION: !!offers.description?.show,
+    ACCEPT_TEXT: getButtonText('acceptButton'),
+    DECLINE_TEXT: getButtonText('declineButton'),
+    PRICE_TEXT: priceText,
+    DESCRIPTION_TEXT: descriptionText,
+  });
+
+  const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, 'text/html');
+
+  for (const item of itemsExceptHeader) {
+    (item as HTMLDivElement).style.display = 'none';
+  }
+
+  form?.appendChild(doc.body.firstChild as HTMLElement);
+
+  // Remove close button
+  form.querySelector('[data-close]')?.remove();
 }
 
 export function createAllCardsModal(params: {
@@ -894,9 +966,9 @@ export function createDiscountInput(params: { config: FormConfig }) {
 
 export function getDiscountInfo(params: { config: FormConfig, discountObject?: FormPaymentData['discount'], isTrialTransaction?: boolean, isTrialUsed?: boolean }) {
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
-  const { 
-    config, 
-    discountObject, 
+  const {
+    config,
+    discountObject,
     isTrialTransaction = true,
     isTrialUsed = false,
   } = params;
@@ -931,7 +1003,7 @@ export function createAppliedDiscountSection(params: { config: FormConfig, hideO
   const isTrialUsed = config?.paymentData?.subscriberStatuses?.isTrialUseBefore || false;
   const isDiscountCodeApplied = getIsDiscountCodeApplied(config);
   const { discountCode, discountText, oldPrice } = getDiscountInfo({ config, isTrialUsed });
-  
+
   if (isDiscountCodeEntryEnabled && isDiscountCodeApplied) return template(appliedDiscountSection, {
     DISCOUNT_CODE: discountCode,
     DISCOUNT_AMOUNT: discountText,
