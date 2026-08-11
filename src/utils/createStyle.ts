@@ -3,19 +3,21 @@ import type { FormConfig } from "../lib/types";
 function addAlphaToHex(hex: string, alpha: number) {
   // Remove the '#' if present
   const cleanHex = hex.replace('#', '');
-  
+
   // Clamp the percentage to 0-100, convert to a 0-255 range, then to hex
   const clampedAlpha = Math.min(100, Math.max(0, alpha));
   const alphaHex = Math.round((clampedAlpha / 100) * 255)
       .toString(16)
       .padStart(2, '0') // Ensures it is always 2 digits (e.g., '0a' instead of 'a')
       .toUpperCase();
-      
+
   return `#${cleanHex}${alphaHex}`;
 }
 
 export function createStyle(config: FormConfig) {
-  const { design, success } = config;
+  const { design, success, postPaymentOffers } = config;
+  const acceptButton = postPaymentOffers?.acceptButton;
+  const declineButton = postPaymentOffers?.declineButton;
   const {
     fontFamily, backgroundColor, borderColor,
     borderRadius, borderWidth, label
@@ -67,7 +69,7 @@ export function createStyle(config: FormConfig) {
   --zc-form-card-item-color: ${config.design.darkMode ? '#FFFFFF' : '#0D0626'};
 
   --zc-form-spinner-color: #BBBFFF;
-  
+
   --zc-tab-button-backgroundColor: ${(design?.button?.backgroundColor + opacity) || '#301BA3'};
 
   --zc-form-provider-backgroundColor: ${design?.darkMode ? '#FFFFFF' : '#000000'};
@@ -87,6 +89,26 @@ export function createStyle(config: FormConfig) {
   --zc-success-button-hover-color: ${success?.button?.hover?.color || '#FFFFFF'};
   --zc-success-button-hover-borderColor: ${success?.button?.hover?.borderColor || '#301BA3'};
   --zc-success-button-hover-backgroundColor: ${success?.button?.hover?.backgroundColor || '#301BA3'};
+
+  --zc-offer-info-color: ${acceptButton?.backgroundColor || '#765EF5'};
+  --zc-offer-info-backgroundColor: ${addAlphaToHex(acceptButton?.backgroundColor || '#765EF5', 15)};
+
+  --zc-offer-title-color: ${postPaymentOffers?.title?.color || '#1A1822'};
+  --zc-offer-title-fontSize: ${postPaymentOffers?.title?.fontSize || '19'}px;
+  --zc-offer-subtitle-color: ${postPaymentOffers?.subtitle?.color || '#1A1822'};
+  --zc-offer-subtitle-fontSize: ${postPaymentOffers?.subtitle?.fontSize || '14'}px;
+  --zc-offer-description-color: ${postPaymentOffers?.description?.color || '#1A1822'};
+  --zc-offer-description-fontSize: ${postPaymentOffers?.description?.fontSize || '14'}px;
+  --zc-offer-priceText-color: ${postPaymentOffers?.priceText?.color || '#1A1822'};
+  --zc-offer-priceText-fontSize: ${postPaymentOffers?.priceText?.fontSize || '14'}px;
+
+  --zc-offer-acceptButton-color: ${acceptButton?.color || '#FFFFFF'};
+  --zc-offer-acceptButton-backgroundColor: ${acceptButton?.backgroundColor || '#765EF5'};
+  --zc-offer-acceptButton-borderRadius: ${acceptButton?.borderRadius || '8'}px;
+  --zc-offer-acceptButton-fontSize: ${acceptButton?.fontSize || '14'}px;
+
+  --zc-offer-declineButton-color: ${declineButton?.color || '#1A1822'};
+  --zc-offer-declineButton-fontSize: ${declineButton?.fontSize || '10'}px;
 
   --zc-priceCard-backgroundColor: ${addAlphaToHex(design?.priceCard?.backgroundColor ?? '#F6F7F9', design?.priceCard?.backgroundOpacity ?? 100)};
   --zc-priceCard-borderColor: ${design?.priceCard?.borderColor ?? '#E7EAEE'};
