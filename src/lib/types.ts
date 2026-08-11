@@ -526,6 +526,65 @@ export type FormSuccess = {
   }
 }
 
+export type FormPostPaymentOffers = {
+  show: boolean;
+  offerPackage: number;
+  title: {
+    text: Record<string, string>;
+    show: boolean;
+    color: string;
+    fontSize: number | string;
+  };
+  subtitle: {
+    text: Record<string, string>;
+    show: boolean;
+    color: string;
+    fontSize: number | string;
+  };
+  description: {
+    show: boolean;
+    fontSize: number | string;
+    color: string;
+  };
+  priceText: {
+    fontSize: number | string;
+    color: string;
+  };
+  offerImage: {
+    show: boolean;
+    url: string;
+  };
+  acceptButton: {
+    /**
+     * ```
+     * 0: "Get Your Offer"
+     * 1: "Buy Now"
+     * 2: "Add for {{PRICE}}"
+     * 3: "Confirm & Pay {{PRICE}}"
+     * 4: "Claim Offer"
+     * ```
+    */
+    text: 0 | 1 | 2 | 3 | 4 | string;
+    fontSize: number | string;
+    color: string;
+    backgroundColor: string;
+    borderRadius: number | string;
+  };
+  declineButton: {
+    /**
+     * ```
+     * 0: "No, thanks"
+     * 1: "Continue without offer"
+     * 2: "Skip"
+     * 3: "No thanks, I'll pass"
+     * ```
+    */
+    text: 0 | 1 | 2 | 3 | string;
+    fontSize: number | string;
+    color: string;
+  };
+}
+
 type ProviderTransactionInfo = {
   totalPrice: string;
   totalPriceStatus: string;
@@ -577,6 +636,7 @@ export type FormConfig = {
   settings: FormSetting;
   design: FormDesign;
   success: FormSuccess;
+  postPaymentOffers: FormPostPaymentOffers;
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
   providerConfigs?: ProviderConfigs;
@@ -606,6 +666,10 @@ export type FormConfig = {
       conversionLabel: string;
     };
   };
+  /** Console preview only: tells the lib which page the editor wants to render */
+  render?: 'payment' | 'after-payment' | 'post-payment-offers';
+  /** Console preview only: mocked payment result used by the after payment preview */
+  paymentDetail?: PaymentDetail;
 }
 
 export type TransactionDetail = {
