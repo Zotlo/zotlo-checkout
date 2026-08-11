@@ -603,6 +603,8 @@ export async function getUserDataForIntegration(payload: {
 }
 
 export function sendIntegrationCAPIInfo() {
+  if (import.meta.env.VITE_CONSOLE) return;
+
   const tiktokParams = prepareTiktokCAPIParams(window.location.href);
   const fbParams = prepareFBCAPIParams(window.location.href);
   const hasAnyTiktokValue = !!Object.values(tiktokParams).filter(Boolean).length;
