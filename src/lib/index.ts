@@ -306,7 +306,10 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
             paymentDetail: config.paymentDetail as PaymentDetail
           })
         } else if (config.render === 'post-payment-offers') {
-          createPostPaymentOffersPage({ config })
+          createPostPaymentOffersPage({
+            config,
+            paymentDetail: config.paymentDetail as PaymentDetail
+          })
         }
       }
     } catch (err) {

@@ -657,6 +657,7 @@
   gap: 18px;
   text-align: center;
   background-color: var(--zc-form-backgroundColor);
+  word-break: break-word;
 }
 
 .zotlo-checkout__offer__info {
