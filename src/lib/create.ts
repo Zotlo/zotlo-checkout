@@ -661,9 +661,9 @@ export function createPaymentSuccessForm(params: {
 
 export function createPostPaymentOffersPage(params: {
   config: FormConfig;
+  paymentDetail: PaymentDetail;
 }) {
-  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
-  const { config } = params;
+  const { config, paymentDetail } = params;
   const offers = config?.postPaymentOffers;
 
   if (!offers?.show) return false;
@@ -676,10 +676,19 @@ export function createPostPaymentOffersPage(params: {
   const { $t } = useI18n(config.general.localization);
   const language = config.general.language || 'en';
 
-  // TODO: Price will be offer packages price when implemented. For now, it will be 0.00 USD for testing purposes.
-  const price = isPanelEditMode ? '0.00 USD' : '';
-  // TODO: Reference price will be calculated from the price with `description.referencePrice.percent`.
-  const refPrice = price;
+  /** Price of the offered package, served within the payment detail */
+  const offerDetail = paymentDetail?.offers?.[0];
+  const offerPrice = Number(offerDetail?.selectedPrice?.price ?? offerDetail?.price) || 0;
+  const currency = offerDetail?.selectedPrice?.currency || offerDetail?.priceCurrency || config.general.currency || 'USD';
+  /** The reference price is the offer price raised by the configured percent */
+  const referencePercent = Number(offers.description?.referencePrice?.percent) || 0;
+
+  function formatPrice(amount: number) {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+
+  const price = formatPrice(offerPrice);
+  const refPrice = formatPrice(offerPrice * (1 + referencePercent / 100));
 
   const textParams = {
     PRICE: price,
