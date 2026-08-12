@@ -677,8 +677,14 @@ export function createPostPaymentOffersPage(params: {
   const language = config.general.language || 'en';
 
   // TODO: Price will be offer packages price when implemented. For now, it will be 0.00 USD for testing purposes.
+  const price = isPanelEditMode ? '0.00 USD' : '';
+  // TODO: Reference price will be calculated from the price with `description.referencePrice.percent`.
+  const refPrice = price;
+
   const textParams = {
-    PRICE: isPanelEditMode ? '0.00 USD' : '',
+    PRICE: price,
+    /** Wrapped with a span so its text style can be configured on its own */
+    REF_PRICE: `<span class="zotlo-checkout__offer__refPrice">${refPrice}</span>`,
   }
 
   function getLocalizedText(field?: { text?: Record<string, string> }) {
@@ -698,8 +704,7 @@ export function createPostPaymentOffersPage(params: {
   const subtitle = getLocalizedText(offers.subtitle);
   const imageUrl = offers.offerImage?.url || '';
   const priceText = template($t('postPaymentOffers.priceText.oneTimeOffer'), textParams);
-  // TODO: Description will be implemented later. For now, it will be "Standard Price: 0.00 USD" for testing purposes.
-  const descriptionText = "Standard Price: 0.00 USD";
+  const descriptionText = template(getLocalizedText(offers.description), textParams);
 
   const htmlText = template(postPaymentOffersElement, {
     INFO_TEXT: $t('postPaymentOffers.successfullMessageInfo'),
@@ -709,7 +714,7 @@ export function createPostPaymentOffersPage(params: {
     SUBTITLE: subtitle,
     SHOW_IMAGE: !!offers.offerImage?.show && !!imageUrl,
     IMAGE_URL: imageUrl,
-    SHOW_DESCRIPTION: !!offers.description?.show,
+    SHOW_DESCRIPTION: !!offers.description?.show && !!descriptionText?.trim(),
     ACCEPT_TEXT: getButtonText('acceptButton'),
     DECLINE_TEXT: getButtonText('declineButton'),
     PRICE_TEXT: priceText,
