@@ -148,6 +148,7 @@ type TextStyle = {
   bold: boolean;
   italic: boolean;
   underline: boolean;
+  strikethrough?: boolean;
 }
 
 export type ProductConfigMobileApp = {
@@ -542,8 +543,13 @@ export type FormPostPaymentOffers = {
   };
   description: {
     show: boolean;
+    text: Record<string, string>;
     fontSize: number | string;
     color: string;
+    referencePrice: {
+      textStyle: TextStyle;
+      percent: number;
+    };
   };
   priceText: {
     fontSize: number | string;

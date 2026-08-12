@@ -705,6 +705,12 @@
   font-size: var(--zc-offer-description-fontSize);
 }
 
+.zotlo-checkout__offer__refPrice {
+  font-weight: var(--zc-offer-refPrice-fontWeight);
+  font-style: var(--zc-offer-refPrice-fontStyle);
+  text-decoration: var(--zc-offer-refPrice-textDecoration);
+}
+
 .zotlo-checkout__offer__description--price {
   color: var(--zc-offer-priceText-color);
   font-size: var(--zc-offer-priceText-fontSize);

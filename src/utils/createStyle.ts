@@ -23,6 +23,12 @@ export function createStyle(config: FormConfig) {
     borderRadius, borderWidth, label
   } = design || {}
 
+  const refPriceStyle = postPaymentOffers?.description?.referencePrice?.textStyle;
+  const refPriceDecoration = [
+    refPriceStyle?.underline ? 'underline' : '',
+    !refPriceStyle || refPriceStyle.strikethrough ? 'line-through' : ''
+  ].filter(Boolean).join(' ') || 'none';
+
   const opacity = config.design.darkMode ? '4A' : '1A';
   const priceCardText = design?.priceCard?.textStyle;
   const priceCardDescription = design?.priceCard?.descriptionText;
@@ -99,6 +105,9 @@ export function createStyle(config: FormConfig) {
   --zc-offer-subtitle-fontSize: ${postPaymentOffers?.subtitle?.fontSize || '14'}px;
   --zc-offer-description-color: ${postPaymentOffers?.description?.color || '#1A1822'};
   --zc-offer-description-fontSize: ${postPaymentOffers?.description?.fontSize || '14'}px;
+  --zc-offer-refPrice-fontWeight: ${refPriceStyle?.bold ? '700' : 'inherit'};
+  --zc-offer-refPrice-fontStyle: ${refPriceStyle?.italic ? 'italic' : 'normal'};
+  --zc-offer-refPrice-textDecoration: ${refPriceDecoration};
   --zc-offer-priceText-color: ${postPaymentOffers?.priceText?.color || '#1A1822'};
   --zc-offer-priceText-fontSize: ${postPaymentOffers?.priceText?.fontSize || '14'}px;
 
