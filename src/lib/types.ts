@@ -728,6 +728,25 @@ export type TransactionDetail = {
   card_brand_id: string;
 }
 
+export type OffersObject = {
+  used: boolean;
+  offerId: number;
+  selectedCountry: string;
+  period: number;
+  packageId: string;
+  packageType: PackageType;
+  periodType: 'year' | 'month' | 'week' | 'day' | null;
+  priceCurrency: string;
+  price: string;
+  selectedPrice: {
+    type: string;
+    quantity: number;
+    currency: string;
+    price: string;
+  };
+  transaction: TransactionDetail | null;
+}
+
 export type PaymentDetail = {
   cardUpdate?: boolean;
   isSandbox: boolean;
@@ -785,6 +804,7 @@ export type PaymentDetail = {
   };
   transaction?: TransactionDetail[];
   discount?: DiscountObject;
+  offers?: OffersObject[];
 }
 
 export interface IFormLoad {
