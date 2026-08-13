@@ -680,6 +680,8 @@
   flex-direction: column;
   align-items: center;
   gap: 18px;
+  min-height: 250px;
+  justify-content: center;
 }
 
 .zotlo-checkout__offer__main__text {
