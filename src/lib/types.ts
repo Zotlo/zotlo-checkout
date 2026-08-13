@@ -536,8 +536,7 @@ export type FormSuccess = {
   }
 }
 
-export type FormPostPaymentOffers = {
-  show: boolean;
+export type PostPaymentOfferSettings = {
   offerPackage: number;
   title: {
     text: Record<string, string>;
@@ -598,6 +597,12 @@ export type FormPostPaymentOffers = {
     fontSize: number | string;
     color: string;
   };
+}
+
+export type FormPostPaymentOffers = {
+  show: boolean;
+  offerCount: number;
+  offersSettings: PostPaymentOfferSettings[];
 }
 
 type ProviderTransactionInfo = {

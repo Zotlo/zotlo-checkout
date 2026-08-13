@@ -16,14 +16,16 @@ function addAlphaToHex(hex: string, alpha: number) {
 
 export function createStyle(config: FormConfig) {
   const { design, success, postPaymentOffers } = config;
-  const acceptButton = postPaymentOffers?.acceptButton;
-  const declineButton = postPaymentOffers?.declineButton;
+  /** Only the displayed offer is styled, each offer keeps its own settings */
+  const offerSettings = postPaymentOffers?.offersSettings?.[0];
+  const acceptButton = offerSettings?.acceptButton;
+  const declineButton = offerSettings?.declineButton;
   const {
     fontFamily, backgroundColor, borderColor,
     borderRadius, borderWidth, label
   } = design || {}
 
-  const refPriceStyle = postPaymentOffers?.description?.referencePrice?.textStyle;
+  const refPriceStyle = offerSettings?.description?.referencePrice?.textStyle;
   const refPriceDecoration = [
     refPriceStyle?.underline ? 'underline' : '',
     !refPriceStyle || refPriceStyle.strikethrough ? 'line-through' : ''
@@ -99,17 +101,17 @@ export function createStyle(config: FormConfig) {
   --zc-offer-info-color: ${acceptButton?.backgroundColor || '#765EF5'};
   --zc-offer-info-backgroundColor: ${addAlphaToHex(acceptButton?.backgroundColor || '#765EF5', 15)};
 
-  --zc-offer-title-color: ${postPaymentOffers?.title?.color || '#1A1822'};
-  --zc-offer-title-fontSize: ${postPaymentOffers?.title?.fontSize || '19'}px;
-  --zc-offer-subtitle-color: ${postPaymentOffers?.subtitle?.color || '#1A1822'};
-  --zc-offer-subtitle-fontSize: ${postPaymentOffers?.subtitle?.fontSize || '14'}px;
-  --zc-offer-description-color: ${postPaymentOffers?.description?.color || '#1A1822'};
-  --zc-offer-description-fontSize: ${postPaymentOffers?.description?.fontSize || '14'}px;
+  --zc-offer-title-color: ${offerSettings?.title?.color || '#1A1822'};
+  --zc-offer-title-fontSize: ${offerSettings?.title?.fontSize || '19'}px;
+  --zc-offer-subtitle-color: ${offerSettings?.subtitle?.color || '#1A1822'};
+  --zc-offer-subtitle-fontSize: ${offerSettings?.subtitle?.fontSize || '14'}px;
+  --zc-offer-description-color: ${offerSettings?.description?.color || '#1A1822'};
+  --zc-offer-description-fontSize: ${offerSettings?.description?.fontSize || '14'}px;
   --zc-offer-refPrice-fontWeight: ${refPriceStyle?.bold ? '700' : 'inherit'};
   --zc-offer-refPrice-fontStyle: ${refPriceStyle?.italic ? 'italic' : 'normal'};
   --zc-offer-refPrice-textDecoration: ${refPriceDecoration};
-  --zc-offer-priceText-color: ${postPaymentOffers?.priceText?.color || '#1A1822'};
-  --zc-offer-priceText-fontSize: ${postPaymentOffers?.priceText?.fontSize || '14'}px;
+  --zc-offer-priceText-color: ${offerSettings?.priceText?.color || '#1A1822'};
+  --zc-offer-priceText-fontSize: ${offerSettings?.priceText?.fontSize || '14'}px;
 
   --zc-offer-acceptButton-color: ${acceptButton?.color || '#FFFFFF'};
   --zc-offer-acceptButton-backgroundColor: ${acceptButton?.backgroundColor || '#765EF5'};
