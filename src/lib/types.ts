@@ -652,6 +652,7 @@ export type PaymentDetail = {
   cardUpdate?: boolean;
   isSandbox: boolean;
   sessionId: string;
+  zcSource: string;
   application: {
     id: number;
     name: string;
