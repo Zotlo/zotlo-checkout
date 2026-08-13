@@ -644,11 +644,6 @@ function prepareTiktokCAPIParams(siteUrl: string, ttParams?: Record<string, stri
   const { ttclid } = parseQueryString(location?.search || '');
 
   if (!ttParams[COOKIE.TTCLICK_ID] && ttclid) {
-    // const subdomainIndex = 1;
-    /* let subdomainIndex = location.host.split('.').length - 1;
-    if (subdomainIndex > 2) subdomainIndex = 2;
-    if (subdomainIndex < 0) subdomainIndex = 0; */
-
     ttParams[COOKIE.TTCLICK_ID] = ttclid || '';
   }
 
@@ -665,12 +660,7 @@ function prepareFBCAPIParams(siteUrl: string, fbParams?: Record<string, string>)
   const { fbclid } = parseQueryString(location?.search || '');
 
   if (!fbParams[COOKIE.FBCLICK_ID] && fbclid) {
-    const subdomainIndex = 1;
-    /* let subdomainIndex = location.host.split('.').length - 1;
-    if (subdomainIndex > 2) subdomainIndex = 2;
-    if (subdomainIndex < 0) subdomainIndex = 0; */
-
-    fbParams[COOKIE.FBCLICK_ID] = `fb.${subdomainIndex}.${Date.now()}.${fbclid || ''}`;
+    fbParams[COOKIE.FBCLICK_ID] = fbclid || '';
   }
 
   return fbParams;
