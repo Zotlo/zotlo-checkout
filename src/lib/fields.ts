@@ -8,7 +8,7 @@ export const FORM_ITEMS = {
       name: 'cardNumber',
       placeholder: 'Card number',
       inputmode: 'numeric',
-      'data-rules': 'required|card',
+      'data-rules': 'required|card|luhn',
       'data-mask': '#### #### #### ####',
     },
   },
