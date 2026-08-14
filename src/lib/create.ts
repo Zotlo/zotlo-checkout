@@ -661,12 +661,15 @@ export function createPaymentSuccessForm(params: {
 
 export function createPostPaymentOffersPage(params: {
   config: FormConfig;
+  paymentDetail: PaymentDetail;
+  /** Position of the displayed offer, each one has its own settings */
+  offerIndex?: number;
 }) {
-  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
-  const { config } = params;
+  const { config, paymentDetail, offerIndex = 0 } = params;
   const offers = config?.postPaymentOffers;
+  const offerSettings = offers?.offersSettings?.[offerIndex];
 
-  if (!offers?.show) return false;
+  if (!offers?.show || !offerSettings) return false;
 
   const container = ZOTLO_GLOBAL.container;
   const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
@@ -676,9 +679,24 @@ export function createPostPaymentOffersPage(params: {
   const { $t } = useI18n(config.general.localization);
   const language = config.general.language || 'en';
 
-  // TODO: Price will be offer packages price when implemented. For now, it will be 0.00 USD for testing purposes.
+  /** Price of the offered package, served within the payment detail */
+  const offerDetail = paymentDetail?.offers?.[offerIndex];
+  const offerPrice = Number(offerDetail?.selectedPrice?.price ?? offerDetail?.price) || 0;
+  const currency = offerDetail?.selectedPrice?.currency || offerDetail?.priceCurrency || config.general.currency || 'USD';
+  /** The reference price is the offer price raised by the configured percent */
+  const referencePercent = Number(offerSettings.description?.referencePrice?.percent) || 0;
+
+  function formatPrice(amount: number) {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+
+  const price = formatPrice(offerPrice);
+  const refPrice = formatPrice(offerPrice * (1 + referencePercent / 100));
+
   const textParams = {
-    PRICE: isPanelEditMode ? '0.00 USD' : '',
+    PRICE: price,
+    /** Wrapped with a span so its text style can be configured on its own */
+    REF_PRICE: `<span class="zotlo-checkout__offer__refPrice">${refPrice}</span>`,
   }
 
   function getLocalizedText(field?: { text?: Record<string, string> }) {
@@ -686,7 +704,7 @@ export function createPostPaymentOffersPage(params: {
   }
 
   function getButtonText(key: 'acceptButton' | 'declineButton') {
-    const value = offers?.[key]?.text;
+    const value = offerSettings?.[key]?.text;
     // if custom text entered
     if (typeof value === 'string' && !!value) return template(value, textParams);
 
@@ -694,22 +712,21 @@ export function createPostPaymentOffersPage(params: {
     return template($t(`postPaymentOffers.${key}.textOptions.${index}`), textParams);
   }
 
-  const title = getLocalizedText(offers.title);
-  const subtitle = getLocalizedText(offers.subtitle);
-  const imageUrl = offers.offerImage?.url || '';
+  const title = getLocalizedText(offerSettings.title);
+  const subtitle = getLocalizedText(offerSettings.subtitle);
+  const imageUrl = offerSettings.offerImage?.url || '';
   const priceText = template($t('postPaymentOffers.priceText.oneTimeOffer'), textParams);
-  // TODO: Description will be implemented later. For now, it will be "Standard Price: 0.00 USD" for testing purposes.
-  const descriptionText = "Standard Price: 0.00 USD";
+  const descriptionText = template(getLocalizedText(offerSettings.description), textParams);
 
   const htmlText = template(postPaymentOffersElement, {
     INFO_TEXT: $t('postPaymentOffers.successfullMessageInfo'),
-    SHOW_TITLE: !!offers.title?.show && !!title?.trim(),
+    SHOW_TITLE: !!offerSettings.title?.show && !!title?.trim(),
     TITLE: title,
-    SHOW_SUBTITLE: !!offers.subtitle?.show && !!subtitle?.trim(),
+    SHOW_SUBTITLE: !!offerSettings.subtitle?.show && !!subtitle?.trim(),
     SUBTITLE: subtitle,
-    SHOW_IMAGE: !!offers.offerImage?.show && !!imageUrl,
+    SHOW_IMAGE: !!offerSettings.offerImage?.show && !!imageUrl,
     IMAGE_URL: imageUrl,
-    SHOW_DESCRIPTION: !!offers.description?.show,
+    SHOW_DESCRIPTION: !!offerSettings.description?.show && !!descriptionText?.trim(),
     ACCEPT_TEXT: getButtonText('acceptButton'),
     DECLINE_TEXT: getButtonText('declineButton'),
     PRICE_TEXT: priceText,

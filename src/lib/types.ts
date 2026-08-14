@@ -148,6 +148,7 @@ type TextStyle = {
   bold: boolean;
   italic: boolean;
   underline: boolean;
+  strikethrough?: boolean;
 }
 
 export type ProductConfigMobileApp = {
@@ -526,8 +527,7 @@ export type FormSuccess = {
   }
 }
 
-export type FormPostPaymentOffers = {
-  show: boolean;
+export type PostPaymentOfferSettings = {
   offerPackage: number;
   title: {
     text: Record<string, string>;
@@ -543,8 +543,13 @@ export type FormPostPaymentOffers = {
   };
   description: {
     show: boolean;
+    text: Record<string, string>;
     fontSize: number | string;
     color: string;
+    referencePrice: {
+      textStyle: TextStyle;
+      percent: number;
+    };
   };
   priceText: {
     fontSize: number | string;
@@ -583,6 +588,12 @@ export type FormPostPaymentOffers = {
     fontSize: number | string;
     color: string;
   };
+}
+
+export type FormPostPaymentOffers = {
+  show: boolean;
+  offerCount: number;
+  offersSettings: PostPaymentOfferSettings[];
 }
 
 type ProviderTransactionInfo = {
@@ -713,6 +724,25 @@ export type TransactionDetail = {
   card_brand_id: string;
 }
 
+export type OffersObject = {
+  used: boolean;
+  offerId: number;
+  selectedCountry: string;
+  period: number;
+  packageId: string;
+  packageType: PackageType;
+  periodType: 'year' | 'month' | 'week' | 'day' | null;
+  priceCurrency: string;
+  price: string;
+  selectedPrice: {
+    type: string;
+    quantity: number;
+    currency: string;
+    price: string;
+  };
+  transaction: TransactionDetail | null;
+}
+
 export type PaymentDetail = {
   cardUpdate?: boolean;
   isSandbox: boolean;
@@ -771,6 +801,7 @@ export type PaymentDetail = {
   };
   transaction?: TransactionDetail[];
   discount?: DiscountObject;
+  offers?: OffersObject[];
 }
 
 export interface IFormLoad {

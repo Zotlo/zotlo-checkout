@@ -4,28 +4,32 @@
   </div>
   <div class="zotlo-checkout__offer__main">
 
-    <% IF(SHOW_TITLE || SHOW_SUBTITLE) %>
-    <div class="zotlo-checkout__offer__main__text">
-      <% IF(SHOW_TITLE) %>
-      <div class="zotlo-checkout__offer__title">{{TITLE}}</div>
+    <% IF(SHOW_TITLE || SHOW_SUBTITLE || SHOW_IMAGE) %>
+    <div class="zotlo-checkout__offer__main-block">
+      <% IF(SHOW_TITLE || SHOW_SUBTITLE) %>
+      <div class="zotlo-checkout__offer__main__text">
+        <% IF(SHOW_TITLE) %>
+        <div class="zotlo-checkout__offer__title">{{TITLE}}</div>
+        <% ENDIF %>
+        <% IF(SHOW_SUBTITLE) %>
+        <div class="zotlo-checkout__offer__subtitle">{{SUBTITLE}}</div>
+        <% ENDIF %>
+      </div>
       <% ENDIF %>
-      <% IF(SHOW_SUBTITLE) %>
-      <div class="zotlo-checkout__offer__subtitle">{{SUBTITLE}}</div>
-      <% ENDIF %>
-    </div>
-    <% ENDIF %>
 
-    <% IF(SHOW_IMAGE) %>
-    <div class="zotlo-checkout__offer__image">
-      <img src="{{IMAGE_URL}}" role="presentation" alt="" />
+      <% IF(SHOW_IMAGE) %>
+      <div class="zotlo-checkout__offer__image">
+        <img src="{{IMAGE_URL}}" role="presentation" alt="" />
+      </div>
+      <% ENDIF %>
     </div>
     <% ENDIF %>
 
     <div class="zotlo-checkout__offer__main__descriptions">
       <% IF(SHOW_DESCRIPTION) %>
-      <div class="zotlo-checkout__offer__description">{{DESCRIPTION_TEXT}}</div>
+      <div class="zotlo-checkout__offer__description"><span>{{DESCRIPTION_TEXT}}</span></div>
       <% ENDIF %>
-      <div class="zotlo-checkout__offer__description zotlo-checkout__offer__description--price">{{PRICE_TEXT}}</div>
+      <div class="zotlo-checkout__offer__description zotlo-checkout__offer__description--price"><span>{{PRICE_TEXT}}</span></div>
     </div>
   </div>
   <div class="zotlo-checkout__offer__actions">

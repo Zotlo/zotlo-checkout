@@ -672,6 +672,7 @@
   gap: 18px;
   text-align: center;
   background-color: var(--zc-form-backgroundColor);
+  word-break: break-word;
 }
 
 .zotlo-checkout__offer__info {
@@ -696,6 +697,14 @@
   gap: 18px;
 }
 
+.zotlo-checkout__offer__main-block {
+  display: flex;
+  gap: 18px;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 250px;
+}
+
 .zotlo-checkout__offer__main__text {
   display: flex;
   flex-direction: column;
@@ -718,6 +727,12 @@
   justify-content: center;
   color: var(--zc-offer-description-color);
   font-size: var(--zc-offer-description-fontSize);
+}
+
+.zotlo-checkout__offer__refPrice {
+  font-weight: var(--zc-offer-refPrice-fontWeight);
+  font-style: var(--zc-offer-refPrice-fontStyle);
+  text-decoration: var(--zc-offer-refPrice-textDecoration);
 }
 
 .zotlo-checkout__offer__description--price {
