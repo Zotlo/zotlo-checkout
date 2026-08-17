@@ -85,6 +85,9 @@ export interface IZotloCheckoutEvents {
   /** Triggers when a payment fails. */
   onFail?: (error: FailEventData) => void;
 
+  /** Triggers when a post payment offer request fails. `data` holds the offer itself. */
+  onOfferFail?: (error: FailEventData) => void;
+
   /** Triggers when form has an invalid field. */
   onInvalidForm?: (error: IFormInvalid) => void;
 }
@@ -646,7 +649,8 @@ export type FormConfig = {
   settings: FormSetting;
   design: FormDesign;
   success: FormSuccess;
-  postPaymentOffers: FormPostPaymentOffers;
+  /** Not available on the card update form */
+  postPaymentOffers?: FormPostPaymentOffers;
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
   providerConfigs?: ProviderConfigs;
@@ -739,7 +743,8 @@ export type OffersObject = {
     currency: string;
     price: string;
   };
-  transaction: TransactionDetail | null;
+  /** Served once the offer is used, in the same shape as the payment transaction */
+  transaction: TransactionDetail[] | null;
 }
 
 export type PaymentDetail = {

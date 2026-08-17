@@ -1,4 +1,4 @@
-import { getUserDataForIntegration, handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
+import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
 import { getGooglePayClient, hasValidApplePayConfig } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
@@ -271,6 +271,38 @@ async function sendPurchaseEvents(payload: { config: FormConfig; result: Payment
   }
 }
 
+/**
+ * The session Uuid is the request auth header, so it is only dropped once the
+ * flow has no further requests to make.
+ */
+export function endPaymentSession(payload: {
+  config: FormConfig;
+  params: IZotloCheckoutParams | IZotloCardParams;
+}) {
+  const { config, params } = payload;
+
+  deleteSession({
+    useCookie: !!params.useCookie,
+    key: config.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID
+  });
+}
+
+/**
+ * Plain payment detail fetch. Unlike handlePaymentSuccess it fires neither the
+ * purchase events nor onSuccess, so the offer flow can refresh the detail
+ * without duplicating them.
+ */
+export async function getPaymentDetail(params: IZotloCheckoutParams | IZotloCardParams) {
+  const { result, meta } = await CheckoutAPI.get("/payment/detail");
+
+  if (meta?.errorCode) {
+    params.events?.onFail?.({ message: meta?.message, data: meta });
+    return null;
+  }
+
+  return result as PaymentDetail;
+}
+
 export async function handlePaymentSuccess(payload: { config: FormConfig; params: IZotloCheckoutParams | IZotloCardParams; }) {
   try {
     setFormLoading(true);
@@ -286,13 +318,11 @@ export async function handlePaymentSuccess(payload: { config: FormConfig; params
         }
       } as PaymentDetail
     } else {
-      const { result: res, meta } = await CheckoutAPI.get("/payment/detail");
-      result = res as PaymentDetail;
-  
-      if (meta?.errorCode) {
-        params.events?.onFail?.({ message: meta?.message, data: meta });
-        return null
-      }
+      const detail = await getPaymentDetail(params);
+
+      if (!detail) return null;
+
+      result = detail;
     }
 
     await sendPurchaseEvents({ config, result });
@@ -303,10 +333,12 @@ export async function handlePaymentSuccess(payload: { config: FormConfig; params
       cardUpdate: ZOTLO_GLOBAL.cardUpdate
     });
 
-    deleteSession({
-      useCookie: !!params.useCookie,
-      key: config.cardUpdate ? COOKIE.CARD_UUID : COOKIE.UUID
-    });
+    // A post payment offer still has a decision to send, so the session has to
+    // outlive this function. The offer flow closes it once the user decides.
+    if (!getActivePostPaymentOffer({ config, paymentDetail: result })) {
+      endPaymentSession({ config, params });
+    }
+
     return result;
   } catch (e) {
     Logger.client?.captureException(e);

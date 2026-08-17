@@ -480,8 +480,10 @@ export function prepareButtonSuccessLink(params: {
 export function preparePaymentDetailsSection(params: {
   config: FormConfig;
   paymentDetail: PaymentDetail;
+  /** Set with every post payment offer the user accepted */
+  acceptedOfferIds?: number[];
 }) {
-  const { config, paymentDetail } = params;
+  const { config, paymentDetail, acceptedOfferIds } = params;
   if (!paymentDetail) return '';
 
   const { $t } = useI18n(config.general.localization);
@@ -530,6 +532,22 @@ export function preparePaymentDetailsSection(params: {
     ZOTLO_ADDRESS_TEXT: '',
   }) || '';
 
+  // The localization dictionary is served by /init, so fall back until the key ships
+  const offerTitleKey = 'postPaymentOffers.paymentDetails.title';
+  const offerTitleText = $t(offerTitleKey);
+  const offerTitle = offerTitleText === offerTitleKey ? $t('common.product') : offerTitleText;
+
+  /** Every accepted offer is billed separately, so each one gets its own row */
+  const offerRows = (acceptedOfferIds || [])
+    .map((offerId) => paymentDetail?.offers?.find(offer => offer.offerId === offerId)?.transaction?.[0])
+    .filter((transaction) => !!transaction?.price)
+    .map((transaction) => `
+        <tr>
+          <td class="zotlo-checkout__payment-details__title-col">${offerTitle}</td>
+          <td class="zotlo-checkout__payment-details__text-col">${transaction!.price} ${transaction!.currency}</td>
+        </tr>`)
+    .join('');
+
   return template(paymentDetailsElement, {
     FORM_TYPE: config.cardUpdate ? 'CARD' : 'CHECKOUT',
     TITLE: $t('paymentSuccess.paymentDetails.title'),
@@ -545,6 +563,7 @@ export function preparePaymentDetailsSection(params: {
     DISCOUNT_TITLE: $t('common.discount'),
     DISCOUNT_TEXT: discountText,
     DISCOUNT_OLD_PRICE: oldPrice,
+    OFFER_ROWS: offerRows,
     TOTAL_TITLE: $t('common.total'),
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: quantityInfo,
@@ -553,20 +572,55 @@ export function preparePaymentDetailsSection(params: {
   });
 }
 
+/**
+ * Replaces the checkout body with a post payment screen, keeping the header.
+ * A previously mounted screen (offers -> success) is removed rather than hidden,
+ * so its event listeners cannot fire after the transition.
+ */
+export function mountCheckoutScreen(htmlText: string, name: 'offers' | 'success') {
+  const container = ZOTLO_GLOBAL.container;
+  const form = container?.querySelector('.zotlo-checkout') as HTMLElement | null;
+
+  if (!container || !form) return null;
+
+  for (const screen of form.querySelectorAll(':scope > [data-screen]')) {
+    screen.remove();
+  }
+
+  const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, 'text/html');
+  const node = doc.body.firstElementChild as HTMLElement | null;
+
+  if (!node) return null;
+
+  for (const item of itemsExceptHeader) {
+    (item as HTMLDivElement).style.display = 'none';
+  }
+
+  node.setAttribute('data-screen', name);
+  form.appendChild(node);
+
+  // Remove close button
+  form.querySelector('[data-close]')?.remove();
+
+  return node;
+}
+
 export function createPaymentSuccessForm(params: {
   config: FormConfig;
   paymentDetail: PaymentDetail;
+  /** Set with every post payment offer the user accepted */
+  acceptedOfferIds?: number[];
 }) {
   if (!params.config?.success?.show) return false;
 
-  const { config, paymentDetail } = params;
+  const { config, paymentDetail, acceptedOfferIds } = params;
   const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
   const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
   const WAIT_TIME = config.success.waitTime; // in seconds
   const delay = WAIT_TIME > MAX_WAIT_TIME ? MAX_WAIT_TIME : (WAIT_TIME < MIN_WAIT_TIME ? MIN_WAIT_TIME : WAIT_TIME);
   const successTheme = config.success.theme;
-  const container = ZOTLO_GLOBAL.container;
-  const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
   const buttonText = successTheme === SuccessTheme.APP2WEB
     ? (config?.success?.button?.text || 0)
@@ -591,7 +645,7 @@ export function createPaymentSuccessForm(params: {
       }).join('')
     : '';
 
-  const paymentDetailsSection = preparePaymentDetailsSection({ config, paymentDetail });
+  const paymentDetailsSection = preparePaymentDetailsSection({ config, paymentDetail, acceptedOfferIds });
 
   const payload = {
     THEME: successTheme,
@@ -618,11 +672,11 @@ export function createPaymentSuccessForm(params: {
 
   const htmlText = template(paymentSuccessElement, payload);
 
-  function startTimer(timeInSeconds: number) {
+  function startTimer(screen: HTMLElement, timeInSeconds: number) {
     let seconds = timeInSeconds;
     const timer = setInterval(() => {
       seconds--;
-      const successMessage = form.querySelector('[data-timer]') as HTMLDivElement;
+      const successMessage = screen.querySelector('[data-timer]') as HTMLDivElement;
       if (successMessage) {
         successMessage.innerHTML = $t('paymentSuccess.timer', { second: seconds })
       }
@@ -633,26 +687,17 @@ export function createPaymentSuccessForm(params: {
     }, 1000);
   }
 
-  if (container) {
-    const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlText, 'text/html');
+  const screen = mountCheckoutScreen(htmlText, 'success');
 
-    for (const item of itemsExceptHeader) {
-      (item as HTMLDivElement).style.display = 'none';
-    }
+  if (!screen) return false;
 
-    form?.appendChild(doc.body.firstChild as HTMLElement);
-
-    // Remove close button
-    form.querySelector('[data-close]')?.remove();
-
-    if (canAutoRedirect) {
-      if (import.meta.env.VITE_SDK_API_URL) {
-        startTimer(delay);
-      }
+  if (canAutoRedirect) {
+    if (import.meta.env.VITE_SDK_API_URL) {
+      startTimer(screen, delay);
     }
   }
+
+  return true;
 }
 
 export function createPostPaymentOffersPage(params: {
@@ -663,20 +708,23 @@ export function createPostPaymentOffersPage(params: {
 }) {
   const { config, paymentDetail, offerIndex = 0 } = params;
   const offers = config?.postPaymentOffers;
+  /** Offer settings and payment detail offers are paired by position */
   const offerSettings = offers?.offersSettings?.[offerIndex];
 
   if (!offers?.show || !offerSettings) return false;
 
-  const container = ZOTLO_GLOBAL.container;
-  const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
+  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
 
-  if (!container || !form) return false;
+  /** Price of the offered package, served within the payment detail */
+  const offerDetail = paymentDetail?.offers?.[offerIndex];
+
+  // Outside the editor an absent offer would render every price as "0.00",
+  // while the console preview renders whatever its mocked payment detail holds
+  if (!offerDetail && !isPanelEditMode) return false;
 
   const { $t } = useI18n(config.general.localization);
   const language = config.general.language || 'en';
 
-  /** Price of the offered package, served within the payment detail */
-  const offerDetail = paymentDetail?.offers?.[offerIndex];
   const offerPrice = Number(offerDetail?.selectedPrice?.price ?? offerDetail?.price) || 0;
   const currency = offerDetail?.selectedPrice?.currency || offerDetail?.priceCurrency || config.general.currency || 'USD';
   /** The reference price is the offer price raised by the configured percent */
@@ -729,18 +777,7 @@ export function createPostPaymentOffersPage(params: {
     DESCRIPTION_TEXT: descriptionText,
   });
 
-  const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlText, 'text/html');
-
-  for (const item of itemsExceptHeader) {
-    (item as HTMLDivElement).style.display = 'none';
-  }
-
-  form?.appendChild(doc.body.firstChild as HTMLElement);
-
-  // Remove close button
-  form.querySelector('[data-close]')?.remove();
+  return !!mountCheckoutScreen(htmlText, 'offers');
 }
 
 export function createAllCardsModal(params: {
