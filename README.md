@@ -110,6 +110,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `events.onSubmit`       | no      | Triggered after the form is submitted.                                                                                       |
 | `events.onSuccess`      | no      | Triggered after a successful payment.                                                                                        |
 | `events.onFail`         | no      | Triggered when a payment fails.                                                                                              |
+| `events.onOfferFail`    | no      | Triggered when a post payment offer request fails.                                                                           |
 | `events.onInvalidForm`  | no      | Triggers when form has an invalid field.                                                                                     |
 
 **Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L92) file.
@@ -211,6 +212,26 @@ onFail?: (error: FailEventData) => void;
   events: {
     onFail(error) {
       alert(error.message)
+    }
+  }
+}
+```
+
+### onOfferFail
+Triggers when a post payment offer request fails. `error.data` holds the offer the decision was sent for.
+
+```typescript
+onOfferFail?: (error: FailEventData) => void;
+```
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L142) and the offer on type [`OffersObject`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L727)
+
+```typescript
+{
+  ...
+  events: {
+    onOfferFail(error) {
+      alert(error.message)
+      console.log('Post payment offer failed to process:', error.data.offerId)
     }
   }
 }
