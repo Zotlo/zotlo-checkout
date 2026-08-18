@@ -58,13 +58,14 @@ export function handlePostPaymentOffers(payload: {
   config: FormConfig;
   params: IZotloCheckoutParams | IZotloCardParams;
   paymentDetail: PaymentDetail;
-  onComplete: (paymentDetail: PaymentDetail, acceptedOfferIds: number[]) => Promise<void>;
+  onComplete: (paymentDetail: PaymentDetail) => Promise<void>;
 }) {
   const { config, params, paymentDetail, onComplete } = payload;
   const activeOffer = getActivePostPaymentOffer({ config, paymentDetail });
 
   if (!activeOffer) return false;
 
+  /** The success page renders the accepted offers off the refetched detail */
   const acceptedOfferIds: number[] = [];
 
   /** Closes the payment session and hands the rest of the success flow back to the caller */
@@ -82,7 +83,7 @@ export function handlePostPaymentOffers(payload: {
     endPaymentSession({ config, params });
     setFormLoading(false);
 
-    await onComplete(detail || paymentDetail, acceptedOfferIds);
+    await onComplete(detail || paymentDetail);
   }
 
   /**

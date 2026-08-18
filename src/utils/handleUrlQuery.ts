@@ -33,13 +33,11 @@ export function getPaymentCallback(payload: {
 export async function completePaymentSuccess(payload: {
   config: FormConfig;
   paymentDetail: PaymentDetail | null;
-  /** Set with every post payment offer the user accepted */
-  acceptedOfferIds?: number[];
   reloadSession?: () => Promise<void>;
 }) {
-  const { config, paymentDetail, acceptedOfferIds, reloadSession } = payload;
+  const { config, paymentDetail, reloadSession } = payload;
 
-  if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail, acceptedOfferIds });
+  if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
 
   if (!config.success.show) {
     if (paymentDetail && config.general.isCheckoutLink) {
@@ -72,8 +70,8 @@ function startPostPaymentOffers(payload: {
     config,
     params,
     paymentDetail,
-    onComplete: (detail, acceptedOfferIds) => completePaymentSuccess({
-      config, paymentDetail: detail, acceptedOfferIds, reloadSession
+    onComplete: (detail) => completePaymentSuccess({
+      config, paymentDetail: detail, reloadSession
     })
   });
 

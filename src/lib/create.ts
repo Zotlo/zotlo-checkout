@@ -8,6 +8,7 @@ import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
 import postPaymentOffersElement from '../html/post-payment-offers.html?raw'
 import paymentDetailsElement from '../html/payment-details.html?raw'
+import additionalPurchaseDetailsElement from '../html/additional-purchase-details.html?raw'
 import paymentHeaderElement from '../html/payment-header.html?raw'
 import priceTableElement from '../html/price-table.html?raw'
 import modalElement from '../html/modal.html?raw'
@@ -477,13 +478,87 @@ export function prepareButtonSuccessLink(params: {
   }
 }
 
+/**
+ * One detail block per accepted post payment offer, since each one is billed as
+ * its own purchase. Returns an empty string when there is nothing extra to show.
+ */
+export function prepareAdditionalPurchaseDetails(params: {
+  config: FormConfig;
+  paymentDetail: PaymentDetail;
+}) {
+  const { config, paymentDetail } = params;
+  const { $t } = useI18n(config.general.localization);
+  const productName = paymentDetail?.application?.name || '-';
+  // Get card_brand_id from main transaction
+  const { card_brand_id = '' } = paymentDetail?.transaction?.[0] || {};
+  // A declined offer is used as well, only an accepted one carries a transaction
+  const purchases = (paymentDetail?.offers || [])
+    .filter((offer) => !!offer?.used && !!offer?.transaction?.[0]?.price);
+
+  return purchases.map((offer, index) => {
+    const {
+      provider_key_translation: paymentMethod = '-',
+      provider_key: paymentProviderKey = '',
+      package_id: packageId = '',
+      currency = '',
+      price = '',
+    } = offer.transaction![0];
+
+    const isCreditCardPayment = paymentProviderKey === PaymentProvider.CREDIT_CARD;
+    const title = $t('paymentSuccess.paymentDetails.additionalPurchaseTitle');
+
+    return template(additionalPurchaseDetailsElement, {
+      // The second and following purchases are numbered
+      TITLE: index === 0 ? title : `${title} - ${index + 1}`,
+      PRODUCT_TITLE: $t('common.product'),
+      PRODUCT_TEXT: productName,
+      PLAN_TITLE: $t('common.plan'),
+      PLAN_TEXT: `${$t('common.oneTimePayment')} (${packageId || offer.packageId})`,
+      PAYMENT_METHOD_TITLE: $t('common.paymentMethod'),
+      PAYMENT_METHOD_TEXT: paymentMethod,
+      CREDIT_CARD_ICON_IMG: isCreditCardPayment ? getCardInfoFromCardNumber(card_brand_id)?.cardIconImg : '',
+      TOTAL_TITLE: $t('common.total'),
+      TOTAL_PRICE: `${price} ${currency}`,
+    });
+  }).join('');
+}
+
+function preparePaymentDetailsFooter(params: {
+  config: FormConfig;
+  paymentDetail: PaymentDetail;
+  hasAdditionalPurchases?: boolean;
+}) {
+  const { config, paymentDetail, hasAdditionalPurchases = false } = params;
+  const { $t } = useI18n(config.general.localization);
+
+  const appName = config.general.appName || paymentDetail?.application?.name || '';
+  const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
+  const zotloSupportUrl = "mailto:support@zotlo.com";
+  const zotloAccountUrl = "https://account.zotlo.com" + (paymentDetail?.zcSource ? `?zc_source=${paymentDetail.zcSource}` : '');
+
+  const templateParams = {
+    CUSTOMER_SUPPORT_LINK: `<a href="${customerSupportUrl}" target="_blank">${appName} ${$t('common.support')}</a>`,
+    ACCOUNT_LINK: `<a href="${zotloAccountUrl}" target="_blank">${$t('common.here')}</a>`,
+    ZOTLO_SUPPORT_LINK: `<a href="${zotloSupportUrl}" target="_blank" rel="noopener noreferrer">${$t('footer.legals.zotlosSupportTeam')}</a>`,
+  };
+
+  if (config?.cardUpdate) {
+    return template($t('paymentSuccess.paymentDetails.footerCard'), templateParams);
+  } else {
+    const supportInfo = template($t('paymentSuccess.paymentDetails.footerSupportInfo'), templateParams);
+    const purchaseInfoKey = hasAdditionalPurchases ? 'footerPurchasesInfo' : 'footerPurchaseInfo';
+    const purchaseInfo = template($t(`paymentSuccess.paymentDetails.${purchaseInfoKey}`), templateParams);
+    const manageInfo = template($t('paymentSuccess.paymentDetails.footerManageInfo'), templateParams);
+
+    return `<div>${supportInfo}</div><div>${purchaseInfo} ${manageInfo}</div>`;
+  } 
+};
+
 export function preparePaymentDetailsSection(params: {
   config: FormConfig;
   paymentDetail: PaymentDetail;
-  /** Set with every post payment offer the user accepted */
-  acceptedOfferIds?: number[];
 }) {
-  const { config, paymentDetail, acceptedOfferIds } = params;
+  const { config, paymentDetail } = params;
   if (!paymentDetail) return '';
 
   const { $t } = useI18n(config.general.localization);
@@ -502,8 +577,6 @@ export function preparePaymentDetailsSection(params: {
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
   const planInfoText = isPanelEditMode ? '-' : getPlanInfoText(config);
   const isOneTimePayment = config.packageInfo?.condition === PackageCondition.ONETIME_PAYMENT;
-  const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
-  const zotloAccountUrl = "https://account.zotlo.com/";
 
   const quantityInfo = quantity > 1 ? template($t('form.quantity.includesNumberUnits'), { QUANTITY: quantity }) : '';
   const totalPrice = price ? `${price} ${currency}` : '-';
@@ -515,15 +588,6 @@ export function preparePaymentDetailsSection(params: {
     isTrialTransaction: status === 'trial'
   });
 
-  const paymentDetailsFooterElement = template(
-    config.cardUpdate
-      ? $t('paymentSuccess.paymentDetails.footerCard')
-      : $t('paymentSuccess.paymentDetails.footer')
-    , {
-    CUSTOMER_SUPPORT_LINK: `<a href="${customerSupportUrl}" target="_blank">${$t('common.customerService')}</a>`,
-    ACCOUNT_LINK: `<a href="${zotloAccountUrl}" target="_blank">${$t('common.here')}</a>`
-  });
-
   const footerInfo = prepareFooterInfo({ config });
   const footerCommon = createFooter({
     ...footerInfo,
@@ -532,21 +596,8 @@ export function preparePaymentDetailsSection(params: {
     ZOTLO_ADDRESS_TEXT: '',
   }) || '';
 
-  // The localization dictionary is served by /init, so fall back until the key ships
-  const offerTitleKey = 'postPaymentOffers.paymentDetails.title';
-  const offerTitleText = $t(offerTitleKey);
-  const offerTitle = offerTitleText === offerTitleKey ? $t('common.product') : offerTitleText;
-
-  /** Every accepted offer is billed separately, so each one gets its own row */
-  const offerRows = (acceptedOfferIds || [])
-    .map((offerId) => paymentDetail?.offers?.find(offer => offer.offerId === offerId)?.transaction?.[0])
-    .filter((transaction) => !!transaction?.price)
-    .map((transaction) => `
-        <tr>
-          <td class="zotlo-checkout__payment-details__title-col">${offerTitle}</td>
-          <td class="zotlo-checkout__payment-details__text-col">${transaction!.price} ${transaction!.currency}</td>
-        </tr>`)
-    .join('');
+  const additionalPurchaseDetails = prepareAdditionalPurchaseDetails({ config, paymentDetail });
+  const paymentDetailsFooter = preparePaymentDetailsFooter({ config, paymentDetail, hasAdditionalPurchases: !!additionalPurchaseDetails });
 
   return template(paymentDetailsElement, {
     FORM_TYPE: config.cardUpdate ? 'CARD' : 'CHECKOUT',
@@ -563,11 +614,11 @@ export function preparePaymentDetailsSection(params: {
     DISCOUNT_TITLE: $t('common.discount'),
     DISCOUNT_TEXT: discountText,
     DISCOUNT_OLD_PRICE: oldPrice,
-    OFFER_ROWS: offerRows,
+    ADDITIONAL_PURCHASE_DETAILS: additionalPurchaseDetails,
     TOTAL_TITLE: $t('common.total'),
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: quantityInfo,
-    FOOTER: paymentDetailsFooterElement,
+    FOOTER: paymentDetailsFooter,
     FOOTER_COMMON: footerCommon,
   });
 }
@@ -610,12 +661,10 @@ export function mountCheckoutScreen(htmlText: string, name: 'offers' | 'success'
 export function createPaymentSuccessForm(params: {
   config: FormConfig;
   paymentDetail: PaymentDetail;
-  /** Set with every post payment offer the user accepted */
-  acceptedOfferIds?: number[];
 }) {
   if (!params.config?.success?.show) return false;
 
-  const { config, paymentDetail, acceptedOfferIds } = params;
+  const { config, paymentDetail } = params;
   const MAX_WAIT_TIME = 50; // Maximum wait time in seconds
   const MIN_WAIT_TIME = 5; // Minimum wait time in seconds
   const WAIT_TIME = config.success.waitTime; // in seconds
@@ -645,7 +694,7 @@ export function createPaymentSuccessForm(params: {
       }).join('')
     : '';
 
-  const paymentDetailsSection = preparePaymentDetailsSection({ config, paymentDetail, acceptedOfferIds });
+  const paymentDetailsSection = preparePaymentDetailsSection({ config, paymentDetail });
 
   const payload = {
     THEME: successTheme,
