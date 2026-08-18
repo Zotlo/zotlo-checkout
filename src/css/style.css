@@ -685,7 +685,7 @@
   font-weight: 500;
   line-height: 1.4;
   justify-content: center;
-  color: #1A1822;
+  color: var(--zc-offer-info-color);
   background-color: var(--zc-offer-info-backgroundColor);
 }
 

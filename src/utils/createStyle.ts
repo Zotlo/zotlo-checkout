@@ -98,7 +98,7 @@ export function createStyle(config: FormConfig) {
   --zc-success-button-hover-borderColor: ${success?.button?.hover?.borderColor || '#301BA3'};
   --zc-success-button-hover-backgroundColor: ${success?.button?.hover?.backgroundColor || '#301BA3'};
 
-  --zc-offer-info-color: ${acceptButton?.backgroundColor || '#765EF5'};
+  --zc-offer-info-color: ${design?.darkMode ? '#FFFFFF' : '#1A1822'};
   --zc-offer-info-backgroundColor: ${addAlphaToHex(acceptButton?.backgroundColor || '#765EF5', 15)};
 
   --zc-offer-title-color: ${offerSettings?.title?.color || '#1A1822'};
