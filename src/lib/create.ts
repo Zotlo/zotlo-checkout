@@ -8,6 +8,7 @@ import selectItemElement from '../html/select-item.html?raw'
 import paymentSuccessElement from '../html/payment-success.html?raw'
 import postPaymentOffersElement from '../html/post-payment-offers.html?raw'
 import paymentDetailsElement from '../html/payment-details.html?raw'
+import additionalPurchaseDetailsElement from '../html/additional-purchase-details.html?raw'
 import paymentHeaderElement from '../html/payment-header.html?raw'
 import priceTableElement from '../html/price-table.html?raw'
 import modalElement from '../html/modal.html?raw'
@@ -481,6 +482,82 @@ export function prepareButtonSuccessLink(params: {
   }
 }
 
+/**
+ * One detail block per accepted post payment offer, since each one is billed as
+ * its own purchase. Returns an empty string when there is nothing extra to show.
+ */
+export function prepareAdditionalPurchaseDetails(params: {
+  config: FormConfig;
+  paymentDetail: PaymentDetail;
+}) {
+  const { config, paymentDetail } = params;
+  const { $t } = useI18n(config.general.localization);
+  const productName = paymentDetail?.application?.name || '-';
+  // Get card_brand_id from main transaction
+  const { card_brand_id = '' } = paymentDetail?.transaction?.[0] || {};
+  // A declined offer is used as well, only an accepted one carries a transaction
+  const purchases = (paymentDetail?.offers || [])
+    .filter((offer) => !!offer?.used && !!offer?.transaction?.[0]?.price);
+
+  return purchases.map((offer, index) => {
+    const {
+      provider_key_translation: paymentMethod = '-',
+      provider_key: paymentProviderKey = '',
+      package_id: packageId = '',
+      currency = '',
+      price = '',
+    } = offer.transaction![0];
+
+    const isCreditCardPayment = paymentProviderKey === PaymentProvider.CREDIT_CARD;
+    const title = $t('paymentSuccess.paymentDetails.additionalPurchaseTitle');
+
+    return template(additionalPurchaseDetailsElement, {
+      // The second and following purchases are numbered
+      TITLE: index === 0 ? title : `${title} - ${index + 1}`,
+      PRODUCT_TITLE: $t('common.product'),
+      PRODUCT_TEXT: productName,
+      PLAN_TITLE: $t('common.plan'),
+      PLAN_TEXT: `${$t('common.oneTimePayment')} (${packageId || offer.packageId})`,
+      PAYMENT_METHOD_TITLE: $t('common.paymentMethod'),
+      PAYMENT_METHOD_TEXT: paymentMethod,
+      CREDIT_CARD_ICON_IMG: isCreditCardPayment ? getCardInfoFromCardNumber(card_brand_id)?.cardIconImg : '',
+      TOTAL_TITLE: $t('common.total'),
+      TOTAL_PRICE: `${price} ${currency}`,
+    });
+  }).join('');
+}
+
+function preparePaymentDetailsFooter(params: {
+  config: FormConfig;
+  paymentDetail: PaymentDetail;
+  hasAdditionalPurchases?: boolean;
+}) {
+  const { config, paymentDetail, hasAdditionalPurchases = false } = params;
+  const { $t } = useI18n(config.general.localization);
+
+  const appName = config.general.appName || paymentDetail?.application?.name || '';
+  const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
+  const zotloSupportUrl = "mailto:support@zotlo.com";
+  const zotloAccountUrl = "https://account.zotlo.com" + (paymentDetail?.zcSource ? `?zc_source=${paymentDetail.zcSource}` : '');
+
+  const templateParams = {
+    CUSTOMER_SUPPORT_LINK: `<a href="${customerSupportUrl}" target="_blank">${appName} ${$t('common.support')}</a>`,
+    ACCOUNT_LINK: `<a href="${zotloAccountUrl}" target="_blank">${$t('common.here')}</a>`,
+    ZOTLO_SUPPORT_LINK: `<a href="${zotloSupportUrl}" target="_blank" rel="noopener noreferrer">${$t('footer.legals.zotlosSupportTeam')}</a>`,
+  };
+
+  if (config?.cardUpdate) {
+    return template($t('paymentSuccess.paymentDetails.footerCard'), templateParams);
+  } else {
+    const supportInfo = template($t('paymentSuccess.paymentDetails.footerSupportInfo'), templateParams);
+    const purchaseInfoKey = hasAdditionalPurchases ? 'footerPurchasesInfo' : 'footerPurchaseInfo';
+    const purchaseInfo = template($t(`paymentSuccess.paymentDetails.${purchaseInfoKey}`), templateParams);
+    const manageInfo = template($t('paymentSuccess.paymentDetails.footerManageInfo'), templateParams);
+
+    return `<div>${supportInfo}</div><div>${purchaseInfo} ${manageInfo}</div>`;
+  } 
+};
+
 export function preparePaymentDetailsSection(params: {
   config: FormConfig;
   paymentDetail: PaymentDetail;
@@ -504,8 +581,6 @@ export function preparePaymentDetailsSection(params: {
   const isPanelEditMode = import.meta.env.VITE_CONSOLE;
   const planInfoText = isPanelEditMode ? '-' : getPlanInfoText(config);
   const isOneTimePayment = config.packageInfo?.condition === PackageCondition.ONETIME_PAYMENT;
-  const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
-  const zotloAccountUrl = "https://account.zotlo.com" + (paymentDetail?.zcSource ? `?zc_source=${paymentDetail.zcSource}` : '');
 
   const quantityInfo = quantity > 1 ? template($t('form.quantity.includesNumberUnits'), { QUANTITY: quantity }) : '';
   const totalPrice = price ? `${price} ${currency}` : '-';
@@ -517,15 +592,6 @@ export function preparePaymentDetailsSection(params: {
     isTrialTransaction: status === 'trial'
   });
 
-  const paymentDetailsFooterElement = template(
-    config.cardUpdate
-      ? $t('paymentSuccess.paymentDetails.footerCard')
-      : $t('paymentSuccess.paymentDetails.footer')
-    , {
-    CUSTOMER_SUPPORT_LINK: `<a href="${customerSupportUrl}" target="_blank">${$t('common.customerService')}</a>`,
-    ACCOUNT_LINK: `<a href="${zotloAccountUrl}" target="_blank">${$t('common.here')}</a>`
-  });
-
   const footerInfo = prepareFooterInfo({ config });
   const footerCommon = createFooter({
     ...footerInfo,
@@ -533,6 +599,9 @@ export function preparePaymentDetailsSection(params: {
     PAYMENT_AGGREGATOR: '',
     ZOTLO_ADDRESS_TEXT: '',
   }) || '';
+
+  const additionalPurchaseDetails = prepareAdditionalPurchaseDetails({ config, paymentDetail });
+  const paymentDetailsFooter = preparePaymentDetailsFooter({ config, paymentDetail, hasAdditionalPurchases: !!additionalPurchaseDetails });
 
   return template(paymentDetailsElement, {
     FORM_TYPE: config.cardUpdate ? 'CARD' : 'CHECKOUT',
@@ -549,12 +618,48 @@ export function preparePaymentDetailsSection(params: {
     DISCOUNT_TITLE: $t('common.discount'),
     DISCOUNT_TEXT: discountText,
     DISCOUNT_OLD_PRICE: oldPrice,
+    ADDITIONAL_PURCHASE_DETAILS: additionalPurchaseDetails,
     TOTAL_TITLE: $t('common.total'),
     TOTAL_PRICE: totalPrice,
     QUANTITY_INFO: quantityInfo,
-    FOOTER: paymentDetailsFooterElement,
+    FOOTER: paymentDetailsFooter,
     FOOTER_COMMON: footerCommon,
   });
+}
+
+/**
+ * Replaces the checkout body with a post payment screen, keeping the header.
+ * A previously mounted screen (offers -> success) is removed rather than hidden,
+ * so its event listeners cannot fire after the transition.
+ */
+export function mountCheckoutScreen(htmlText: string, name: 'offers' | 'success') {
+  const container = ZOTLO_GLOBAL.container;
+  const form = container?.querySelector('.zotlo-checkout') as HTMLElement | null;
+
+  if (!container || !form) return null;
+
+  for (const screen of form.querySelectorAll(':scope > [data-screen]')) {
+    screen.remove();
+  }
+
+  const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, 'text/html');
+  const node = doc.body.firstElementChild as HTMLElement | null;
+
+  if (!node) return null;
+
+  for (const item of itemsExceptHeader) {
+    (item as HTMLDivElement).style.display = 'none';
+  }
+
+  node.setAttribute('data-screen', name);
+  form.appendChild(node);
+
+  // Remove close button
+  form.querySelector('[data-close]')?.remove();
+
+  return node;
 }
 
 export function createPaymentSuccessForm(params: {
@@ -569,8 +674,6 @@ export function createPaymentSuccessForm(params: {
   const WAIT_TIME = config.success.waitTime; // in seconds
   const delay = WAIT_TIME > MAX_WAIT_TIME ? MAX_WAIT_TIME : (WAIT_TIME < MIN_WAIT_TIME ? MIN_WAIT_TIME : WAIT_TIME);
   const successTheme = config.success.theme;
-  const container = ZOTLO_GLOBAL.container;
-  const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
   const { $t } = useI18n(config.general.localization);
   const buttonText = successTheme === SuccessTheme.APP2WEB
     ? (config?.success?.button?.text || 0)
@@ -622,11 +725,11 @@ export function createPaymentSuccessForm(params: {
 
   const htmlText = template(paymentSuccessElement, payload);
 
-  function startTimer(timeInSeconds: number) {
+  function startTimer(screen: HTMLElement, timeInSeconds: number) {
     let seconds = timeInSeconds;
     const timer = setInterval(() => {
       seconds--;
-      const successMessage = form.querySelector('[data-timer]') as HTMLDivElement;
+      const successMessage = screen.querySelector('[data-timer]') as HTMLDivElement;
       if (successMessage) {
         successMessage.innerHTML = $t('paymentSuccess.timer', { second: seconds })
       }
@@ -637,26 +740,17 @@ export function createPaymentSuccessForm(params: {
     }, 1000);
   }
 
-  if (container) {
-    const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlText, 'text/html');
+  const screen = mountCheckoutScreen(htmlText, 'success');
 
-    for (const item of itemsExceptHeader) {
-      (item as HTMLDivElement).style.display = 'none';
-    }
+  if (!screen) return false;
 
-    form?.appendChild(doc.body.firstChild as HTMLElement);
-
-    // Remove close button
-    form.querySelector('[data-close]')?.remove();
-
-    if (canAutoRedirect) {
-      if (import.meta.env.VITE_SDK_API_URL) {
-        startTimer(delay);
-      }
+  if (canAutoRedirect) {
+    if (import.meta.env.VITE_SDK_API_URL) {
+      startTimer(screen, delay);
     }
   }
+
+  return true;
 }
 
 export function createPostPaymentOffersPage(params: {
@@ -667,20 +761,23 @@ export function createPostPaymentOffersPage(params: {
 }) {
   const { config, paymentDetail, offerIndex = 0 } = params;
   const offers = config?.postPaymentOffers;
+  /** Offer settings and payment detail offers are paired by position */
   const offerSettings = offers?.offersSettings?.[offerIndex];
 
   if (!offers?.show || !offerSettings) return false;
 
-  const container = ZOTLO_GLOBAL.container;
-  const form = container?.querySelector('.zotlo-checkout') as HTMLDivElement;
+  const isPanelEditMode = import.meta.env.VITE_CONSOLE;
 
-  if (!container || !form) return false;
+  /** Price of the offered package, served within the payment detail */
+  const offerDetail = paymentDetail?.offers?.[offerIndex];
+
+  // Outside the editor an absent offer would render every price as "0.00",
+  // while the console preview renders whatever its mocked payment detail holds
+  if (!offerDetail && !isPanelEditMode) return false;
 
   const { $t } = useI18n(config.general.localization);
   const language = config.general.language || 'en';
 
-  /** Price of the offered package, served within the payment detail */
-  const offerDetail = paymentDetail?.offers?.[offerIndex];
   const offerPrice = Number(offerDetail?.selectedPrice?.price ?? offerDetail?.price) || 0;
   const currency = offerDetail?.selectedPrice?.currency || offerDetail?.priceCurrency || config.general.currency || 'USD';
   /** The reference price is the offer price raised by the configured percent */
@@ -733,18 +830,7 @@ export function createPostPaymentOffersPage(params: {
     DESCRIPTION_TEXT: descriptionText,
   });
 
-  const itemsExceptHeader = form.querySelectorAll(':scope > div:not(.zotlo-checkout__header)');
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlText, 'text/html');
-
-  for (const item of itemsExceptHeader) {
-    (item as HTMLDivElement).style.display = 'none';
-  }
-
-  form?.appendChild(doc.body.firstChild as HTMLElement);
-
-  // Remove close button
-  form.querySelector('[data-close]')?.remove();
+  return !!mountCheckoutScreen(htmlText, 'offers');
 }
 
 export function createAllCardsModal(params: {

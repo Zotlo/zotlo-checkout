@@ -1,5 +1,5 @@
 import Countries from '../countries.json';
-import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, type FormSetting, PackageType, PackageCondition } from '../lib/types';
+import { DesignTheme, type FormConfig, type IZotloCardParams, type IZotloCheckoutParams, PaymentProvider, PaymentResultStatus, SavedCardsGroupName, type FooterInfo, type FormSetting, type PaymentDetail, PackageType, PackageCondition } from '../lib/types';
 import { createAllCardsModal, createPriceTable, createSavedCardItem, createButton } from '../lib/create';
 import { getPackageTemplateParams } from './getPackageInfo';
 import { getCDNUrl } from './getCDNUrl';
@@ -133,6 +133,33 @@ export function isDLocalEnabled(config: FormConfig) {
 // PIX is available (PIX-only behaviour).
 export function isCpfCnpjAvailable(config: FormConfig) {
   return isDLocalEnabled(config) || isPixAvailable(config);
+}
+
+/**
+ * The offer the post payment offers page renders and the user can accept, with
+ * its position within the payment detail. Single source of truth so the rendered
+ * price, the applied settings and the posted offerId cannot diverge.
+ */
+export function getActivePostPaymentOffer(params: {
+  config: FormConfig;
+  paymentDetail?: PaymentDetail | null;
+}) {
+  const { config, paymentDetail } = params;
+
+  // handleUrlQuery is shared with the card update flow, which never fetches a payment detail
+  if (config?.cardUpdate) return null;
+  if (!config?.postPaymentOffers?.show) return null;
+
+  const offers = paymentDetail?.offers || [];
+  // Already used offers must not be re-presented when the success URL is reopened
+  const index = offers.findIndex((offer, offerIndex) => {
+    return !offer?.used
+      && Number.isFinite(Number(offer?.offerId))
+      // An offer without settings could not be rendered, so it must not keep the session alive either
+      && !!config.postPaymentOffers?.offersSettings?.[offerIndex];
+  });
+
+  return index === -1 ? null : { offer: offers[index], index };
 }
 
 export function generateTabButtons(config: FormConfig, paymentMethods: FormSetting['paymentMethodSetting']) {
