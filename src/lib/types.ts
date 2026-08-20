@@ -406,6 +406,7 @@ export type FormPaymentData = {
   };
   showSavedCards: boolean;
   savedCardList?: SavedCreditCardData[];
+  dLocal?: boolean;
 }
 
 export type PackageInfoType = {

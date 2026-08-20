@@ -1,4 +1,4 @@
-import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
+import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, isDLocalEnabled, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
 import { getCardMask } from "./getCardMask";
 import { type FormConfig, PaymentProvider } from "../lib/types";
 import { FORM_ITEMS } from "../lib/fields";
@@ -271,9 +271,11 @@ export function validateForm(params: {
   for (const validation of Object.values(validations)) {
     const name = validation.name;
 
-    // CPF/CNPJ is only required when paying with PIX, regardless of theme/tab.
+    // When dLocal is enabled CPF/CNPJ is required for every payment method;
+    // otherwise it is only required when paying with PIX, regardless of theme/tab.
     if (name === cpfCnpjField) {
-      const result = validation.validate(providerKey !== PaymentProvider.PIX);
+      const skipCpfCnpj = isDLocalEnabled(config) ? false : providerKey !== PaymentProvider.PIX;
+      const result = validation.validate(skipCpfCnpj);
       if (!result.isValid) errors.push({ name, result });
       continue;
     }

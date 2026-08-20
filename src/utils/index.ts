@@ -123,6 +123,16 @@ export function isPixAvailable(config: FormConfig) {
   return preparePaymentMethods(config).some((method) => method.providerKey === PaymentProvider.PIX);
 }
 
+export function isDLocalEnabled(config: FormConfig) {
+  return !!config?.paymentData?.dLocal;
+}
+
+// The CPF/CNPJ field is rendered when dLocal is enabled (all methods) or when
+// PIX is available (PIX-only behaviour).
+export function isCpfCnpjAvailable(config: FormConfig) {
+  return isDLocalEnabled(config) || isPixAvailable(config);
+}
+
 export function generateTabButtons(config: FormConfig, paymentMethods: FormSetting['paymentMethodSetting']) {
     const { $t } = useI18n(config?.general?.localization);
     const theme = {
