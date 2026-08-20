@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.20.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.19.0...v1.20.0)
+
+### 🚀 Enhancements
+
+- **Z3-6525:** Show rety-to-load action button if user user not found ([3e12718](https://github.com/Zotlo/zotlo-checkout/commit/3e12718))
+- **Z3-6525:** Add a new code control for retry-to-load action ([3b24643](https://github.com/Zotlo/zotlo-checkout/commit/3b24643))
+- **Z3-6536:** Send clickid to server for improve capi performance ([51e1a4a](https://github.com/Zotlo/zotlo-checkout/commit/51e1a4a))
+- **Z3-6536:** Send fbclid directly without any format ([630faa4](https://github.com/Zotlo/zotlo-checkout/commit/630faa4))
+- **Z3-6632:** Add luhn algorithm for card validation ([06c427f](https://github.com/Zotlo/zotlo-checkout/commit/06c427f))
+
+### 🏡 Chore
+
+- **Z3-6536:** Ignore capi action by env ([008a3d6](https://github.com/Zotlo/zotlo-checkout/commit/008a3d6))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.19.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.18.6...v1.19.0)

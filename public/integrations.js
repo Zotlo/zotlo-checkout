@@ -414,31 +414,6 @@
       });
     },
 
-    /** 
-     * @param {string} siteUrl
-     * @param {Record<string, string>} [ttParams] - Optional TikTok parameters, if not provided, it will be retrieved from cookies and URL
-    */
-    prepareCAPIParams(siteUrl, ttParams) {
-      ttParams = ttParams || {
-        [COOKIE.TTCLICK_ID]: getCookie(COOKIE.TTCLICK_ID) || '',
-        [COOKIE.TTBROWSER_ID]: getCookie(COOKIE.TTBROWSER_ID) || ''
-      };
-
-      const location = new URL(`${siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`}`);
-      const { ttclid } = parseQueryString(location?.search || '');
-
-      if (!ttParams[COOKIE.TTCLICK_ID] && ttclid) {
-        // const subdomainIndex = 1;
-        /* let subdomainIndex = location.host.split('.').length - 1;
-        if (subdomainIndex > 2) subdomainIndex = 2;
-        if (subdomainIndex < 0) subdomainIndex = 0; */
-    
-        ttParams[COOKIE.TTCLICK_ID] = ttclid || '';
-      }
-
-      return ttParams;
-    },
-
     /**
      * 
      * @param {Object} params 
@@ -455,31 +430,6 @@
         value: value || '',
         path: pageSlug
       }
-    },
-
-    sendCAPIInfo() {
-      const win = globalThis;
-
-      setTimeout(() => {
-        const params = Tiktok.prepareCAPIParams(window.location.href);
-        const hasAnyValue = !!Object.values(params).filter(Boolean).length;
-
-        if (hasAnyValue) {
-          const myEvent = new CustomEvent('sendCAPIInfo', {
-            detail: {
-              integration: 'TT',
-              params: {
-                ttclid: params[COOKIE.TTCLICK_ID],
-                ttp: params[COOKIE.TTBROWSER_ID]
-              }
-            },
-            bubbles: true, 
-            cancelable: true
-          });
-
-          document.dispatchEvent(myEvent);
-        }
-      }, 1000);
     },
 
     /**
@@ -511,8 +461,6 @@
         return headScripts;
       }
 
-      document.addEventListener('tiktokLoad', Tiktok.sendCAPIInfo.bind(this), { once: true });
-
       if (window.document) {
         (function (w, d, t, id, sid, ldtmp) {
           w.TiktokAnalyticsObject=t;
@@ -525,7 +473,6 @@
             var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},
             ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,
             o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a?.parentNode?.insertBefore(o,a);
-            document.dispatchEvent(new CustomEvent('tiktokLoad', {detail: {},bubbles: true, cancelable: true}));
             w.loadedIntegrations=w.loadedIntegrations||[];
             w.loadedIntegrations.push('Tiktok');
           };
@@ -634,27 +581,6 @@
       });
     },
   
-    prepareCAPIParams(siteUrl, fbParams) {
-      fbParams = fbParams || {
-        [COOKIE.FBCLICK_ID]: getCookie(COOKIE.FBCLICK_ID) || '',
-        [COOKIE.FBBROWSER_ID]: getCookie(COOKIE.FBBROWSER_ID) || ''
-      };
-  
-      const location = new URL(`${siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`}`);
-      const { fbclid } = parseQueryString(location?.search || '');
-  
-      if (!fbParams[COOKIE.FBCLICK_ID] && fbclid) {
-        const subdomainIndex = 1;
-        /* let subdomainIndex = location.host.split('.').length - 1;
-        if (subdomainIndex > 2) subdomainIndex = 2;
-        if (subdomainIndex < 0) subdomainIndex = 0; */
-    
-        fbParams[COOKIE.FBCLICK_ID] = `fb.${subdomainIndex}.${Date.now()}.${fbclid || ''}`;
-      }
-  
-      return fbParams;
-    },
-  
     /**
      * @param {Object} params
      * @param {string} [params.siteUrl]
@@ -668,31 +594,6 @@
         value: params.value || '',
         path: params.pageSlug
       }
-    },
-  
-    sendCAPIInfo() {
-      const win = window;
-  
-      setTimeout(function timeoutSendCAPIInfo() {
-        const params = Facebook.prepareCAPIParams(window.location.href);
-        const hasAnyValue = !!Object.values(params).filter(Boolean).length;
-  
-        if (hasAnyValue) {
-          const myEvent = new CustomEvent('sendCAPIInfo', {
-            detail: {
-              integration: 'FB',
-              params: {
-                fbp: params[COOKIE.FBBROWSER_ID],
-                fbclid: params[COOKIE.FBCLICK_ID]
-              }
-            },
-            bubbles: true, 
-            cancelable: true
-          });
-
-          document.dispatchEvent(myEvent);
-        }
-      }, 1000);
     },
   
     /**
@@ -724,7 +625,6 @@
       }
 
       const win = globalThis;
-      document.addEventListener('fbLoad', Facebook.sendCAPIInfo.bind(this), { once: true });
   
       if (window.document) {
         (function(f, b, e, v) {
@@ -745,7 +645,6 @@
           t.src=v;
           t.onload=function() {
             const win = window;
-            document.dispatchEvent(new CustomEvent('fbLoad', {detail: {},bubbles: true,cancelable: true}));
             if (win) {
               win.loadedIntegrations=win.loadedIntegrations||[];
               win.loadedIntegrations.push('FB');

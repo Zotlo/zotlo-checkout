@@ -527,6 +527,21 @@
   font-weight: 600;
 }
 
+.zotlo-checkout__noMethod__action {
+  border: none;
+  border-radius: 6px;
+  background-color: #4329CC;
+  color: white;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.zotlo-checkout__noMethod__action:hover {
+  background-color: #3119a7;
+}
+
 .zotlo-checkout .zotlo-checkout__payment-provider {
   min-height: 48px;
 }

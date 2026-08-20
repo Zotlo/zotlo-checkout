@@ -25,7 +25,9 @@ import {
   shouldSkipBillingFields,
   toggleCpfCnpjVisibility,
   isPixAvailable,
-  getUserDataForIntegration
+  isDLocalEnabled,
+  getUserDataForIntegration,
+  sendIntegrationCAPIInfo
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -38,6 +40,8 @@ import { createPaymentSuccessForm } from "./create";
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
 import { getFormValues, loadSelectbox } from "./common";
+import { deleteSession } from "../utils/session";
+import { COOKIE } from "../utils/cookie";
 import { ErrorCodes } from "../utils/config/types";
 
 async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotloCheckoutReturn> {
@@ -188,7 +192,26 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   }
 
   function handleTabView() {
-    if (!hasAnyConfig()) return;
+    if (!hasAnyConfig()) {
+      const showRetryButton = ZOTLO_GLOBAL.formElement?.querySelector('[data-retry-action]');
+      if (!showRetryButton) return;
+
+      async function retryAction() {
+        ErrorHandler.response = null;
+        setFormLoading(true);
+        deleteSession({
+          useCookie: !!params.useCookie,
+          key: COOKIE.UUID
+        });
+        await reloadSession();
+        await refresh();
+
+        showRetryButton?.removeEventListener('click', retryAction);
+      }
+
+      showRetryButton?.addEventListener('click', retryAction);
+      return;
+    }
 
     const paymentMethods = preparePaymentMethods(config);
 
@@ -291,7 +314,15 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
             message = '';
           }
 
-          form = generateEmptyPage({ config, title, message });
+          form = generateEmptyPage({
+            config,
+            title,
+            message,
+            showRetryButton: [
+              ErrorCodes.USER_NOT_FOUND,
+              ErrorCodes.USER_NOT_EXIST
+            ].includes(ErrorHandler.response?.meta?.errorCode!)
+          });
         }
       }
 
@@ -446,25 +477,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       ...getEventData(),
       ...tiktokContext
     });
-  }
-
-  async function sendCAPIInfo(e: any) {
-    const data = e?.detail || {}
-    const params = data?.params || {};
-    const payload: Record<string, string> = {}
-
-    if (data.integration === 'FB' && params.fbclid) {
-      payload.fbclid = params.fbclid || '';
-    }
-
-    if (data.integration === 'TT' && params.ttclid) {
-      payload.ttclid = params.ttclid || '';
-    }
-
-    if (Object.keys(payload).length === 0) return;
-
-    // Bind to BE
-    CheckoutAPI.post('/clickId', payload);
   }
 
   function initFormInputs() {
@@ -636,15 +648,19 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       input.addEventListener('change', onFormInputChange, { once: true });
     });
     document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
-    document.addEventListener('sendCAPIInfo', sendCAPIInfo);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
 
-    // CPF/CNPJ is only relevant for PIX. In tabbed layouts show it while the
-    // PIX tab is active; in tab-less layouts show it whenever PIX is available.
+    // When dLocal is enabled the CPF/CNPJ field applies to every payment method,
+    // so it stays visible regardless of the active tab. Otherwise it is only
+    // relevant for PIX: in tabbed layouts show it while the PIX tab is active; in
+    // tab-less layouts show it whenever PIX is available.
     const activeTab = container
       ?.querySelector('button[data-tab][data-active="true"]')
       ?.getAttribute('data-tab');
-    toggleCpfCnpjVisibility(activeTab ? activeTab === PaymentProvider.PIX : isPixAvailable(config));
+
+    const isCpfCnpjVisible = isDLocalEnabled(config)
+      || (activeTab ? activeTab === PaymentProvider.PIX : isPixAvailable(config));
+    toggleCpfCnpjVisibility(isCpfCnpjVisible);
   }
 
   function destroyFormInputs() {
@@ -687,7 +703,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     }
 
     document.removeEventListener('cookieConsent', onCookieConsentGranted);
-    document.removeEventListener('sendCAPIInfo', sendCAPIInfo);
 
     validatorInstance?.clearRules();
     destroySavedCardsEvents?.();
@@ -700,6 +715,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   function init() {
     handleTabView();
     const { $t } = useI18n(config.general.localization);
+
+    sendIntegrationCAPIInfo();
 
     params.events?.onLoad?.({
       packageId: params.packageId,

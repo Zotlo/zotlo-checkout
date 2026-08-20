@@ -9,6 +9,7 @@ export function generateEmptyPage(params: {
   config: FormConfig,
   title?: string,
   message?: string,
+  showRetryButton?: boolean
 }) {
   const { config } = params;
   const { $t } = useI18n(config.general?.localization);
@@ -18,6 +19,7 @@ export function generateEmptyPage(params: {
     DIR: dir,
     TITLE: params.title || $t('empty.noMethod.title'),
     DESC: params.message || $t('empty.noMethod.desc'),
+    SHOW_RETRY_BUTTON: params.showRetryButton
   });
 }
 
