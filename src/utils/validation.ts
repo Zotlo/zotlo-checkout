@@ -25,6 +25,7 @@ const ValidationMessages = {
     email: 'Invalid email format',
     expirationDate: 'Expiration Date is not valid.',
     card: 'Invalid card format',
+    luhn: 'Invalid card number',
     length: 'This field must be 0:{length} long',
     min: 'Minimum 0:{min} characters required',
     phone: 'Invalid phone number format',
@@ -127,6 +128,32 @@ export const ValidationRules = {
     const filteredValue = value.replace(/\s/g, ''); // remove spaces
     if (filteredValue.length === card.length) return true;
     return getValidationMessage('card');
+  },
+  luhn(value: string) {
+    // Luhn (mod 10) checksum: doubling every second digit from the right, reducing
+    // results over 9 by 9 and expecting the total to be a multiple of 10.
+    const digits = `${value ?? ''}`.replace(/\D/g, '');
+    if (!digits) return true;
+
+    let sum = 0;
+    let double = false;
+
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let digit = Number(digits[i]);
+
+      if (double) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+
+      sum += digit;
+      double = !double;
+    }
+
+    const isValid = sum % 10 === 0;
+    if (isValid) return true;
+
+    return getValidationMessage('luhn');
   },
   length(value: string, params: any[]) {
     const length = params[0];
