@@ -26,7 +26,8 @@ import {
   toggleCpfCnpjVisibility,
   isPixAvailable,
   isDLocalEnabled,
-  getUserDataForIntegration
+  getUserDataForIntegration,
+  sendIntegrationCAPIInfo
 } from "../utils";
 import { ErrorHandler } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -478,25 +479,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     });
   }
 
-  async function sendCAPIInfo(e: any) {
-    const data = e?.detail || {}
-    const params = data?.params || {};
-    const payload: Record<string, string> = {}
-
-    if (data.integration === 'FB' && params.fbclid) {
-      payload.fbclid = params.fbclid || '';
-    }
-
-    if (data.integration === 'TT' && params.ttclid) {
-      payload.ttclid = params.ttclid || '';
-    }
-
-    if (Object.keys(payload).length === 0) return;
-
-    // Bind to BE
-    CheckoutAPI.post('/clickId', payload);
-  }
-
   function initFormInputs() {
     const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
     const container = ZOTLO_GLOBAL.container;
@@ -666,7 +648,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       input.addEventListener('change', onFormInputChange, { once: true });
     });
     document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
-    document.addEventListener('sendCAPIInfo', sendCAPIInfo);
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
 
     // When dLocal is enabled the CPF/CNPJ field applies to every payment method,
@@ -722,7 +703,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     }
 
     document.removeEventListener('cookieConsent', onCookieConsentGranted);
-    document.removeEventListener('sendCAPIInfo', sendCAPIInfo);
 
     validatorInstance?.clearRules();
     destroySavedCardsEvents?.();
@@ -735,6 +715,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   function init() {
     handleTabView();
     const { $t } = useI18n(config.general.localization);
+
+    sendIntegrationCAPIInfo();
 
     params.events?.onLoad?.({
       packageId: params.packageId,
