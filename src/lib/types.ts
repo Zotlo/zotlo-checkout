@@ -118,7 +118,16 @@ export interface IZotloCheckoutParams {
   events?: IZotloCheckoutEvents;
 
   /** Send custom parameters to webhooks */
-  customParameters?: Record<string, any>;
+  customParameters?: Record<string, any> & {
+    /** Associate your UTM data with the subscriber by passing a utmData object (optional)  */
+    utmData?: {
+      utmCampaign?: string;
+      utmMedium?: string;
+      utmSource?: string;
+      utmTerm?: string;
+      utmContent?: string;
+    }
+  };
 
   /** Show saved credit cards if the user has any saved cards. Default is `false`. (To use this feature contact with support, a permission must be granted.) */
   showSavedCards?: boolean;
