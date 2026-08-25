@@ -500,7 +500,7 @@ export function preparePaymentDetailsSection(params: {
   const planInfoText = isPanelEditMode ? '-' : getPlanInfoText(config);
   const isOneTimePayment = config.packageInfo?.condition === PackageCondition.ONETIME_PAYMENT;
   const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
-  const zotloAccountUrl = "https://account.zotlo.com" + (paymentDetail?.zcSource ? `?zc_source=${paymentDetail.zcSource}` : '');
+  const zotloAccountUrl = "https://account.zotlo.com" + (paymentDetail?.zcSource ? `/account?zc_source=${paymentDetail.zcSource}` : '');
 
   const quantityInfo = quantity > 1 ? template($t('form.quantity.includesNumberUnits'), { QUANTITY: quantity }) : '';
   const totalPrice = price ? `${price} ${currency}` : '-';
