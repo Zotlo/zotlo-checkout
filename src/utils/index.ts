@@ -146,7 +146,7 @@ export function generateTabButtons(config: FormConfig, paymentMethods: FormSetti
     }
 
     const tabButtons = paymentMethods.reduce((acc, item, index) => {
-      const postfix = theme[item.providerKey][config.design.darkMode ? 'dark' : 'light'];
+      const postfix = theme[item.providerKey]?.[config.design.darkMode ? 'dark' : 'light'];
       const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
 
       return acc + createButton({
