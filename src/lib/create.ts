@@ -538,7 +538,7 @@ function preparePaymentDetailsFooter(params: {
   const appName = config.general.appName || paymentDetail?.application?.name || '';
   const customerSupportUrl = paymentDetail?.application?.links?.customerSupportUrl || '';
   const zotloSupportUrl = "mailto:support@zotlo.com";
-  const zotloAccountUrl = "https://account.zotlo.com" + (paymentDetail?.zcSource ? `?zc_source=${paymentDetail.zcSource}` : '');
+  const zotloAccountUrl = "https://account.zotlo.com" + (paymentDetail?.zcSource ? `/account?zc_source=${paymentDetail.zcSource}` : '');
 
   const templateParams = {
     CUSTOMER_SUPPORT_LINK: `<a href="${customerSupportUrl}" target="_blank">${appName} ${$t('common.support')}</a>`,
