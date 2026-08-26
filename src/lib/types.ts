@@ -6,6 +6,7 @@ export enum PaymentProvider {
   APPLE_PAY = 'applePay',
   CREDIT_CARD = 'creditCard',
   PIX = 'pix',
+  ALIPAY = 'alipay',
 };
 
 export enum PaymentResultStatus {
@@ -443,6 +444,7 @@ export type FormGeneral = {
   isLive?: boolean;
   showPaypal: boolean;
   showPix?: boolean;
+  showAliPay?: boolean;
   language: string;
   countryCode: string;
   currency: string;

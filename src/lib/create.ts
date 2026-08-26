@@ -424,6 +424,7 @@ export function createProviderButton(params: {
     [PaymentProvider.GOOGLE_PAY]: { dark: '_black', light: '' },
     [PaymentProvider.APPLE_PAY]: { dark: '_black', light: '' },
     [PaymentProvider.PIX]: { dark: '', light: '_white' },
+    [PaymentProvider.ALIPAY]: { dark: '_black', light: '_white' }
   };
   const postfix = (postfixByProvider[provider] ?? { dark: '', light: '' })[config.design.darkMode ? 'dark' : 'light'];
   const buttonsRenderedBySdks = [PaymentProvider.GOOGLE_PAY];

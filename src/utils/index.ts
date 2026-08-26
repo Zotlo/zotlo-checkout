@@ -111,12 +111,14 @@ export function preparePaymentMethods(config: FormConfig) {
     const isPanelEditMode = import.meta.env.VITE_CONSOLE;
     const isAvailable = isPanelEditMode ? true : !!config?.paymentData?.providers?.[item?.providerKey];
     const isPixAvailable = isPanelEditMode ? !!config.general?.showPix : !!config?.paymentData?.providers?.[PaymentProvider.PIX];
+    const isAlipayAvailable = isPanelEditMode ? !!config.general?.showAliPay : !!config?.paymentData?.providers?.[PaymentProvider.ALIPAY];
     const isApplePayCanMakePayments = isPanelEditMode ? true : config?.providerConfigs?.applePay?.canMakePayments;
     const isGooglePayReadyToPay = isPanelEditMode ? true : config?.providerConfigs?.googlePay?.isReadyToPay;
     if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
     if (item.providerKey === PaymentProvider.GOOGLE_PAY) return isGooglePayReadyToPay && isAvailable;
     if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
     if (item.providerKey === PaymentProvider.PIX) return isPixAvailable;
+    if (item.providerKey === PaymentProvider.ALIPAY) return isAlipayAvailable;
     return isAvailable;
   }) || [];
 }
@@ -142,7 +144,8 @@ export function generateTabButtons(config: FormConfig, paymentMethods: FormSetti
       [PaymentProvider.PAYPAL]: { dark: '_disabled.png', light: '.png' },
       [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
       [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' },
-      [PaymentProvider.PIX]: { dark: '_white.svg', light: '.svg' }
+      [PaymentProvider.PIX]: { dark: '_white.svg', light: '.svg' },
+      [PaymentProvider.ALIPAY]: { dark: '_white.svg', light: '_black.svg' }
     }
 
     const tabButtons = paymentMethods.reduce((acc, item, index) => {
