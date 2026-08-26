@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.20.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.20.0...v1.20.1)
+
+### 🚀 Enhancements
+
+- **Z3-6658:** update README for utmData under customParameters ([57bff8f](https://github.com/Zotlo/zotlo-checkout/commit/57bff8f))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.20.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.19.0...v1.20.0)
