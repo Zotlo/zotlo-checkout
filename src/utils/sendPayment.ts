@@ -34,22 +34,17 @@ function preparePayload(payload: {
   const { returnUrl } = params || {};
   const showSavedCards = config.general.showSavedCards;
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
-  let data = {};
+  const isWalletProvider = providerKey === PaymentProvider.APPLE_PAY || providerKey === PaymentProvider.GOOGLE_PAY;
 
-  switch (providerKey) {
-    case PaymentProvider.CREDIT_CARD:
-      data = {
-        providerKey,
-        acceptPolicy,
-      };
-      if (cardId) {
-        data = {
-          ...data,
-          cardId,
-        }
-        break;
-      }
-      data = {
+  let data: Record<string, any> = {
+    providerKey,
+    acceptPolicy,
+  };
+
+  if (providerKey === PaymentProvider.CREDIT_CARD) {
+    data = cardId
+      ? { ...data, cardId }
+      : {
         ...data,
         creditCardDetails: {
           cardHolder,
@@ -60,33 +55,15 @@ function preparePayload(payload: {
         },
         ...(showSavedCards && { saveCard }),
       }
-      break;
-    case PaymentProvider.PAYPAL:
-    case PaymentProvider.APPLE_PAY:
-    case PaymentProvider.GOOGLE_PAY: {
-      data = {
-        providerKey,
-        acceptPolicy,
-      }
+  }
 
-      if (
-        !!config?.paymentData?.sandboxPayment &&
-        [PaymentProvider.APPLE_PAY, PaymentProvider.GOOGLE_PAY].includes(providerKey)
-      ) {
-        (data as any).transactionId = (config?.providerConfigs as any)?.[providerKey]?.transactionId || "";
-        (data as any)[`${providerKey}Token`] = 'aaaaaa';
-      }
+  // Sandbox wallet payments never open the native sheet, so a placeholder token is sent instead
+  if (isWalletProvider && !!config?.paymentData?.sandboxPayment) {
+    data = {
+      ...data,
+      transactionId: config?.providerConfigs?.[providerKey]?.transactionId || "",
+      [`${providerKey}Token`]: 'aaaaaa',
     }
-      break;
-    case PaymentProvider.PIX: {
-      data = {
-        providerKey,
-        acceptPolicy,
-      }
-    }
-      break;
-    default:
-      break;
   }
 
   // When dLocal is enabled identityCardNumber is required for every payment method,
