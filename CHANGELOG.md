@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.21.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.20.1...v1.21.0)
+
+### 🚀 Enhancements
+
+- **Z3-6561:** Set zc_source parameter to account url ([2a188ef](https://github.com/Zotlo/zotlo-checkout/commit/2a188ef))
+- **Z3-6561:** Add a path for account url ([1268fd8](https://github.com/Zotlo/zotlo-checkout/commit/1268fd8))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.20.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.20.0...v1.20.1)
