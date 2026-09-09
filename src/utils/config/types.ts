@@ -1,4 +1,4 @@
-import type { FormConfig, FormDesign, FormSetting, FormSuccess } from "../../lib/types";
+import type { FormConfig, FormDesign, FormPostPaymentOffers, FormSetting, FormSuccess } from "../../lib/types";
 
 export type InitResult = {
   uuid: string;
@@ -11,6 +11,7 @@ export type InitResult = {
   settings: {
     design: FormDesign;
     success: FormSuccess;
+    postPaymentOffers?: FormPostPaymentOffers;
   };
   paymentMethodSetting: FormSetting["paymentMethodSetting"];
   registerType: FormSetting["registerType"];

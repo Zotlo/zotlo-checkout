@@ -130,6 +130,10 @@
             window.VueApp.addToaster('Error', message);
             window.EventActions.payment.paymentGTMError(message);
           },
+          onOfferFail(error) {
+            const message = error.message || 'Post payment offer failed to process';
+            window.VueApp.addToaster('Error', message);
+          },
           onInvalidForm(error) {
             const message = error.result.errors[0] || 'Unknown error';
             const formattedMessage = error.name ? `${error.name} - ${message}` : message;
