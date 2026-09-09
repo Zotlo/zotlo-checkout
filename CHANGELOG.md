@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.22.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.21.0...v1.22.0)
+
+### 🚀 Enhancements
+
+- **Z3-6558:** Implement post-payment offers with dynamic content and styling ([8657944](https://github.com/Zotlo/zotlo-checkout/commit/8657944))
+- **Z3-6558**: Add reference price styling and structure ([47f1ce3](https://github.com/Zotlo/zotlo-checkout/commit/47f1ce3))
+- **Z3-6559**: Add offers type for PaymentDetail ([518d9de](https://github.com/Zotlo/zotlo-checkout/commit/518d9de))
+- **Z3-6559**: Add ref price calculation by offer package ([d7c7c65](https://github.com/Zotlo/zotlo-checkout/commit/d7c7c65))
+- **Z3-6559**: Update post-payment offers functionality to support multiple offers ([412719d](https://github.com/Zotlo/zotlo-checkout/commit/412719d))
+- **Z3-6558**: update titles and image layout and stylings ([643dd2c](https://github.com/Zotlo/zotlo-checkout/commit/643dd2c))
+- **Z3-6559**: implement post-payment offers checkout flow ([aac8feb](https://github.com/Zotlo/zotlo-checkout/commit/aac8feb))
+- **Z3-6590**: add additional purchase details section ([100db80](https://github.com/Zotlo/zotlo-checkout/commit/100db80))
+- **Z3-6558**: update offer info color to support dark mode ([85d82fc](https://github.com/Zotlo/zotlo-checkout/commit/85d82fc))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.21.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.20.1...v1.21.0)
