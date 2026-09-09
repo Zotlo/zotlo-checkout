@@ -1,6 +1,6 @@
 import { ErrorHandler } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
-import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormSuccess, ProviderConfigs } from "../../lib/types";
+import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormPostPaymentOffers, FormSuccess, ProviderConfigs } from "../../lib/types";
 import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
 import { CheckoutAPI } from "../../utils/api";
@@ -105,6 +105,14 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
       },
       params.style?.success || {}
     ) as FormSuccess;
+
+    // No local defaults: createStyle already carries a fallback for every
+    // --zc-offer-* variable, so an omitted block simply leaves `show` falsy
+    // and the post payment offers page is never rendered.
+    config.postPaymentOffers = mergeDeep(
+      {},
+      settings?.postPaymentOffers || {}
+    ) as FormPostPaymentOffers;
 
     if (window?.Integration) {
       window.Integration.data.ia = initData?.ia || '';

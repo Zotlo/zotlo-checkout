@@ -53,10 +53,11 @@
         </tr>
       </tbody>
     </table>
+    {{ADDITIONAL_PURCHASE_DETAILS}}
   </div>
   <% ENDIF %>
   <div class="zotlo-checkout__payment-details__footer">
-    <div>{{FOOTER}}</div>
+    <div class="zotlo-checkout__payment-details__footer-content">{{FOOTER}}</div>
     <% IF(FORM_TYPE==='CARD') %>
     {{FOOTER_COMMON}}
     <% ENDIF %>

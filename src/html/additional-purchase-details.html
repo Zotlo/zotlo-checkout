@@ -1,0 +1,34 @@
+<div class="zotlo-checkout__payment-details-additional">
+  <div class="zotlo-checkout__payment-details__title">{{TITLE}}</div>
+  <table>
+    <tbody>
+      <tr>
+        <td class="zotlo-checkout__payment-details__title-col">{{PRODUCT_TITLE}}</td>
+        <td class="zotlo-checkout__payment-details__text-col">{{PRODUCT_TEXT}}</td>
+      </tr>
+      <tr>
+        <td class="zotlo-checkout__payment-details__title-col">{{PLAN_TITLE}}</td>
+        <td class="zotlo-checkout__payment-details__text-col">{{PLAN_TEXT}}</td>
+      </tr>
+      <tr>
+        <td class="zotlo-checkout__payment-details__title-col">{{PAYMENT_METHOD_TITLE}}</td>
+        <td class="zotlo-checkout__payment-details__text-col">
+          <div class="zotlo-checkout__payment-details__payment-method">
+            <% IF(CREDIT_CARD_ICON_IMG) %>
+              {{CREDIT_CARD_ICON_IMG}}
+            <% ENDIF %>
+            <span>{{PAYMENT_METHOD_TEXT}}</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="zotlo-checkout__payment-details__title-col zotlo-checkout__payment-details__total-title">{{TOTAL_TITLE}}</td>
+        <td class="zotlo-checkout__payment-details__text-col">
+          <div class="zotlo-checkout__payment-details__total">
+            <span class="zotlo-checkout__payment-details__total-price">{{TOTAL_PRICE}}</span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

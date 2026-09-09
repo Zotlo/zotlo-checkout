@@ -85,6 +85,9 @@ export interface IZotloCheckoutEvents {
   /** Triggers when a payment fails. */
   onFail?: (error: FailEventData) => void;
 
+  /** Triggers when a post payment offer request fails. `data` holds the offer itself. */
+  onOfferFail?: (error: FailEventData) => void;
+
   /** Triggers when form has an invalid field. */
   onInvalidForm?: (error: IFormInvalid) => void;
 }
@@ -157,6 +160,7 @@ type TextStyle = {
   bold: boolean;
   italic: boolean;
   underline: boolean;
+  strikethrough?: boolean;
 }
 
 export type ProductConfigMobileApp = {
@@ -535,6 +539,75 @@ export type FormSuccess = {
   }
 }
 
+export type PostPaymentOfferSettings = {
+  offerPackage: number;
+  title: {
+    text: Record<string, string>;
+    show: boolean;
+    color: string;
+    fontSize: number | string;
+  };
+  subtitle: {
+    text: Record<string, string>;
+    show: boolean;
+    color: string;
+    fontSize: number | string;
+  };
+  description: {
+    show: boolean;
+    text: Record<string, string>;
+    fontSize: number | string;
+    color: string;
+    referencePrice: {
+      textStyle: TextStyle;
+      percent: number;
+    };
+  };
+  priceText: {
+    fontSize: number | string;
+    color: string;
+  };
+  offerImage: {
+    show: boolean;
+    url: string;
+  };
+  acceptButton: {
+    /**
+     * ```
+     * 0: "Get Your Offer"
+     * 1: "Buy Now"
+     * 2: "Add for {{PRICE}}"
+     * 3: "Confirm & Pay {{PRICE}}"
+     * 4: "Claim Offer"
+     * ```
+    */
+    text: 0 | 1 | 2 | 3 | 4 | string;
+    fontSize: number | string;
+    color: string;
+    backgroundColor: string;
+    borderRadius: number | string;
+  };
+  declineButton: {
+    /**
+     * ```
+     * 0: "No, thanks"
+     * 1: "Continue without offer"
+     * 2: "Skip"
+     * 3: "No thanks, I'll pass"
+     * ```
+    */
+    text: 0 | 1 | 2 | 3 | string;
+    fontSize: number | string;
+    color: string;
+  };
+}
+
+export type FormPostPaymentOffers = {
+  show: boolean;
+  offerCount: number;
+  offersSettings: PostPaymentOfferSettings[];
+}
+
 type ProviderTransactionInfo = {
   totalPrice: string;
   totalPriceStatus: string;
@@ -586,6 +659,8 @@ export type FormConfig = {
   settings: FormSetting;
   design: FormDesign;
   success: FormSuccess;
+  /** Not available on the card update form */
+  postPaymentOffers?: FormPostPaymentOffers;
   paymentData?: FormPaymentData;
   packageInfo?: PackageInfoType;
   providerConfigs?: ProviderConfigs;
@@ -615,6 +690,10 @@ export type FormConfig = {
       conversionLabel: string;
     };
   };
+  /** Console preview only: tells the lib which page the editor wants to render */
+  render?: 'payment' | 'after-payment' | 'post-payment-offers';
+  /** Console preview only: mocked payment result used by the after payment preview */
+  paymentDetail?: PaymentDetail;
 }
 
 export type TransactionDetail = {
@@ -656,6 +735,26 @@ export type TransactionDetail = {
   provider_key_translation: string;
   quantity: number;
   card_brand_id: string;
+}
+
+export type OffersObject = {
+  used: boolean;
+  offerId: number;
+  selectedCountry: string;
+  period: number;
+  packageId: string;
+  packageType: PackageType;
+  periodType: 'year' | 'month' | 'week' | 'day' | null;
+  priceCurrency: string;
+  price: string;
+  selectedPrice: {
+    type: string;
+    quantity: number;
+    currency: string;
+    price: string;
+  };
+  /** Served once the offer is used, in the same shape as the payment transaction */
+  transaction: TransactionDetail[] | null;
 }
 
 export type PaymentDetail = {
@@ -716,6 +815,7 @@ export type PaymentDetail = {
   };
   transaction?: TransactionDetail[];
   discount?: DiscountObject;
+  offers?: OffersObject[];
 }
 
 export interface IFormLoad {

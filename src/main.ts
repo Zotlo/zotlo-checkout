@@ -53,6 +53,11 @@ import { ZotloCard } from './lib/card'
       win.VueApp.addToaster('Error', message);
       win.EventActions.payment.paymentGTMError(message);
     },
+    onOfferFail(error) {
+      // The payment itself succeeded, but post payment offer failed.
+      const message = error.message || 'Post payment offer failed to process';
+      win.VueApp.addToaster('Error', message);
+    },
     onInvalidForm(error) {
       const message = error.result.errors[0] || 'Unknown error';
       const formattedMessage = error.name ? `${error.name} - ${message}` : message;
