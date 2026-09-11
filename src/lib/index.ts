@@ -69,6 +69,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         packageId: params.packageId,
         language: params.language,
         subscriberId: params.subscriberId,
+        variantId: params.variantId,
         returnUrl: params.returnUrl,
         style: params.style,
         customParameters: params.customParameters,
