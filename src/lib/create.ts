@@ -19,7 +19,7 @@ import footerHTML from '../html/footer.html?raw'
 import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable, isDLocalEnabled, calculatePaymentStartDate } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, getLegalTextParams, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable, isDLocalEnabled, calculatePaymentStartDate } from "../utils";
 import type { PaymentPeriodType, PaymentDateInfo } from '../utils/paymentStartCalculation';
 import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions, getPackageTemplateParams } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
@@ -814,6 +814,28 @@ export function createPostPaymentOffersPage(params: {
   const imageUrl = offerSettings.offerImage?.url || '';
   const priceText = template($t('postPaymentOffers.priceText.oneTimeOffer'), textParams);
   const descriptionText = template(getLocalizedText(offerSettings.description), textParams);
+  const acceptText = getButtonText('acceptButton');
+
+  /**
+   * This screen hides the form footer, so the legal text has to travel with the
+   * offer. Same legal params as the checkout footer, plus the button the user is
+   * about to press and the amount it charges.
+   */
+  const offerFooter = createFooter({
+    SHOW_FOOTER_DESC: false,
+    PRICE_INFO: '',
+    FOOTER_DESC: '',
+    DISCLAIMER: `<div>${$t('footer.upsell.disclaimerText', {
+      ...getLegalTextParams(config),
+      buttonText: acceptText,
+      price,
+    })}</div>`,
+    AGREEMENT_TEXT: '',
+    MOR_INFO: '',
+    CHARGE_STATEMENT: '',
+    PAYMENT_AGGREGATOR: '',
+    ZOTLO_ADDRESS_TEXT: '',
+  });
 
   const htmlText = template(postPaymentOffersElement, {
     INFO_TEXT: $t('postPaymentOffers.successfullMessageInfo'),
@@ -824,10 +846,11 @@ export function createPostPaymentOffersPage(params: {
     SHOW_IMAGE: !!offerSettings.offerImage?.show && !!imageUrl,
     IMAGE_URL: imageUrl,
     SHOW_DESCRIPTION: !!offerSettings.description?.show && !!descriptionText?.trim(),
-    ACCEPT_TEXT: getButtonText('acceptButton'),
+    ACCEPT_TEXT: acceptText,
     DECLINE_TEXT: getButtonText('declineButton'),
     PRICE_TEXT: priceText,
     DESCRIPTION_TEXT: descriptionText,
+    FOOTER: offerFooter,
   });
 
   return !!mountCheckoutScreen(htmlText, 'offers');

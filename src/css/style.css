@@ -787,6 +787,10 @@
   width: auto;
 }
 
+.zotlo-checkout__offer .zotlo-checkout__footer {
+  width: 100%;
+}
+
 .zotlo-checkout__payment-details {
   width: 100%;
   display: flex;
