@@ -111,7 +111,8 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     // and the post payment offers page is never rendered.
     config.postPaymentOffers = mergeDeep(
       {},
-      settings?.postPaymentOffers || {}
+      settings?.postPaymentOffers || {},
+      params.style?.postPaymentOffers || {}
     ) as FormPostPaymentOffers;
 
     if (window?.Integration) {

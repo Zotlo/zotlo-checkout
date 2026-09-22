@@ -57,6 +57,8 @@ export interface IZotloCheckoutStyle {
     footer: Omit<FormDesign['footer'], 'showMerchantDisclaimer'>;
   }>;
   success?: DeepPartial<Omit<FormSuccess, 'genericButton'>>;
+  /** Overrides the post payment offer styles saved in the Zotlo Console. Not available on the card update form. */
+  postPaymentOffers?: DeepPartial<Pick<FormPostPaymentOffers, 'offersSettings'>>;
 }
 
 export interface IZotloCardStyle {
