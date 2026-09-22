@@ -111,7 +111,7 @@ export interface IZotloCheckoutParams {
   /** (Optional) The language code for the checkout form, e.g., `en`, `fr`, `pt_br`. */
   language?: string;
 
-  /** (Optional) The id string of the A/B test variant to render, e.g. `variant_xyz`. Defaults to the base variant. */
+  /** (Optional) String id of the A/B test variant to render. Defaults to the base variant. If an A/B test running, this param has no effect. */
   variantId?: string;
 
   /** (Optional) Enable or disable the discount code entry field in the checkout form. Default is `false`. */

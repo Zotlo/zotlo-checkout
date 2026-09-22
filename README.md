@@ -105,6 +105,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `subscriberId`          | no      | (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4.                                |
 | `style`                 | no      | Custom styling on config                                                                                                     |
 | `customParameters`      | no      | Send custom parameters to webhooks                                                                                           |
+| `variantId`             | no      | String id of the A/B test variant to render. Defaults to the base variant. If an A/B test running, this param has no effect. |
 | `events`                | no      | Event listeners that can be used during the checkout process.                                                                |
 | `events.onLoad`         | no      | Triggers after form loaded.                                                                                                  |
 | `events.onSubmit`       | no      | Triggered after the form is submitted.                                                                                       |
