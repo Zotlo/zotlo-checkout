@@ -109,11 +109,14 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     // No local defaults: createStyle already carries a fallback for every
     // --zc-offer-* variable, so an omitted block simply leaves `show` falsy
     // and the post payment offers page is never rendered.
-    config.postPaymentOffers = mergeDeep(
-      {},
-      settings?.postPaymentOffers || {},
-      params.style?.postPaymentOffers || {}
-    ) as FormPostPaymentOffers;
+    const defaultOffersSettings = settings?.postPaymentOffers || {} as FormPostPaymentOffers;
+    const styleOffers = params.style?.postPaymentOffers?.offersSettings || [];
+    config.postPaymentOffers = {
+      ...defaultOffersSettings,
+      offersSettings: (defaultOffersSettings.offersSettings || []).map(
+        (offer, index) => mergeDeep(offer, styleOffers[index] || {})
+      )
+    } as FormPostPaymentOffers;
 
     if (window?.Integration) {
       window.Integration.data.ia = initData?.ia || '';
