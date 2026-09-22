@@ -362,7 +362,7 @@ export function handleSavedCardsEvents(params: { config: FormConfig }) {
       modalDOM?.classList.add('zotlo-checkout__modal-enter-from');
       modalDOM?.classList.add('zotlo-checkout__modal-enter-active');
       closeBtn.removeEventListener('click', handleClose);
-      
+
       setTimeout(() => closeAllCardsModal(), 150);
     }
   }
@@ -393,8 +393,8 @@ export function getFooterPriceInfo(config: FormConfig) {
 
   const discountTrialKey = isTrialDiscountAllowed ? 'allowTrialDiscount' : 'noTrialDiscount';
   const discountRecurringKey = isRecurringDiscountLimited ? 'recurringLimited' : 'recurringForever';
-  const finalLocalizationKey = isDiscountCodeApplied ? 
-    `footer.priceInfo.discounted.${packageCondition}.${discountTrialKey}.${discountRecurringKey}` : 
+  const finalLocalizationKey = isDiscountCodeApplied ?
+    `footer.priceInfo.discounted.${packageCondition}.${discountTrialKey}.${discountRecurringKey}` :
     `footer.priceInfo.${packageCondition}`;
 
   return template($t(finalLocalizationKey), params);
@@ -509,18 +509,41 @@ export function getIsSavedCardPayment(params: { providerKey?: PaymentProvider; c
   return cardId > 0;
 }
 
+/**
+ * Legal names and document links shared by every footer disclaimer.
+ * Russia is served under the Jigle brand, so the name is swapped for every text.
+ */
+export function getLegalTextParams(config: FormConfig) {
+  const { $t } = useI18n(config.general?.localization);
+  const zotloUrls = config?.general?.zotloUrls || {};
+  const isRussia = config.general.countryCode === 'RU';
+  const ruName = $t('footer.legals.jigleName');
+
+  return {
+    appName: config.general.appName || '',
+    zotloName: isRussia ? ruName : $t('footer.legals.zotloName'),
+    zotloTitle: isRussia ? ruName : $t('footer.legals.zotloTitle'),
+    termsOfUse: `<a target="_blank" href="${config.general.tosUrl}">${$t('common.termsOfUse')}</a>`,
+    privacyPolicy: `<a target="_blank" href="${config.general.privacyUrl}">${$t('common.privacyPolicy')}</a>`,
+    zotloTerms: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a>`,
+    zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`,
+  };
+}
+
 export function prepareFooterInfo(params: { config: FormConfig }) {
   const { config } = params;
   const { $t } = useI18n(config.general?.localization);
-  const privacyUrl = config.general.privacyUrl;
-  const tosUrl = config.general.tosUrl;
-  const zotloUrls = config?.general?.zotloUrls || {};
   const isRussia = config.general.countryCode === 'RU';
   const PaymentAggregator = 'https://3p-assets.cdnztl.com/docs/2025/09/10/jigle-payment-terms-ru.pdf'
-  const appName = config.general.appName || '';
-  const ruName = $t('footer.legals.jigleName');
-  const zotloName = isRussia ? ruName : $t('footer.legals.zotloName');
-  const zotloTitle = isRussia ? ruName : $t('footer.legals.zotloTitle');
+  const {
+    appName,
+    zotloName,
+    zotloTitle,
+    termsOfUse,
+    privacyPolicy,
+    zotloTerms,
+    zotloPrivacy,
+  } = getLegalTextParams(config);
 
   const footerInfo: FooterInfo = {
     SHOW_FOOTER_DESC: true,
@@ -530,17 +553,17 @@ export function prepareFooterInfo(params: { config: FormConfig }) {
     AGREEMENT_TEXT: $t('footer.legals.agreement', {
       appName,
       zotloName,
-      termsOfUse: `<a target="_blank" href="${tosUrl}">${$t('common.termsOfUse')}</a>`,
-      privacyPolicy: `<a target="_blank" href="${privacyUrl}">${$t('common.privacyPolicy')}</a>`,
-      zotloTerms: `<a target="_blank" href="${zotloUrls?.termsOfService}">${$t('common.termsOfService')}</a>`,
-      zotloPrivacy: `<a target="_blank" href="${zotloUrls?.privacyPolicy}">${$t('common.privacyPolicy')}</a>`
+      termsOfUse,
+      privacyPolicy,
+      zotloTerms,
+      zotloPrivacy
     }),
     MOR_INFO: $t('footer.legals.morInfo', { appName, zotloName, zotloTitle }),
     CHARGE_STATEMENT: isRussia ? '' : $t('footer.legals.chargeStatement', { statementName: config.general.statementName }),
     PAYMENT_AGGREGATOR: isRussia
       ? $t('footer.zotlo.aggregator', {
         here: `<a target="_blank" href="${PaymentAggregator}">${$t('common.here')}</a>`
-      }) 
+      })
       : '',
     ZOTLO_ADDRESS_TEXT: isRussia ? '' : $t('footer.zotlo.legals.address'),
   }
@@ -590,7 +613,7 @@ export async function handleResponseRedirection(payload: {
 
 async function sha256(message: string) {
   // encode as (utf-8) Uint8Array
-  const msgBuffer = new TextEncoder().encode(message);                    
+  const msgBuffer = new TextEncoder().encode(message);
 
   // hash the message
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -598,7 +621,7 @@ async function sha256(message: string) {
   // convert buffer to byte array
   const hashArray = Array.from(new Uint8Array(hashBuffer));
 
-  // convert bytes to hex string                  
+  // convert bytes to hex string
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
 }
