@@ -162,9 +162,12 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     }
     config.paymentData = paymentInitData;
     config.packageInfo = getPackageInfo(config);
+    ZOTLO_GLOBAL.ready = true;
   } catch (e: any) {
     ErrorHandler.response = e;
+    params.events?.onError?.(e);
     Logger.client?.captureException(e);
+    ZOTLO_GLOBAL.ready = false;
     return config;
   }
 
