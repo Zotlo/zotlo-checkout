@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.23.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.22.0...v1.23.0)
+
+### 🚀 Enhancements
+
+- **Z3-6607**: add optional chaining for tab buttons postfix ([9d0bc79](https://github.com/Zotlo/zotlo-checkout/commit/9d0bc79))
+- **Z3-6607**: add alipay integrations and update related configurations ([b130974](https://github.com/Zotlo/zotlo-checkout/commit/b130974))
+
+### 🩹 Fixes
+
+- **Z3-6691:** Fix the issue that cannot set subscriber id on init if user get with bypass-register ([5bc635c](https://github.com/Zotlo/zotlo-checkout/commit/5bc635c))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+
 ## v1.22.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.21.0...v1.22.0)

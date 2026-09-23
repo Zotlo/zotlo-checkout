@@ -328,6 +328,13 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
 
       if (container) container.innerHTML = `<style>${style}</style>` + form;
 
+      // syncInputsOnTabs reads the subscriber ID from this state, so seed it with the value
+      // coming from the init response (e.g. register bypass with a subscriberId query
+      // parameter) on every render. Otherwise the first tab activation would sync an empty
+      // string over the prefilled input.
+      ZOTLO_GLOBAL.data.subscriberId = config.settings.registerType === 'other'
+        ? '' : (config.general.subscriberId || '');
+
       init();
 
       if (import.meta.env.VITE_CONSOLE) {
