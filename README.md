@@ -114,7 +114,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `events.onOfferFail`    | no      | Triggered when a post payment offer request fails.                                                                           |
 | `events.onInvalidForm`  | no      | Triggers when form has an invalid field.                                                                                     |
 
-**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L92) file.
+**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L96) file.
 
 ### Custom Parameters
 Besides sending arbitrary parameters, you can associate your UTM data with the subscriber by passing a `utmData` object under `customParameters`:
@@ -136,7 +136,7 @@ Besides sending arbitrary parameters, you can associate your UTM data with the s
 ```
 
 ## Events
-Please view [`IZotloCheckoutEvents`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L75) for full details on [src/lib/types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L75) file.
+Please view [`IZotloCheckoutEvents`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L76) for full details on [src/lib/types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L76) file.
 
 ### onLoad
 Triggers after form loaded.
@@ -145,7 +145,7 @@ Triggers after form loaded.
 onLoad?: (params: IFormLoad) => void;
 ```
 
-**Note:** You can see `params` details on type [`IFormLoad`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L721)
+**Note:** You can see `params` details on type [`IFormLoad`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L823)
 
 ```typescript
 {
@@ -184,7 +184,7 @@ Triggers after a successful payment.
 onSuccess?: (result: PaymentDetail) => void;
 ```
 
-**Note:** You can see `result` details on type [`PaymentDetail`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L661)
+**Note:** You can see `result` details on type [`PaymentDetail`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L762)
 
 ```typescript
 {
@@ -205,7 +205,7 @@ Triggers when a payment fails.
 ```typescript
 onFail?: (error: FailEventData) => void;
 ```
-**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L151)
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L155)
 
 ```typescript
 {
@@ -224,7 +224,7 @@ Triggers when a post payment offer request fails. `error.data` holds the offer t
 ```typescript
 onOfferFail?: (error: FailEventData) => void;
 ```
-**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L142) and the offer on type [`OffersObject`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L727)
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L155) and the offer on type [`OffersObject`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L742)
 
 ```typescript
 {
@@ -245,7 +245,7 @@ Triggers when form has an invalid field.
 onInvalidForm?: (error: IFormInvalid) => void;
 ```
 
-**Note:** You can see `error` details on type [`IFormInvalid`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L730)
+**Note:** You can see `error` details on type [`IFormInvalid`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L832)
 
 
 ```typescript
@@ -283,7 +283,7 @@ checkout.unmount();
 ## Styling
 You can customize your form on config with `style` parameter. If you do not define any parameters, the settings made in the [Zotlo Console](https://console.zotlo.com) will apply by default.
 
-**Note:** For more details, please check `IZotloCheckoutStyle` on [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L53) file.
+**Note:** For more details, please check `IZotloCheckoutStyle` on [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L54) file.
 
 ```javascript
 {
@@ -427,4 +427,4 @@ These parameters specify the parameters and descriptions used in the Zotlo Card.
 | `events.onFail`           | no       | Triggered when a update fails.                                                                                               |
 | `events.onInvalidForm`    | no       | Triggers when form has an invalid field.                                                                                     |
 
-**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L735) file.
+**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L837) file.
