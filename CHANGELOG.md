@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.23.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.23.0...v1.23.1)
+
+### 🚀 Enhancements
+
+- **Z3-6744:** Add onError callback for pre-init action ([1b3bcb5](https://github.com/Zotlo/zotlo-checkout/commit/1b3bcb5))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.23.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.22.0...v1.23.0)
