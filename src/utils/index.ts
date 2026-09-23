@@ -17,6 +17,7 @@ export { calculatePaymentStartDate } from './paymentStartCalculation';
 type Country = typeof Countries[0];
 
 export const ZOTLO_GLOBAL = {
+  ready: false,
   cardUpdate: false,
   data: {
     subscriberId: '',

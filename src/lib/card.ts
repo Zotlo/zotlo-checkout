@@ -40,7 +40,8 @@ async function createZotloCard(params: IZotloCardParams) {
       style: params.style,
       customParameters: params.customParameters,
       useCookie: !!params?.useCookie,
-      showSavedCards: params?.showSavedCards
+      showSavedCards: params?.showSavedCards,
+      events: params.events
     });
   }
 
@@ -61,6 +62,7 @@ async function createZotloCard(params: IZotloCardParams) {
     handleTabView();
     const { $t } = useI18n(config.general.localization);
     params.events?.onLoad?.({
+      ready: ZOTLO_GLOBAL.ready,
       packageId: params.packageId,
       sandbox: !!config?.paymentData?.sandboxPayment,
       countryCode: config.general.countryCode || '',
@@ -324,6 +326,8 @@ async function createZotloCard(params: IZotloCardParams) {
             title: config?.general?.localization?.empty?.error?.title || 'An error occured',
             message: ErrorHandler.response?.meta?.message
           });
+
+          ZOTLO_GLOBAL.ready = false;
         }
       }
 
