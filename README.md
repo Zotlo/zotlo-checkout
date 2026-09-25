@@ -105,6 +105,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `subscriberId`          | no      | (Optional) Default subscriber ID for registration; can be an email, phone number, or UUID v4.                                |
 | `style`                 | no      | Custom styling on config                                                                                                     |
 | `customParameters`      | no      | Send custom parameters to webhooks                                                                                           |
+| `customPriceToken`      | no      | API-provided token used to validate and initialize the custom price.                                                         |
 | `events`                | no      | Event listeners that can be used during the checkout process.                                                                |
 | `events.onLoad`         | no      | Triggers after form loaded.                                                                                                  |
 | `events.onSubmit`       | no      | Triggered after the form is submitted.                                                                                       |

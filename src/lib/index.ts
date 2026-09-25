@@ -72,6 +72,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         returnUrl: params.returnUrl,
         style: params.style,
         customParameters: params.customParameters,
+        customPriceToken: params.customPriceToken,
         useCookie: !!params?.useCookie,
         showSavedCards: params?.showSavedCards,
         quantitySetting: params?.quantitySetting,
