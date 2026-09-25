@@ -30,7 +30,9 @@ import { ZotloCard } from './lib/card'
 
       if (!win.Integration) return;
 
-      win.checkConsent(config.cookieText, config.countryCode, config.packageId);
+      if (config.ready) {
+        win.checkConsent(config.cookieText, config.countryCode, config.packageId);
+      }
 
       // Load itegrations
       const Integration = win.Integration || {};
@@ -62,6 +64,9 @@ import { ZotloCard } from './lib/card'
       const message = error.result.errors[0] || 'Unknown error';
       const formattedMessage = error.name ? `${error.name} - ${message}` : message;
       win.EventActions.payment.paymentGTMError(formattedMessage);
+    },
+    onError(error) {
+      console.log('An error occured', error);
     }
   };
 

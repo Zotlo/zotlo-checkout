@@ -1,3 +1,4 @@
+import { ApiResponse } from "../utils/api";
 import { type ValidationResult } from "../utils/validation";
 
 export enum PaymentProvider {
@@ -93,6 +94,9 @@ export interface IZotloCheckoutEvents {
 
   /** Triggers when form has an invalid field. */
   onInvalidForm?: (error: IFormInvalid) => void;
+
+  /** Triggers when pre-init errors occurs */
+  onError?: (error: ApiResponse) => void;
 }
 
 export interface IZotloCheckoutParams {
@@ -831,6 +835,8 @@ export interface IFormLoad {
   integrations: FormConfig['integrations'];
   backgroundColor: string;
   cookieText: string;
+  /** Indicates if the form is ready for use */
+  ready: boolean;
   packageId: string;
 }
 

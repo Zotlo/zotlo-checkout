@@ -153,6 +153,9 @@
             const message = error.result.errors[0] || 'Unknown error';
             const formattedMessage = error.name ? `${error.name} - ${message}` : message;
             window.EventActions.payment.paymentGTMError(formattedMessage);
+          },
+          onError(error) {
+            console.log('An error occured', error);
           }
         }
       }).then((zcInstance) => {

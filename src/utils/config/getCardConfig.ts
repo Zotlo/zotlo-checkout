@@ -125,8 +125,12 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
       allowSubscriberIdEditing: false,
       hideSubscriberIdIfAlreadySet: true,
     }
+
+    ZOTLO_GLOBAL.ready = true;
   } catch (e: any) {
     ErrorHandler.response = e;
+    ZOTLO_GLOBAL.ready = false;
+    params.events?.onError?.(e);
     Logger.client?.captureException(e);
     return config;
   }

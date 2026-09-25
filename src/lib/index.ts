@@ -76,7 +76,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         useCookie: !!params?.useCookie,
         showSavedCards: params?.showSavedCards,
         quantitySetting: params?.quantitySetting,
-        enableDiscountCodeEntry: params?.enableDiscountCodeEntry
+        enableDiscountCodeEntry: params?.enableDiscountCodeEntry,
+        events: params.events
       });
       await refreshProviderConfigs();
     }
@@ -324,6 +325,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
               ErrorCodes.USER_NOT_EXIST
             ].includes(ErrorHandler.response?.meta?.errorCode!)
           });
+
+          ZOTLO_GLOBAL.ready = false;
         }
       }
 
@@ -732,6 +735,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     sendIntegrationCAPIInfo();
 
     params.events?.onLoad?.({
+      ready: ZOTLO_GLOBAL.ready,
       packageId: params.packageId,
       sandbox: !!config?.paymentData?.sandboxPayment,
       countryCode: config.general.countryCode || '',
