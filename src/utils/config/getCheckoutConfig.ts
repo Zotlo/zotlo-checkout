@@ -52,6 +52,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     subscriberId,
     variantId,
     customParameters,
+    customPriceToken,
     useCookie = false,
     showSavedCards,
     quantitySetting,
@@ -65,6 +66,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     ...(subscriberId && { subscriberId }),
     ...(variantId && { variantIdString: variantId }),
     ...(customParameters && typeof customParameters === 'object' && { customParameters: JSON.stringify(customParameters) }),
+    ...(customPriceToken && { customPriceToken }),
     ...(quantitySetting && { quantitySetting }),
     ...(enableDiscountCodeEntry !== undefined && { enableDiscountCodeEntry }),
   };
