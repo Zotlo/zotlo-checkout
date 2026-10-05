@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.24.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.23.1...v1.24.0)
+
+### 🚀 Enhancements
+
+- **Z3-6683**: add post payment offers style override to checkout configuration ([ed85415](https://github.com/Zotlo/zotlo-checkout/commit/ed85415))
+- **Z3-6683**: enhance post payment offers configuration handling in checkout ([7fa3ea4](https://github.com/Zotlo/zotlo-checkout/commit/7fa3ea4))
+
+### ❤️ Contributors
+
+- Ömer Sarı ([@omeersari](https://github.com/omeersari))
+
 ## v1.23.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.23.0...v1.23.1)
