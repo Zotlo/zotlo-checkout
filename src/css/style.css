@@ -643,10 +643,9 @@
 }
 
 .zotlo-checkout__success__timer {
-  font-weight: 500;
   font-size: 14px;
   margin: 4px auto 0;
-  color: #68686A;
+  color: var(--zc-success-color);
 }
 
 .zotlo-checkout__success__buttons {
