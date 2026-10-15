@@ -13,6 +13,7 @@
 - **Z3-6000**: update success timer color to match footer ([97f2e26](https://github.com/Zotlo/zotlo-checkout/commit/97f2e26))
 - **Z3-6646**: update readme for variantId param ([d2bf3de](https://github.com/Zotlo/zotlo-checkout/commit/d2bf3de))
 - **Z3-6646**: add variantId to parameters for A/B testing support ([ed2aeb2](https://github.com/Zotlo/zotlo-checkout/commit/ed2aeb2))
+- **Z3-6719**: add footer disclaimer for post payment offers ([7c3e63d](https://github.com/Zotlo/zotlo-checkout/commit/7c3e63d))
 
 ### ❤️ Contributors
 
