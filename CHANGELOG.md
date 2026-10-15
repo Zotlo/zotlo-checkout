@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.25.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.24.0...v1.25.0)
+
+### 🩹 Fixes
+
+- **Z3-6783:** Show multi-period label on subscription activation button ([eb84b0e](https://github.com/Zotlo/zotlo-checkout/commit/eb84b0e))
+
+### 🚀 Enhancements
+
+- **Z3-6000**: update success timer color to match footer ([97f2e26](https://github.com/Zotlo/zotlo-checkout/commit/97f2e26))
+- **Z3-6646**: update readme for variantId param ([d2bf3de](https://github.com/Zotlo/zotlo-checkout/commit/d2bf3de))
+- **Z3-6646**: add variantId to parameters for A/B testing support ([ed2aeb2](https://github.com/Zotlo/zotlo-checkout/commit/ed2aeb2))
+- **Z3-6719**: add footer disclaimer for post payment offers ([7c3e63d](https://github.com/Zotlo/zotlo-checkout/commit/7c3e63d))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.24.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.23.1...v1.24.0)
