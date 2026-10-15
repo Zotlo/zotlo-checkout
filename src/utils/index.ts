@@ -424,7 +424,7 @@ export function getSubmitButtonContent(config: FormConfig) {
         params.TRIAL_PERIOD = params.TRIAL_PERIOD_NAMING;
         break;
       case 1:
-        params.PERIOD = params.PERIOD_TYPE;
+        params.PERIOD = (config?.packageInfo?.period || 0) > 1 ? params.PERIOD_NAMING : params.PERIOD_TYPE;
         params.TRIAL_PERIOD = params.TRIAL_PERIOD_TYPE;
         break;
     }
