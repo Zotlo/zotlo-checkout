@@ -1,11 +1,12 @@
 {
   "name": "zotlo-checkout",
-  "version": "1.25.0",
+  "version": "1.25.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && node --loader ts-node/esm builder.ts",
     "build:rc": "tsc && node --loader ts-node/esm builder.ts --mode rc",
+    "build:preprod": "tsc && node --loader ts-node/esm builder.ts --mode preprod",
     "preview": "vite preview"
   },
   "files": [

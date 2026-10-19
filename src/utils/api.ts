@@ -1,5 +1,5 @@
 import { COOKIE } from "./cookie";
-import { getSession } from "./session";
+import { getSession, refreshSession } from "./session";
 
 interface RequestConfig {
   headers?: Record<string, string>;
@@ -28,6 +28,8 @@ export class API {
   defaultTimeout = 30000;
   useCookie = false;
   sessionKey: string | undefined = undefined;
+  // Session lifetime in minutes, must match the backend session timeout
+  sessionTimeout = 15;
 
   constructor(payload?: {
     baseUrl?: string;
@@ -35,12 +37,14 @@ export class API {
     defaultTimeout?: number;
     useCookie?: boolean;
     sessionKey?: string;
+    sessionTimeout?: number;
   }) {
     if (payload?.baseUrl) this.baseUrl = payload.baseUrl;
     if (payload?.defaultHeaders) this.defaultHeaders = payload.defaultHeaders;
     if (payload?.defaultTimeout) this.defaultTimeout = payload.defaultTimeout;
     if (payload?.useCookie) this.useCookie = payload.useCookie;
     if (payload?.sessionKey) this.sessionKey = payload.sessionKey;
+    if (payload?.sessionTimeout) this.sessionTimeout = payload.sessionTimeout;
   }
 
   setUseCookie(value: boolean) {
@@ -113,6 +117,7 @@ export class API {
       xhr.onload = () => {
         try {
           const responseData = this.getResponseData(xhr, mergedHeaders);
+          this.handleSessionRefresh(existingUuid, responseData);
           resolve(responseData);
         } catch {
           const responseData = this.getResponseData(xhr, mergedHeaders);
@@ -138,6 +143,20 @@ export class API {
       } else {
         xhr.send();
       }
+    });
+  }
+
+  /**
+   * Backend resets the session timeout only on successful responses,
+   * so keep the local expiry in sync with it.
+   */
+  handleSessionRefresh(sentUuid: string | undefined, responseData: ApiResponse) {
+    if (!sentUuid || !responseData?.meta || responseData.meta.errorCode) return;
+
+    refreshSession({
+      expireTimeInMinutes: this.sessionTimeout,
+      useCookie: this.useCookie,
+      key: this.sessionKey
     });
   }
 
@@ -180,5 +199,6 @@ export class API {
 export const CheckoutAPI = new API();
 export const CardAPI = new API({
   baseUrl: import.meta.env.VITE_SDK_CARD_API_URL || '',
-  sessionKey: COOKIE.CARD_UUID
+  sessionKey: COOKIE.CARD_UUID,
+  sessionTimeout: 30
 });

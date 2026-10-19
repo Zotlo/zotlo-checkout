@@ -58,7 +58,7 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
     if (initRes.meta.errorCode) throw initRes;
 
     if (!initData || Array.isArray(initData)) return config;
-    setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie, key: COOKIE.CARD_UUID });
+    setSession({ id: initData?.uuid, expireTimeInMinutes: CardAPI.sessionTimeout, useCookie, key: COOKIE.CARD_UUID });
 
     config.customerSupportUrl = initData?.customerSupportUrl || '';
 

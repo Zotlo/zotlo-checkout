@@ -44,6 +44,15 @@ export function setSession(params: { id: string, expireTimeInMinutes: number, pa
   return newSession;
 }
 
+// Restarts the expiry of the current session, mirroring the backend which resets
+// its session timeout on every request.
+export function refreshSession(params: { expireTimeInMinutes: number, path?: string, useCookie?: boolean, key?: string }): Session | null {
+  const { expireTimeInMinutes, path, useCookie, key } = params;
+  const session = getSession({ path, useCookie, key });
+  if (!session?.id) return null;
+  return setSession({ id: session.id, expireTimeInMinutes, path, useCookie, key });
+}
+
 export function deleteSession(params?: { path?: string, useCookie?: boolean, key?: string }): void {
   const { path, useCookie = false, key = COOKIE.UUID } = params || {};
   if (useCookie) return deleteUuidCookie(key);
