@@ -77,7 +77,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     if (initRes.meta.errorCode) throw initRes;
 
     if (!initData || Array.isArray(initData)) return config;
-    setSession({ id: initData?.uuid, expireTimeInMinutes: 30, useCookie });
+    setSession({ id: initData?.uuid, expireTimeInMinutes: CheckoutAPI.sessionTimeout, useCookie });
 
     const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
