@@ -8,25 +8,25 @@ export type GooglePayButtonOptions = {
 
 const googlePaySdkUrl = 'https://pay.google.com/gp/p/js/pay.js';
 const applePaySdkUrl = 'https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js';
+const scriptRetryDelayMs = 1000;
+// Upper limit for the retry so a hanging network doesn't hold the form back twice
+const scriptRetryTimeoutMs = 3000;
+// Successful and in-flight loads by src; failed loads are removed so the next call retries
+const scriptLoaders = new Map<string, Promise<void>>();
 let googlePayClient: any = null;
 
-function loadScript(src: string, id?: string): Promise<void> {
-  return new Promise<void>((resolve) => {
-    // Prevent loading the same script multiple times based on src
-    const isScriptExist = Array.from(document.getElementsByTagName('script')).find(
-      (script) => script.src === src
-    );
+type ScriptLoadResult = 'loaded' | 'failed' | 'timeout';
 
-    if (isScriptExist) {
-      resolve();
-      return;
-    }
-
+function injectScript(src: string, id?: string, timeoutMs?: number): Promise<ScriptLoadResult> {
+  return new Promise<ScriptLoadResult>((resolve) => {
+    // On timeout only stop waiting; the tag stays so a late load is still usable on the next render
+    const timer = timeoutMs ? setTimeout(() => resolve('timeout'), timeoutMs) : undefined;
     const script = document.createElement('script');
     if (id) script.id = id;
     script.src = src;
     script.async = true;
     script.onload = () => {
+      clearTimeout(timer);
       // This resolves rendering problem for apple-pay-modal component on mobile devices
       const modal = document.querySelector('apple-pay-modal') as HTMLElement | null;
 
@@ -39,16 +39,50 @@ function loadScript(src: string, id?: string): Promise<void> {
       }
 
       // Emit as done
-      resolve();
+      resolve('loaded');
     };
     script.onerror = () => {
-      const err = new Error(`Failed to load script: ${src}`);
-      Logger.client?.captureException(err);
-      resolve()
+      clearTimeout(timer);
+      // Drop the failed tag, otherwise it would be treated as an existing script later on
+      script.remove();
+      resolve('failed');
     };
 
     document.head.appendChild(script);
   });
+}
+
+function loadScript(src: string, id: string, provider: PaymentProvider): Promise<void> {
+  // Reuse a successful or still loading request instead of reporting it as ready too early
+  const existingLoader = scriptLoaders.get(src);
+  if (existingLoader) return existingLoader;
+
+  // Script added outside of this loader (e.g. by the host page)
+  const isScriptExist = Array.from(document.getElementsByTagName('script')).some(
+    (script) => script.src === src
+  );
+  if (isScriptExist) return Promise.resolve();
+
+  const loader = (async () => {
+    let result = await injectScript(src, id);
+
+    // Retry once for transient network failures, mostly seen on mobile in-app browsers
+    if (result === 'failed') {
+      await new Promise((resolve) => setTimeout(resolve, scriptRetryDelayMs));
+      result = await injectScript(src, id, scriptRetryTimeoutMs);
+    }
+
+    if (result === 'loaded') return;
+
+    scriptLoaders.delete(src);
+    // The flow continues without this provider, so it's reported as a warning
+    Logger.client?.captureException(new Error(`Failed to load script: ${src}`), {
+      captureContext: { level: 'warning', tags: { provider, reason: result } }
+    });
+  })();
+
+  scriptLoaders.set(src, loader);
+  return loader;
 }
 
 export async function loadProviderSDKs(params: { paymentInitData?: FormPaymentData }): Promise<void[]> {
@@ -56,8 +90,8 @@ export async function loadProviderSDKs(params: { paymentInitData?: FormPaymentDa
   const { providers = {} as Record<PaymentProvider, boolean> } = paymentInitData || {};
   const promises: Promise<void>[] = [];
 
-  if (providers?.[PaymentProvider.APPLE_PAY]) promises.push(loadScript(applePaySdkUrl, 'apple-pay-sdk'));
-  if (providers?.[PaymentProvider.GOOGLE_PAY]) promises.push(loadScript(googlePaySdkUrl, 'google-pay-sdk'));
+  if (providers?.[PaymentProvider.APPLE_PAY]) promises.push(loadScript(applePaySdkUrl, 'apple-pay-sdk', PaymentProvider.APPLE_PAY));
+  if (providers?.[PaymentProvider.GOOGLE_PAY]) promises.push(loadScript(googlePaySdkUrl, 'google-pay-sdk', PaymentProvider.GOOGLE_PAY));
 
   return Promise.all(promises);
 }

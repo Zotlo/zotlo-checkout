@@ -8,7 +8,10 @@ const SENTRY_CHUNK_FILE = 'zotlo-sentry.min.js';
 // keys: statusCode, statusMessage". Convert it so the issue title and grouping
 // carry the actual message (e.g. "DEVELOPER_ERROR: currencyCode in
 // transactionInfo must be set!").
+// It can also reject with a plain string (e.g. "failed to open window"), which
+// Sentry records without a stack trace, so wrap strings in an Error as well.
 export function toCapturableError(err: unknown): unknown {
+  if (typeof err === 'string') return new Error(err);
   const e = err as { statusCode?: unknown; statusMessage?: unknown } | null;
   if (err instanceof Error || !e?.statusMessage) return err;
   const error = new Error(String(e.statusMessage));

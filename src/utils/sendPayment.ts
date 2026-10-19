@@ -7,6 +7,8 @@ import { Logger, toCapturableError } from "../lib/logger";
 import { COOKIE, getCookie } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
 
+const googlePayPopupError = 'failed to open window';
+
 function prepareBillingInfo(formData: Record<string, any>, config: FormConfig) {
   const data = {
     businessName: formData[FORM_ITEMS.BILLING_BUSINESS_NAME.input.name] || '',
@@ -528,6 +530,22 @@ async function handleGooglePayPayment(payload: {
   } catch (error: any) {
     // Prevent user closing form error (pay.js rejects with { statusCode: "CANCELED" })
     if (error?.toString()?.includes("AbortError") || error?.statusCode === "CANCELED") return;
+
+    // pay.js couldn't open its payment sheet popup (e.g. blocked in in-app browsers)
+    // and rejects with this plain string. Expected on some browsers, so give a readable message
+    // instead of the raw one and report it as a warning.
+    const errorMessage = typeof error === 'string' ? error : error?.message;
+    if (errorMessage === googlePayPopupError) {
+      params.events?.onFail?.({
+        message: 'Google Pay could not be opened in this browser. Please try another payment method.',
+        data: {}
+      });
+      Logger.client?.captureException(toCapturableError(errorMessage), {
+        captureContext: { level: 'warning', tags: { provider: PaymentProvider.GOOGLE_PAY } }
+      });
+      return;
+    }
+
     handlePaymentErrorMessage(error, params, "Google Pay payment process failed");
   }
 }

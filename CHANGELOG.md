@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.25.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.0...v1.25.1)
+
+### 🩹 Fixes
+
+- **Z3-6806:** Sync local session expiry with backend timeout ([532a881](https://github.com/Zotlo/zotlo-checkout/commit/532a881))
+- **Z3-6806:** Retry failed provider SDK loads and stop caching failures ([81a4af3](https://github.com/Zotlo/zotlo-checkout/commit/81a4af3))
+- **Z3-6806:** Handle Google Pay popup failure and capture string errors with a stack ([64d4641](https://github.com/Zotlo/zotlo-checkout/commit/64d4641))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.25.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.24.0...v1.25.0)
