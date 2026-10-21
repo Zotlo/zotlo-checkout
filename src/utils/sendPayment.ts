@@ -474,9 +474,15 @@ async function handleApplePayPayment(payload: {
           },
         });
       } catch (e) {
-        session.completePayment(ApplePaySession.STATUS_FAILURE);
+        // The sheet may already be closed (e.g. Apple Pay timed out while the checkout
+        // request was pending), where completePayment throws and would hide the error
+        try { session.completePayment(ApplePaySession.STATUS_FAILURE); } catch { /* session already closed */ }
         endSession(true);
-        Logger.client?.captureException(e || 'Apple Pay checkout error -> onpaymentauthorized');
+        handlePaymentErrorMessage(
+          e || new Error('Apple Pay checkout error -> onpaymentauthorized'),
+          params,
+          "Apple Pay payment process failed"
+        );
       }
     };
 
