@@ -17,4 +17,5 @@ export {
   functionToStringIntegration,
   linkedErrorsIntegration,
   httpContextIntegration,
+  extraErrorDataIntegration,
 } from '@sentry/browser';

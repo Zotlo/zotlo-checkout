@@ -63,6 +63,8 @@ export const Logger = {
         SentryBrowser.linkedErrorsIntegration(),
         SentryBrowser.dedupeIntegration(),
         SentryBrowser.httpContextIntegration(),
+        // Records custom error fields (e.g. ApiRequestError's elapsedMs/status) as extra data
+        SentryBrowser.extraErrorDataIntegration(),
       ],
       release,
       // Known Error/ad/3rd-party and loop sources (allowUrls defined will probably block these, but let's call it extra security)
