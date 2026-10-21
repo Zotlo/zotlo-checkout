@@ -491,6 +491,11 @@ async function handleApplePayPayment(payload: {
   }
 }
 
+// pay.js allows a single pending loadPaymentData() per PaymentsClient (shared across mounts);
+// a second call rejects with "This method can only be called one at a time"
+// (e.g. double-tap in in-app browsers, or a re-mount while the payment sheet is still open)
+let isGooglePayRequestActive = false;
+
 async function handleGooglePayPayment(payload: {
   formPayload: Record<string, any>;
   providerConfig: ProviderConfigs["googlePay"];
@@ -507,6 +512,10 @@ async function handleGooglePayPayment(payload: {
     subscriberId,
     refreshProviderConfigsFunction
   } = payload;
+
+  if (isGooglePayRequestActive) return;
+  isGooglePayRequestActive = true;
+
   try {
     const paymentDataRequest = JSON.parse(JSON.stringify(providerConfig?.paymentDataRequest));
     
@@ -547,6 +556,8 @@ async function handleGooglePayPayment(payload: {
     }
 
     handlePaymentErrorMessage(error, params, "Google Pay payment process failed");
+  } finally {
+    isGooglePayRequestActive = false;
   }
 }
 
