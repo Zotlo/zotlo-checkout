@@ -10,10 +10,23 @@ const SENTRY_CHUNK_FILE = 'zotlo-sentry.min.js';
 // transactionInfo must be set!").
 // It can also reject with a plain string (e.g. "failed to open window"), which
 // Sentry records without a stack trace, so wrap strings in an Error as well.
+// Backend errors thrown as the raw { meta, result } response (e.g. /init) would all
+// group under "Object captured as exception with keys: meta, result", so they're
+// titled by their error code; the meta fields are recorded via extraErrorDataIntegration.
 export function toCapturableError(err: unknown): unknown {
   if (typeof err === 'string') return new Error(err);
+  if (err instanceof Error) return err;
+
+  const response = err as { meta?: { errorCode?: string; message?: string; httpStatus?: number; requestId?: string } } | null;
+  if (response?.meta?.errorCode) {
+    const { errorCode, message, httpStatus, requestId } = response.meta;
+    const error = Object.assign(new Error(`${errorCode}: ${message || ''}`), { httpStatus, requestId });
+    error.name = 'ApiResponseError';
+    return error;
+  }
+
   const e = err as { statusCode?: unknown; statusMessage?: unknown } | null;
-  if (err instanceof Error || !e?.statusMessage) return err;
+  if (!e?.statusMessage) return err;
   const error = new Error(String(e.statusMessage));
   error.name = String(e.statusCode || 'PaymentsError');
   return error;
