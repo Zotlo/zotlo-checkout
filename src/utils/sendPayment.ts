@@ -493,6 +493,20 @@ async function handleApplePayPayment(payload: {
     session.begin();
     isApplePaySessionActive = true;
   } catch (error: any) {
+    // In-app browsers (e.g. Facebook) inject scripts into the page, so WebKit refuses to
+    // start the session from an "insecure document". Expected there, so give a readable
+    // message and report it as a warning.
+    if (error?.name === 'InvalidAccessError' && error?.message?.includes('insecure document')) {
+      params.events?.onFail?.({
+        message: 'Apple Pay could not be opened in this browser. Please try another payment method.',
+        data: {}
+      });
+      Logger.client?.captureException(error, {
+        captureContext: { level: 'warning', tags: { provider: PaymentProvider.APPLE_PAY } }
+      });
+      return;
+    }
+
     handlePaymentErrorMessage(error, params, "Apple Pay payment process failed");
   }
 }
