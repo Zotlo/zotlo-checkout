@@ -80,7 +80,8 @@ export const Logger = {
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*onesignal\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*hotjar\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*intercomcdn\.com/i,
-        /^(?:https?:)?\/\/([a-z0-9-]+\.)*jsdelivr\.net/i,
+        // Public CDNs (jsdelivr, unpkg) must not be listed: the SDK itself is served from them,
+        // so errors thrown in our own code would be dropped for those integrations
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*browser-intake-datadoghq\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*mixpanel\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*segment\.com/i,
