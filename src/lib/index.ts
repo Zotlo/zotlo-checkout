@@ -29,7 +29,7 @@ import {
   getUserDataForIntegration,
   sendIntegrationCAPIInfo
 } from "../utils";
-import { ErrorHandler } from "../utils/config";
+import { ErrorHandler, isSessionError } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
 import { sendPayment, registerPaymentUser } from "../utils/sendPayment";
@@ -320,10 +320,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
             config,
             title,
             message,
-            showRetryButton: [
-              ErrorCodes.USER_NOT_FOUND,
-              ErrorCodes.USER_NOT_EXIST
-            ].includes(ErrorHandler.response?.meta?.errorCode!)
+            showRetryButton: isSessionError(ErrorHandler.response)
           });
 
           ZOTLO_GLOBAL.ready = false;
