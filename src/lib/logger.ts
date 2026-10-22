@@ -20,7 +20,7 @@ export function toCapturableError(err: unknown): unknown {
   const response = err as { meta?: { errorCode?: string; message?: string; httpStatus?: number; requestId?: string } } | null;
   if (response?.meta?.errorCode) {
     const { errorCode, message, httpStatus, requestId } = response.meta;
-    const error = Object.assign(new Error(`${errorCode}: ${message || ''}`), { httpStatus, requestId });
+    const error = Object.assign(new Error(`${errorCode}: ${message || ''}`), { errorCode, httpStatus, requestId });
     error.name = 'ApiResponseError';
     return error;
   }
@@ -79,6 +79,15 @@ export const Logger = {
         // Records custom error fields (e.g. ApiRequestError's elapsedMs/status) as extra data
         SentryBrowser.extraErrorDataIntegration(),
       ],
+      // Sentry groups by stack trace, and these errors are always created in the same place
+      // (the XHR handler, toCapturableError), so every endpoint or error code would land in
+      // a single issue. Group them by request and by error code instead.
+      beforeSend(event, hint) {
+        const err = hint?.originalException as { name?: string; method?: string; endpoint?: string; errorCode?: string } | undefined;
+        if (err?.name === 'ApiRequestError') event.fingerprint = ['ApiRequestError', `${err.method} ${err.endpoint}`];
+        if (err?.name === 'ApiResponseError') event.fingerprint = ['ApiResponseError', String(err.errorCode)];
+        return event;
+      },
       release,
       // Known Error/ad/3rd-party and loop sources (allowUrls defined will probably block these, but let's call it extra security)
       denyUrls: [
