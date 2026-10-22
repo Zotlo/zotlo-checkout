@@ -417,6 +417,13 @@ async function handleApplePayPayment(payload: {
       }
     };
 
+    // completePayment throws InvalidAccessError once the sheet is gone (e.g. Apple Pay timed
+    // out while /payment/checkout was pending). The checkout result must still be handled,
+    // otherwise a successful payment is never redirected and is reported as failed.
+    const completePayment = (status: number) => {
+      try { session.completePayment(status); } catch { /* session already closed */ }
+    };
+
     session.onvalidatemerchant = async (event: any) => {
       let response;
       const validationStart = Date.now();
@@ -464,19 +471,17 @@ async function handleApplePayPayment(payload: {
           refreshProviderConfigsFunction,
           actions: {
             completeAction: () => {
-              session.completePayment(ApplePaySession.STATUS_SUCCESS);
+              completePayment(ApplePaySession.STATUS_SUCCESS);
               isApplePaySessionActive = false;
             },
             errorAction: () => {
-              session.completePayment(ApplePaySession.STATUS_FAILURE);
+              completePayment(ApplePaySession.STATUS_FAILURE);
               endSession(true);
             },
           },
         });
       } catch (e) {
-        // The sheet may already be closed (e.g. Apple Pay timed out while the checkout
-        // request was pending), where completePayment throws and would hide the error
-        try { session.completePayment(ApplePaySession.STATUS_FAILURE); } catch { /* session already closed */ }
+        completePayment(ApplePaySession.STATUS_FAILURE);
         endSession(true);
         handlePaymentErrorMessage(
           e || new Error('Apple Pay checkout error -> onpaymentauthorized'),
