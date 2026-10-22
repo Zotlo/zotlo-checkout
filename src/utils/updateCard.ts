@@ -59,6 +59,6 @@ export async function updateCard(payload: {
     return cardResponse;
   } catch (err: any) {
     params.events?.onFail?.({ message: err?.meta?.message, data: err?.meta });
-    Logger.client?.captureException(err);
+    Logger.captureException(err);
   }
 }

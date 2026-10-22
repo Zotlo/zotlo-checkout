@@ -84,7 +84,7 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
           return;
         }
       } catch (e) {
-        Logger.client?.captureException(e);
+        Logger.captureException(e);
         setLoadingForDiscount(false);
       }
 
@@ -192,7 +192,7 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
           return;
         }
       } catch (e) {
-        Logger.client?.captureException(e);
+        Logger.captureException(e);
         setLoadingForDiscount(false);
       }
 

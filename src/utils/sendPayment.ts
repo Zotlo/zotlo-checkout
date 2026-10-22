@@ -1,6 +1,6 @@
 import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalEnabled, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
-import { getGooglePayClient, hasValidApplePayConfig } from "./loadProviderSdks";
+import { getGooglePayClient, hasValidApplePayConfig, hasValidGooglePayConfig, isApplePayInsecureDocumentError } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
 import { deleteSession, getSession } from "./session";
 import { Logger, toCapturableError } from "../lib/logger";
@@ -115,7 +115,7 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
     return response;
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message || "Failed to register user", data: err?.meta });
-    Logger.client?.captureException(err);
+    Logger.captureException(err);
     return err;
   }
 }
@@ -134,7 +134,7 @@ function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, mess
     message,
     data: typeof error !== 'string' ? error : {}
   });
-  Logger.client?.captureException(
+  Logger.captureException(
     toCapturableError(error),
     extra ? { captureContext: { extra } } : undefined
   );
@@ -328,7 +328,7 @@ export async function handlePaymentSuccess(payload: { config: FormConfig; params
 
     return result;
   } catch (e) {
-    Logger.client?.captureException(e);
+    Logger.captureException(e);
     return null;
   } finally {
     setFormLoading(false);
@@ -362,6 +362,13 @@ async function handleCheckoutResponse(payload: {
   }
 }
 
+// Why the /payment/init provider config is incomplete, for the error report
+function getProviderInitInfo(initMeta?: Record<string, any>) {
+  if (initMeta?.errorCode) return ` (init error ${initMeta.errorCode}: ${initMeta.message || ''})`;
+  if (initMeta?.message) return ` (init: ${initMeta.message})`;
+  return '';
+}
+
 // WebKit allows a single active Apple Pay session per page; a second session.begin()
 // throws "Page already has an active payment session." (e.g. double-tap in in-app browsers)
 let isApplePaySessionActive = false;
@@ -389,15 +396,9 @@ async function handleApplePayPayment(payload: {
     const providerKey = PaymentProvider.APPLE_PAY;
 
     if (!hasValidApplePayConfig(providerConfig)) {
-      const initMeta = providerConfig?.initMeta;
-      const initInfo = initMeta?.errorCode
-        ? ` (init error ${initMeta.errorCode}: ${initMeta.message || ''})`
-        : initMeta?.message
-          ? ` (init: ${initMeta.message})`
-          : '';
       await refreshProviderConfigsFunction();
       return handlePaymentErrorMessage(
-        new Error(`Apple Pay provider config is missing or incomplete${initInfo}`),
+        new Error(`Apple Pay provider config is missing or incomplete${getProviderInitInfo(providerConfig?.initMeta)}`),
         params,
         "Apple Pay payment process failed"
       );
@@ -415,6 +416,13 @@ async function handleApplePayPayment(payload: {
       if (abort) {
         try { session.abort(); } catch { /* session already closed */ }
       }
+    };
+
+    // completePayment throws InvalidAccessError once the sheet is gone (e.g. Apple Pay timed
+    // out while /payment/checkout was pending). The checkout result must still be handled,
+    // otherwise a successful payment is never redirected and is reported as failed.
+    const completePayment = (status: number) => {
+      try { session.completePayment(status); } catch { /* session already closed */ }
     };
 
     session.onvalidatemerchant = async (event: any) => {
@@ -464,19 +472,23 @@ async function handleApplePayPayment(payload: {
           refreshProviderConfigsFunction,
           actions: {
             completeAction: () => {
-              session.completePayment(ApplePaySession.STATUS_SUCCESS);
+              completePayment(ApplePaySession.STATUS_SUCCESS);
               isApplePaySessionActive = false;
             },
             errorAction: () => {
-              session.completePayment(ApplePaySession.STATUS_FAILURE);
+              completePayment(ApplePaySession.STATUS_FAILURE);
               endSession(true);
             },
           },
         });
       } catch (e) {
-        session.completePayment(ApplePaySession.STATUS_FAILURE);
+        completePayment(ApplePaySession.STATUS_FAILURE);
         endSession(true);
-        Logger.client?.captureException(e || 'Apple Pay checkout error -> onpaymentauthorized');
+        handlePaymentErrorMessage(
+          e || new Error('Apple Pay checkout error -> onpaymentauthorized'),
+          params,
+          "Apple Pay payment process failed"
+        );
       }
     };
 
@@ -487,9 +499,28 @@ async function handleApplePayPayment(payload: {
     session.begin();
     isApplePaySessionActive = true;
   } catch (error: any) {
+    // canMakePayments() can still pass in in-app browsers when the page scripts are injected
+    // later, so the session is refused on click instead. Expected there, so give a readable
+    // message and report it as a warning.
+    if (isApplePayInsecureDocumentError(error)) {
+      params.events?.onFail?.({
+        message: 'Apple Pay could not be opened in this browser. Please try another payment method.',
+        data: {}
+      });
+      Logger.captureException(error, {
+        captureContext: { level: 'warning', tags: { provider: PaymentProvider.APPLE_PAY } }
+      });
+      return;
+    }
+
     handlePaymentErrorMessage(error, params, "Apple Pay payment process failed");
   }
 }
+
+// pay.js allows a single pending loadPaymentData() per PaymentsClient (shared across mounts);
+// a second call rejects with "This method can only be called one at a time"
+// (e.g. double-tap in in-app browsers, or a re-mount while the payment sheet is still open)
+let isGooglePayRequestActive = false;
 
 async function handleGooglePayPayment(payload: {
   formPayload: Record<string, any>;
@@ -507,9 +538,24 @@ async function handleGooglePayPayment(payload: {
     subscriberId,
     refreshProviderConfigsFunction
   } = payload;
+
+  if (isGooglePayRequestActive) return;
+  isGooglePayRequestActive = true;
+
   try {
+    // The button was rendered with a valid config, but a refresh after a failed payment
+    // can leave it incomplete; pay.js would then throw DEVELOPER_ERROR (e.g. missing currencyCode)
+    if (!hasValidGooglePayConfig(providerConfig)) {
+      await refreshProviderConfigsFunction();
+      return handlePaymentErrorMessage(
+        new Error(`Google Pay provider config is missing or incomplete${getProviderInitInfo(providerConfig?.initMeta)}`),
+        params,
+        "Google Pay payment process failed"
+      );
+    }
+
     const paymentDataRequest = JSON.parse(JSON.stringify(providerConfig?.paymentDataRequest));
-    
+
     const registerResponse = await registerPaymentUserIfNecessary(subscriberId, config, params);
     if (registerResponse?.meta?.errorCode) return;
 
@@ -540,13 +586,15 @@ async function handleGooglePayPayment(payload: {
         message: 'Google Pay could not be opened in this browser. Please try another payment method.',
         data: {}
       });
-      Logger.client?.captureException(toCapturableError(errorMessage), {
+      Logger.captureException(toCapturableError(errorMessage), {
         captureContext: { level: 'warning', tags: { provider: PaymentProvider.GOOGLE_PAY } }
       });
       return;
     }
 
     handlePaymentErrorMessage(error, params, "Google Pay payment process failed");
+  } finally {
+    isGooglePayRequestActive = false;
   }
 }
 

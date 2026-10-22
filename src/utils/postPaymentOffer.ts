@@ -3,7 +3,7 @@ import type { FormConfig, IZotloCardParams, IZotloCheckoutParams, OffersObject, 
 import { createPostPaymentOffersPage } from "../lib/create";
 import { endPaymentSession, getPaymentDetail } from "./sendPayment";
 import { CheckoutAPI } from "./api";
-import { Logger } from "../lib/logger";
+import { Logger, toCapturableError } from "../lib/logger";
 
 /**
  * Sends the user's decision for a post payment offer.
@@ -30,7 +30,7 @@ export async function sendOfferDecision(payload: {
 
     if (response?.meta?.errorCode) {
       params.events?.onOfferFail?.({ message: response.meta?.message, data: offer });
-      Logger.client?.captureException(response.meta);
+      Logger.captureException(toCapturableError(response));
       return false;
     }
 
@@ -41,7 +41,7 @@ export async function sendOfferDecision(payload: {
       message: e?.meta?.message || 'Post payment offer request failed',
       data: offer
     });
-    Logger.client?.captureException(e);
+    Logger.captureException(e);
     return false;
   }
 }
@@ -75,7 +75,7 @@ export function handlePostPaymentOffers(payload: {
     // backend errors, so a reject here is only worth recording.
     const detail = acceptedOfferIds.length
       ? await getPaymentDetail(params).catch((e) => {
-        Logger.client?.captureException(e);
+        Logger.captureException(e);
         return null;
       })
       : null;

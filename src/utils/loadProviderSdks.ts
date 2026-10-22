@@ -76,7 +76,7 @@ function loadScript(src: string, id: string, provider: PaymentProvider): Promise
 
     scriptLoaders.delete(src);
     // The flow continues without this provider, so it's reported as a warning
-    Logger.client?.captureException(new Error(`Failed to load script: ${src}`), {
+    Logger.captureException(new Error(`Failed to load script: ${src}`), {
       captureContext: { level: 'warning', tags: { provider, reason: result } }
     });
   })();
@@ -126,7 +126,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
     const client = getGooglePayClient();
     return client?.createButton?.({...payload, onClick: () => {}});
   } catch (e) {
-    Logger.client?.captureException(toCapturableError(e));
+    Logger.captureException(toCapturableError(e));
     return null;
   }
 }
@@ -166,7 +166,7 @@ function prefetchGooglePaymentData(providerConfigs?: ProviderConfigs) {
     const payload = JSON.parse(JSON.stringify(providerConfigs?.googlePay?.paymentDataRequest));
     getGooglePayClient()?.prefetchPaymentData?.(payload);
   } catch (e) {
-    Logger.client?.captureException(toCapturableError(e));
+    Logger.captureException(toCapturableError(e));
   }
 }
 
@@ -177,9 +177,15 @@ export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs
     const response = await getGooglePayClient()?.isReadyToPay?.(isReadyToPayRequest);
     return !!response?.result;
   } catch (e) {
-    Logger.client?.captureException(toCapturableError(e));
+    Logger.captureException(toCapturableError(e));
     return false;
   }
+}
+
+// In-app browsers (e.g. Facebook, Instagram) inject scripts into the page, so WebKit treats
+// it as an "insecure document" and disables Apple Pay, whatever the page's certificate
+export function isApplePayInsecureDocumentError(error: any) {
+  return error?.name === 'InvalidAccessError' && !!error?.message?.includes('insecure document');
 }
 
 export function canMakeApplePayPayments() {
@@ -187,7 +193,11 @@ export function canMakeApplePayPayments() {
   try {
     return (globalThis as any)?.ApplePaySession?.canMakePayments();
   } catch (e) {
-    Logger.client?.captureException(e);
+    // Expected in in-app browsers, the button is just hidden
+    Logger.captureException(e, isApplePayInsecureDocumentError(e)
+      ? { captureContext: { level: 'warning', tags: { provider: PaymentProvider.APPLE_PAY } } }
+      : undefined
+    );
     return false;
   }
 }
@@ -220,6 +230,28 @@ export function hasValidGooglePayConfig(googlePayConfig?: ProviderConfigs["googl
   );
 }
 
+let isFramePaymentWarningSent = false;
+
+// Inside an iframe without allow="payment", PaymentRequest (used by pay.js, and by Apple's
+// SDK on non-Safari browsers) throws SecurityError, so the wallet buttons would render but
+// never work. Browsers without the policy API (e.g. Safari) are left as they are.
+export function isPaymentAllowedInFrame() {
+  if (import.meta.env.VITE_CONSOLE) return true;
+  if (window.self === window.top) return true;
+
+  const policy = (document as any).permissionsPolicy || (document as any).featurePolicy;
+  const isAllowed = policy?.allowsFeature ? !!policy.allowsFeature('payment') : true;
+
+  if (!isAllowed && !isFramePaymentWarningSent) {
+    isFramePaymentWarningSent = true;
+    Logger.captureException(new Error('Wallet payments disabled: iframe is missing allow="payment"'), {
+      captureContext: { level: 'warning' }
+    });
+  }
+
+  return isAllowed;
+}
+
 export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
   [providerConfigs] = await Promise.all([
@@ -227,8 +259,9 @@ export async function prepareProviders(config: FormConfig, returnUrl: string) {
     loadProviderSDKs({ paymentInitData: config?.paymentData })
   ]);
 
-  const canAppleMakePayments = canMakeApplePayPayments() && hasValidApplePayConfig(providerConfigs?.applePay);
-  const isGooglePayEnabled = !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY] && hasValidGooglePayConfig(providerConfigs?.googlePay);
+  const isPaymentAllowed = isPaymentAllowedInFrame();
+  const canAppleMakePayments = isPaymentAllowed && canMakeApplePayPayments() && hasValidApplePayConfig(providerConfigs?.applePay);
+  const isGooglePayEnabled = isPaymentAllowed && !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY] && hasValidGooglePayConfig(providerConfigs?.googlePay);
   const isGoogleReadyToPay = isGooglePayEnabled && await canMakeGooglePayPayments(providerConfigs);
 
   if (isGoogleReadyToPay) prefetchGooglePaymentData(providerConfigs);

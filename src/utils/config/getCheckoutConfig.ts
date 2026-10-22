@@ -1,10 +1,10 @@
-import { ErrorHandler } from "./index";
+import { captureInitError, ErrorHandler, isSessionError, setErrorResponse } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormPostPaymentOffers, FormSuccess, ProviderConfigs } from "../../lib/types";
 import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
 import { CheckoutAPI } from "../../utils/api";
-import { setSession } from "../session";
+import { deleteSession, getSession, setSession } from "../session";
 import { getPackageInfo } from "../getPackageInfo";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
 import { ErrorCodes, type InitResult } from "./types";
@@ -30,8 +30,8 @@ export async function getPaymentData(uuid?: string) {
 
     return paymentInitData;
   } catch (e: any) {
-    ErrorHandler.response = e;
-    Logger.client?.captureException(e);
+    setErrorResponse(e);
+    Logger.captureException(e);
     return {} as FormPaymentData;
   }
 }
@@ -74,7 +74,15 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
   const reqConfig = { headers: { Language: language } };
 
   try {
-    const initRes = await CheckoutAPI.post('/init', payload, reqConfig);
+    let initRes = await CheckoutAPI.post('/init', payload, reqConfig);
+
+    // A stale session Uuid sent with the request makes /init fail with "user not found";
+    // drop it and retry once instead of leaving it to the Retry button on the error page
+    if (isSessionError(initRes) && getSession({ useCookie })?.id) {
+      deleteSession({ useCookie });
+      initRes = await CheckoutAPI.post('/init', payload, reqConfig);
+    }
+
     const initData = initRes?.result as InitResult;
     if (initRes.meta.errorCode) throw initRes;
 
@@ -172,9 +180,9 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     config.packageInfo = getPackageInfo(config);
     ZOTLO_GLOBAL.ready = true;
   } catch (e: any) {
-    ErrorHandler.response = e;
+    setErrorResponse(e);
     params.events?.onError?.(e);
-    Logger.client?.captureException(e);
+    captureInitError(e);
     ZOTLO_GLOBAL.ready = false;
     return config;
   }
@@ -188,8 +196,8 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
     const data = res?.result || {};
     return { ...data, initMeta: res?.meta };
   } catch (e: any) {
-    ErrorHandler.response = e;
-    Logger.client?.captureException(e);
+    setErrorResponse(e);
+    Logger.captureException(e);
     return { initMeta: e?.meta || { message: e?.message || 'Provider init request failed' } };
   }
 }

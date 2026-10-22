@@ -10,10 +10,23 @@ const SENTRY_CHUNK_FILE = 'zotlo-sentry.min.js';
 // transactionInfo must be set!").
 // It can also reject with a plain string (e.g. "failed to open window"), which
 // Sentry records without a stack trace, so wrap strings in an Error as well.
+// Backend errors thrown as the raw { meta, result } response (e.g. /init) would all
+// group under "Object captured as exception with keys: meta, result", so they're
+// titled by their error code; the meta fields are recorded via extraErrorDataIntegration.
 export function toCapturableError(err: unknown): unknown {
   if (typeof err === 'string') return new Error(err);
+  if (err instanceof Error) return err;
+
+  const response = err as { meta?: { errorCode?: string; message?: string; httpStatus?: number; requestId?: string } } | null;
+  if (response?.meta?.errorCode) {
+    const { errorCode, message, httpStatus, requestId } = response.meta;
+    const error = Object.assign(new Error(`${errorCode}: ${message || ''}`), { errorCode, httpStatus, requestId });
+    error.name = 'ApiResponseError';
+    return error;
+  }
+
   const e = err as { statusCode?: unknown; statusMessage?: unknown } | null;
-  if (err instanceof Error || !e?.statusMessage) return err;
+  if (!e?.statusMessage) return err;
   const error = new Error(String(e.statusMessage));
   error.name = String(e.statusCode || 'PaymentsError');
   return error;
@@ -55,7 +68,7 @@ export const Logger = {
       transport: SentryBrowser.makeFetchTransport,
       stackParser: SentryBrowser.defaultStackParser,
       // Only integrations that don't patch page globals — events reach this client
-      // solely through explicit Logger.client.captureException() calls, so nothing
+      // solely through explicit Logger.captureException() calls, so nothing
       // from the host page can leak into our project.
       integrations: [
         SentryBrowser.eventFiltersIntegration(),
@@ -63,7 +76,18 @@ export const Logger = {
         SentryBrowser.linkedErrorsIntegration(),
         SentryBrowser.dedupeIntegration(),
         SentryBrowser.httpContextIntegration(),
+        // Records custom error fields (e.g. ApiRequestError's elapsedMs/status) as extra data
+        SentryBrowser.extraErrorDataIntegration(),
       ],
+      // Sentry groups by stack trace, and these errors are always created in the same place
+      // (the XHR handler, toCapturableError), so every endpoint or error code would land in
+      // a single issue. Group them by request and by error code instead.
+      beforeSend(event, hint) {
+        const err = hint?.originalException as { name?: string; method?: string; endpoint?: string; errorCode?: string } | undefined;
+        if (err?.name === 'ApiRequestError') event.fingerprint = ['ApiRequestError', `${err.method} ${err.endpoint}`];
+        if (err?.name === 'ApiResponseError') event.fingerprint = ['ApiResponseError', String(err.errorCode)];
+        return event;
+      },
       release,
       // Known Error/ad/3rd-party and loop sources (allowUrls defined will probably block these, but let's call it extra security)
       denyUrls: [
@@ -78,7 +102,8 @@ export const Logger = {
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*onesignal\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*hotjar\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*intercomcdn\.com/i,
-        /^(?:https?:)?\/\/([a-z0-9-]+\.)*jsdelivr\.net/i,
+        // Public CDNs (jsdelivr, unpkg) must not be listed: the SDK itself is served from them,
+        // so errors thrown in our own code would be dropped for those integrations
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*browser-intake-datadoghq\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*mixpanel\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*segment\.com/i,
@@ -147,12 +172,19 @@ export const Logger = {
     this.scope = scope;
   },
 
+  // Captures through our scope instead of the client directly: only Scope.captureException
+  // puts originalException on the hint, which extraErrorDataIntegration needs to record the
+  // error's custom fields (e.g. ApiRequestError's elapsedMs, ApiResponseError's requestId)
+  captureException(err: unknown, hint?: Parameters<Sentry.Scope['captureException']>[1]) {
+    this.scope?.captureException(err, hint);
+  },
+
   // Wraps an SDK entry point so errors thrown inside it are reported to Sentry
   // before propagating to the caller. This keeps capturing opt-in per function
   // instead of patching page globals (see zotlo-sentry.ts).
   wrap<T extends (...args: any[]) => any>(fn: T): T {
     const capture = (err: unknown) => {
-      this.client?.captureException(err);
+      this.captureException(err);
     };
 
     return function (this: unknown, ...args: Parameters<T>) {
