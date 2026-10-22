@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.25.3
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.2...v1.25.3)
+
+### 🩹 Fixes
+
+- **Z3-6822:** Hide Apple Pay when canMakePayments fails in in-app browsers ([cb4c4c9](https://github.com/Zotlo/zotlo-checkout/commit/cb4c4c9))
+- **Z3-6822:** Capture through the Sentry scope so custom error fields are recorded ([603c4ea](https://github.com/Zotlo/zotlo-checkout/commit/603c4ea))
+- **Z3-6822:** Keep network errors from breaking the checkout render ([46761d4](https://github.com/Zotlo/zotlo-checkout/commit/46761d4))
+- **Z3-6822:** Finish the Apple Pay checkout when the sheet is already closed ([f1198f0](https://github.com/Zotlo/zotlo-checkout/commit/f1198f0))
+- **Z3-6822:** Group API errors by request and by error code in Sentry ([2fc2ea3](https://github.com/Zotlo/zotlo-checkout/commit/2fc2ea3))
+- **Z3-6822:** Check the Google Pay config before opening the payment sheet ([e1eab95](https://github.com/Zotlo/zotlo-checkout/commit/e1eab95))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.25.2
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.1...v1.25.2)

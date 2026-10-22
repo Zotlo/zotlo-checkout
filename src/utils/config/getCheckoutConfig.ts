@@ -1,4 +1,4 @@
-import { captureInitError, ErrorHandler, isSessionError } from "./index";
+import { captureInitError, ErrorHandler, isSessionError, setErrorResponse } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormPostPaymentOffers, FormSuccess, ProviderConfigs } from "../../lib/types";
 import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
@@ -30,8 +30,8 @@ export async function getPaymentData(uuid?: string) {
 
     return paymentInitData;
   } catch (e: any) {
-    ErrorHandler.response = e;
-    Logger.client?.captureException(e);
+    setErrorResponse(e);
+    Logger.captureException(e);
     return {} as FormPaymentData;
   }
 }
@@ -178,7 +178,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     config.packageInfo = getPackageInfo(config);
     ZOTLO_GLOBAL.ready = true;
   } catch (e: any) {
-    ErrorHandler.response = e;
+    setErrorResponse(e);
     params.events?.onError?.(e);
     captureInitError(e);
     ZOTLO_GLOBAL.ready = false;
@@ -194,8 +194,8 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
     const data = res?.result || {};
     return { ...data, initMeta: res?.meta };
   } catch (e: any) {
-    ErrorHandler.response = e;
-    Logger.client?.captureException(e);
+    setErrorResponse(e);
+    Logger.captureException(e);
     return { initMeta: e?.meta || { message: e?.message || 'Provider init request failed' } };
   }
 }

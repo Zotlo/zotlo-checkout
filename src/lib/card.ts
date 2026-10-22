@@ -117,7 +117,7 @@ async function createZotloCard(params: IZotloCardParams) {
           if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
         }
       } catch (e) {
-        Logger.client?.captureException(e);
+        Logger.captureException(e);
       } finally {
         setFormLoading(false);
       }
@@ -344,7 +344,7 @@ async function createZotloCard(params: IZotloCardParams) {
         }
       }
     } catch (err) {
-      Logger.client?.captureException(err);
+      Logger.captureException(err);
     }
   }
 

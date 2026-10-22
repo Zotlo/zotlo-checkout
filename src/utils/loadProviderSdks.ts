@@ -76,7 +76,7 @@ function loadScript(src: string, id: string, provider: PaymentProvider): Promise
 
     scriptLoaders.delete(src);
     // The flow continues without this provider, so it's reported as a warning
-    Logger.client?.captureException(new Error(`Failed to load script: ${src}`), {
+    Logger.captureException(new Error(`Failed to load script: ${src}`), {
       captureContext: { level: 'warning', tags: { provider, reason: result } }
     });
   })();
@@ -126,7 +126,7 @@ export function getGooglePayButton(googlePayConfig: ProviderConfigs["googlePay"]
     const client = getGooglePayClient();
     return client?.createButton?.({...payload, onClick: () => {}});
   } catch (e) {
-    Logger.client?.captureException(toCapturableError(e));
+    Logger.captureException(toCapturableError(e));
     return null;
   }
 }
@@ -166,7 +166,7 @@ function prefetchGooglePaymentData(providerConfigs?: ProviderConfigs) {
     const payload = JSON.parse(JSON.stringify(providerConfigs?.googlePay?.paymentDataRequest));
     getGooglePayClient()?.prefetchPaymentData?.(payload);
   } catch (e) {
-    Logger.client?.captureException(toCapturableError(e));
+    Logger.captureException(toCapturableError(e));
   }
 }
 
@@ -177,9 +177,15 @@ export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs
     const response = await getGooglePayClient()?.isReadyToPay?.(isReadyToPayRequest);
     return !!response?.result;
   } catch (e) {
-    Logger.client?.captureException(toCapturableError(e));
+    Logger.captureException(toCapturableError(e));
     return false;
   }
+}
+
+// In-app browsers (e.g. Facebook, Instagram) inject scripts into the page, so WebKit treats
+// it as an "insecure document" and disables Apple Pay, whatever the page's certificate
+export function isApplePayInsecureDocumentError(error: any) {
+  return error?.name === 'InvalidAccessError' && !!error?.message?.includes('insecure document');
 }
 
 export function canMakeApplePayPayments() {
@@ -187,7 +193,11 @@ export function canMakeApplePayPayments() {
   try {
     return (globalThis as any)?.ApplePaySession?.canMakePayments();
   } catch (e) {
-    Logger.client?.captureException(e);
+    // Expected in in-app browsers, the button is just hidden
+    Logger.captureException(e, isApplePayInsecureDocumentError(e)
+      ? { captureContext: { level: 'warning', tags: { provider: PaymentProvider.APPLE_PAY } } }
+      : undefined
+    );
     return false;
   }
 }
@@ -234,7 +244,7 @@ export function isPaymentAllowedInFrame() {
 
   if (!isAllowed && !isFramePaymentWarningSent) {
     isFramePaymentWarningSent = true;
-    Logger.client?.captureException(new Error('Wallet payments disabled: iframe is missing allow="payment"'), {
+    Logger.captureException(new Error('Wallet payments disabled: iframe is missing allow="payment"'), {
       captureContext: { level: 'warning' }
     });
   }
