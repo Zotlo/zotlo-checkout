@@ -474,9 +474,15 @@ async function handleApplePayPayment(payload: {
           },
         });
       } catch (e) {
-        session.completePayment(ApplePaySession.STATUS_FAILURE);
+        // The sheet may already be closed (e.g. Apple Pay timed out while the checkout
+        // request was pending), where completePayment throws and would hide the error
+        try { session.completePayment(ApplePaySession.STATUS_FAILURE); } catch { /* session already closed */ }
         endSession(true);
-        Logger.client?.captureException(e || 'Apple Pay checkout error -> onpaymentauthorized');
+        handlePaymentErrorMessage(
+          e || new Error('Apple Pay checkout error -> onpaymentauthorized'),
+          params,
+          "Apple Pay payment process failed"
+        );
       }
     };
 
@@ -487,9 +493,28 @@ async function handleApplePayPayment(payload: {
     session.begin();
     isApplePaySessionActive = true;
   } catch (error: any) {
+    // In-app browsers (e.g. Facebook) inject scripts into the page, so WebKit refuses to
+    // start the session from an "insecure document". Expected there, so give a readable
+    // message and report it as a warning.
+    if (error?.name === 'InvalidAccessError' && error?.message?.includes('insecure document')) {
+      params.events?.onFail?.({
+        message: 'Apple Pay could not be opened in this browser. Please try another payment method.',
+        data: {}
+      });
+      Logger.client?.captureException(error, {
+        captureContext: { level: 'warning', tags: { provider: PaymentProvider.APPLE_PAY } }
+      });
+      return;
+    }
+
     handlePaymentErrorMessage(error, params, "Apple Pay payment process failed");
   }
 }
+
+// pay.js allows a single pending loadPaymentData() per PaymentsClient (shared across mounts);
+// a second call rejects with "This method can only be called one at a time"
+// (e.g. double-tap in in-app browsers, or a re-mount while the payment sheet is still open)
+let isGooglePayRequestActive = false;
 
 async function handleGooglePayPayment(payload: {
   formPayload: Record<string, any>;
@@ -507,6 +532,10 @@ async function handleGooglePayPayment(payload: {
     subscriberId,
     refreshProviderConfigsFunction
   } = payload;
+
+  if (isGooglePayRequestActive) return;
+  isGooglePayRequestActive = true;
+
   try {
     const paymentDataRequest = JSON.parse(JSON.stringify(providerConfig?.paymentDataRequest));
     
@@ -547,6 +576,8 @@ async function handleGooglePayPayment(payload: {
     }
 
     handlePaymentErrorMessage(error, params, "Google Pay payment process failed");
+  } finally {
+    isGooglePayRequestActive = false;
   }
 }
 

@@ -220,6 +220,28 @@ export function hasValidGooglePayConfig(googlePayConfig?: ProviderConfigs["googl
   );
 }
 
+let isFramePaymentWarningSent = false;
+
+// Inside an iframe without allow="payment", PaymentRequest (used by pay.js, and by Apple's
+// SDK on non-Safari browsers) throws SecurityError, so the wallet buttons would render but
+// never work. Browsers without the policy API (e.g. Safari) are left as they are.
+export function isPaymentAllowedInFrame() {
+  if (import.meta.env.VITE_CONSOLE) return true;
+  if (window.self === window.top) return true;
+
+  const policy = (document as any).permissionsPolicy || (document as any).featurePolicy;
+  const isAllowed = policy?.allowsFeature ? !!policy.allowsFeature('payment') : true;
+
+  if (!isAllowed && !isFramePaymentWarningSent) {
+    isFramePaymentWarningSent = true;
+    Logger.client?.captureException(new Error('Wallet payments disabled: iframe is missing allow="payment"'), {
+      captureContext: { level: 'warning' }
+    });
+  }
+
+  return isAllowed;
+}
+
 export async function prepareProviders(config: FormConfig, returnUrl: string) {
   let providerConfigs = {} as ProviderConfigs;
   [providerConfigs] = await Promise.all([
@@ -227,8 +249,9 @@ export async function prepareProviders(config: FormConfig, returnUrl: string) {
     loadProviderSDKs({ paymentInitData: config?.paymentData })
   ]);
 
-  const canAppleMakePayments = canMakeApplePayPayments() && hasValidApplePayConfig(providerConfigs?.applePay);
-  const isGooglePayEnabled = !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY] && hasValidGooglePayConfig(providerConfigs?.googlePay);
+  const isPaymentAllowed = isPaymentAllowedInFrame();
+  const canAppleMakePayments = isPaymentAllowed && canMakeApplePayPayments() && hasValidApplePayConfig(providerConfigs?.applePay);
+  const isGooglePayEnabled = isPaymentAllowed && !!config?.paymentData?.providers?.[PaymentProvider.GOOGLE_PAY] && hasValidGooglePayConfig(providerConfigs?.googlePay);
   const isGoogleReadyToPay = isGooglePayEnabled && await canMakeGooglePayPayments(providerConfigs);
 
   if (isGoogleReadyToPay) prefetchGooglePaymentData(providerConfigs);

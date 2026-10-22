@@ -10,10 +10,23 @@ const SENTRY_CHUNK_FILE = 'zotlo-sentry.min.js';
 // transactionInfo must be set!").
 // It can also reject with a plain string (e.g. "failed to open window"), which
 // Sentry records without a stack trace, so wrap strings in an Error as well.
+// Backend errors thrown as the raw { meta, result } response (e.g. /init) would all
+// group under "Object captured as exception with keys: meta, result", so they're
+// titled by their error code; the meta fields are recorded via extraErrorDataIntegration.
 export function toCapturableError(err: unknown): unknown {
   if (typeof err === 'string') return new Error(err);
+  if (err instanceof Error) return err;
+
+  const response = err as { meta?: { errorCode?: string; message?: string; httpStatus?: number; requestId?: string } } | null;
+  if (response?.meta?.errorCode) {
+    const { errorCode, message, httpStatus, requestId } = response.meta;
+    const error = Object.assign(new Error(`${errorCode}: ${message || ''}`), { httpStatus, requestId });
+    error.name = 'ApiResponseError';
+    return error;
+  }
+
   const e = err as { statusCode?: unknown; statusMessage?: unknown } | null;
-  if (err instanceof Error || !e?.statusMessage) return err;
+  if (!e?.statusMessage) return err;
   const error = new Error(String(e.statusMessage));
   error.name = String(e.statusCode || 'PaymentsError');
   return error;
@@ -63,6 +76,8 @@ export const Logger = {
         SentryBrowser.linkedErrorsIntegration(),
         SentryBrowser.dedupeIntegration(),
         SentryBrowser.httpContextIntegration(),
+        // Records custom error fields (e.g. ApiRequestError's elapsedMs/status) as extra data
+        SentryBrowser.extraErrorDataIntegration(),
       ],
       release,
       // Known Error/ad/3rd-party and loop sources (allowUrls defined will probably block these, but let's call it extra security)
@@ -78,7 +93,8 @@ export const Logger = {
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*onesignal\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*hotjar\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*intercomcdn\.com/i,
-        /^(?:https?:)?\/\/([a-z0-9-]+\.)*jsdelivr\.net/i,
+        // Public CDNs (jsdelivr, unpkg) must not be listed: the SDK itself is served from them,
+        // so errors thrown in our own code would be dropped for those integrations
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*browser-intake-datadoghq\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*mixpanel\.com/i,
         /^(?:https?:)?\/\/([a-z0-9-]+\.)*segment\.com/i,

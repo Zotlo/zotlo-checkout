@@ -18,6 +18,31 @@ export interface ApiResponse {
 }
 
 /**
+ * A request that got no response (network error or timeout).
+ * The message stays stable for Sentry grouping; the details are fields,
+ * which Sentry records through extraErrorDataIntegration.
+ */
+export class ApiRequestError extends Error {
+  type: 'network' | 'timeout';
+  method: string;
+  endpoint: string;
+  status: number;
+  elapsedMs: number;
+  timeout: number;
+
+  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout'>) {
+    super(`${details.type === 'timeout' ? 'Request timeout' : 'Network error'}: ${details.method} ${details.endpoint}`);
+    this.name = 'ApiRequestError';
+    this.type = details.type;
+    this.method = details.method;
+    this.endpoint = details.endpoint;
+    this.status = details.status;
+    this.elapsedMs = details.elapsedMs;
+    this.timeout = details.timeout;
+  }
+}
+
+/**
  * API utility class for making HTTP requests using XMLHttpRequest
  */
 export class API {
@@ -125,13 +150,22 @@ export class API {
         }
       };
 
-      xhr.onerror = function () {
-        reject(xhr.response);
+      // Network errors and timeouts carry no response (xhr.response is ""), so reject with
+      // a descriptive error instead; otherwise Sentry gets an empty value with no context.
+      const startedAt = Date.now();
+      const rejectWithRequestError = (type: ApiRequestError['type']) => {
+        reject(new ApiRequestError({
+          type,
+          method,
+          endpoint,
+          status: xhr.status,
+          elapsedMs: Date.now() - startedAt,
+          timeout
+        }));
       };
 
-      xhr.ontimeout = function () {
-        reject(xhr.response);
-      };
+      xhr.onerror = () => rejectWithRequestError('network');
+      xhr.ontimeout = () => rejectWithRequestError('timeout');
 
       // Send the request
       if (data && method !== "GET") {

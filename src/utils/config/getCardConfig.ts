@@ -1,11 +1,10 @@
-import { ErrorHandler } from "./index";
+import { captureInitError, ErrorHandler } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import { DesignTheme, PaymentProvider, type FormConfig, type FormDesign, type FormSuccess, type IZotloCheckoutParams } from "../../lib/types";
 import { CardAPI } from "../api";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
 import { setSession } from "../session";
 import type { CardInitResult } from "./types";
-import { Logger } from "../../lib/logger";
 import { COOKIE } from "../cookie";
 
 export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormConfig> {
@@ -131,7 +130,7 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
     ErrorHandler.response = e;
     ZOTLO_GLOBAL.ready = false;
     params.events?.onError?.(e);
-    Logger.client?.captureException(e);
+    captureInitError(e);
     return config;
   }
 

@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.25.2
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.1...v1.25.2)
+
+### 🩹 Fixes
+
+- **Z3-6815:** Reject network errors and timeouts with a descriptive ApiRequestError ([01ea748](https://github.com/Zotlo/zotlo-checkout/commit/01ea748))
+- **Z3-6815:** Allow a single pending Google Pay loadPaymentData call ([10db030](https://github.com/Zotlo/zotlo-checkout/commit/10db030))
+- **Z3-6815:** Stop dropping SDK errors for integrations loading it from jsdelivr ([d1461a3](https://github.com/Zotlo/zotlo-checkout/commit/d1461a3))
+- **Z3-6815:** Recover /init from a stale session and report init errors by code ([de6037a](https://github.com/Zotlo/zotlo-checkout/commit/de6037a))
+- **Z3-6815:** Notify onFail when the Apple Pay checkout request fails ([25018b8](https://github.com/Zotlo/zotlo-checkout/commit/25018b8))
+- **Z3-6815:** Hide wallet buttons in iframes without allow="payment" ([4fb9306](https://github.com/Zotlo/zotlo-checkout/commit/4fb9306))
+- **Z3-6815:** Handle Apple Pay insecure document error in in-app browsers ([26dc9da](https://github.com/Zotlo/zotlo-checkout/commit/26dc9da))
+- **Z3-6815:** Report post payment offer errors by error code ([96c1e5f](https://github.com/Zotlo/zotlo-checkout/commit/96c1e5f))
+- **Z3-6815:** Start a new session after unmount ([5e5303f](https://github.com/Zotlo/zotlo-checkout/commit/5e5303f))
+
+### 💅 Refactors
+
+- **Z3-6815:** Share session error codes with the Retry button ([101e876](https://github.com/Zotlo/zotlo-checkout/commit/101e876))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.25.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.0...v1.25.1)
