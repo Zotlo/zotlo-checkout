@@ -182,12 +182,22 @@ export async function canMakeGooglePayPayments(providerConfigs?: ProviderConfigs
   }
 }
 
+// In-app browsers (e.g. Facebook, Instagram) inject scripts into the page, so WebKit treats
+// it as an "insecure document" and disables Apple Pay, whatever the page's certificate
+export function isApplePayInsecureDocumentError(error: any) {
+  return error?.name === 'InvalidAccessError' && !!error?.message?.includes('insecure document');
+}
+
 export function canMakeApplePayPayments() {
   if (import.meta.env.VITE_CONSOLE) return true;
   try {
     return (globalThis as any)?.ApplePaySession?.canMakePayments();
   } catch (e) {
-    Logger.client?.captureException(e);
+    // Expected in in-app browsers, the button is just hidden
+    Logger.client?.captureException(e, isApplePayInsecureDocumentError(e)
+      ? { captureContext: { level: 'warning', tags: { provider: PaymentProvider.APPLE_PAY } } }
+      : undefined
+    );
     return false;
   }
 }

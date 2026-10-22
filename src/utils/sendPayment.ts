@@ -1,6 +1,6 @@
 import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalEnabled, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
-import { getGooglePayClient, hasValidApplePayConfig } from "./loadProviderSdks";
+import { getGooglePayClient, hasValidApplePayConfig, isApplePayInsecureDocumentError } from "./loadProviderSdks";
 import { CheckoutAPI } from "./api";
 import { deleteSession, getSession } from "./session";
 import { Logger, toCapturableError } from "../lib/logger";
@@ -493,10 +493,10 @@ async function handleApplePayPayment(payload: {
     session.begin();
     isApplePaySessionActive = true;
   } catch (error: any) {
-    // In-app browsers (e.g. Facebook) inject scripts into the page, so WebKit refuses to
-    // start the session from an "insecure document". Expected there, so give a readable
+    // canMakePayments() can still pass in in-app browsers when the page scripts are injected
+    // later, so the session is refused on click instead. Expected there, so give a readable
     // message and report it as a warning.
-    if (error?.name === 'InvalidAccessError' && error?.message?.includes('insecure document')) {
+    if (isApplePayInsecureDocumentError(error)) {
       params.events?.onFail?.({
         message: 'Apple Pay could not be opened in this browser. Please try another payment method.',
         data: {}
