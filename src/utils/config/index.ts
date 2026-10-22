@@ -20,7 +20,7 @@ export function isSessionError(response?: ApiResponse | null) {
 // setup issues rather than SDK failures, so they're reported as warnings
 export function captureInitError(e: any) {
   const isSetupError = !!e?.meta?.errorCode && !isSessionError(e);
-  Logger.client?.captureException(
+  Logger.captureException(
     toCapturableError(e),
     isSetupError ? { captureContext: { level: 'warning' } } : undefined
   );

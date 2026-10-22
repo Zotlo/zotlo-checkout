@@ -68,7 +68,7 @@ export const Logger = {
       transport: SentryBrowser.makeFetchTransport,
       stackParser: SentryBrowser.defaultStackParser,
       // Only integrations that don't patch page globals — events reach this client
-      // solely through explicit Logger.client.captureException() calls, so nothing
+      // solely through explicit Logger.captureException() calls, so nothing
       // from the host page can leak into our project.
       integrations: [
         SentryBrowser.eventFiltersIntegration(),
@@ -163,12 +163,19 @@ export const Logger = {
     this.scope = scope;
   },
 
+  // Captures through our scope instead of the client directly: only Scope.captureException
+  // puts originalException on the hint, which extraErrorDataIntegration needs to record the
+  // error's custom fields (e.g. ApiRequestError's elapsedMs, ApiResponseError's requestId)
+  captureException(err: unknown, hint?: Parameters<Sentry.Scope['captureException']>[1]) {
+    this.scope?.captureException(err, hint);
+  },
+
   // Wraps an SDK entry point so errors thrown inside it are reported to Sentry
   // before propagating to the caller. This keeps capturing opt-in per function
   // instead of patching page globals (see zotlo-sentry.ts).
   wrap<T extends (...args: any[]) => any>(fn: T): T {
     const capture = (err: unknown) => {
-      this.client?.captureException(err);
+      this.captureException(err);
     };
 
     return function (this: unknown, ...args: Parameters<T>) {

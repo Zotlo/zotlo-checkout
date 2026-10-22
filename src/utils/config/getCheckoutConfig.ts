@@ -31,7 +31,7 @@ export async function getPaymentData(uuid?: string) {
     return paymentInitData;
   } catch (e: any) {
     ErrorHandler.response = e;
-    Logger.client?.captureException(e);
+    Logger.captureException(e);
     return {} as FormPaymentData;
   }
 }
@@ -195,7 +195,7 @@ export async function getProviderConfig(providerKey: PaymentProvider, returnUrl:
     return { ...data, initMeta: res?.meta };
   } catch (e: any) {
     ErrorHandler.response = e;
-    Logger.client?.captureException(e);
+    Logger.captureException(e);
     return { initMeta: e?.meta || { message: e?.message || 'Provider init request failed' } };
   }
 }

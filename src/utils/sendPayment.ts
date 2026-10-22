@@ -115,7 +115,7 @@ export async function registerPaymentUser(subscriberId: string, config: FormConf
     return response;
   } catch (err:any) {
     params.events?.onFail?.({ message: err?.meta?.message || "Failed to register user", data: err?.meta });
-    Logger.client?.captureException(err);
+    Logger.captureException(err);
     return err;
   }
 }
@@ -134,7 +134,7 @@ function handlePaymentErrorMessage(error:any, params: IZotloCheckoutParams, mess
     message,
     data: typeof error !== 'string' ? error : {}
   });
-  Logger.client?.captureException(
+  Logger.captureException(
     toCapturableError(error),
     extra ? { captureContext: { extra } } : undefined
   );
@@ -328,7 +328,7 @@ export async function handlePaymentSuccess(payload: { config: FormConfig; params
 
     return result;
   } catch (e) {
-    Logger.client?.captureException(e);
+    Logger.captureException(e);
     return null;
   } finally {
     setFormLoading(false);
@@ -501,7 +501,7 @@ async function handleApplePayPayment(payload: {
         message: 'Apple Pay could not be opened in this browser. Please try another payment method.',
         data: {}
       });
-      Logger.client?.captureException(error, {
+      Logger.captureException(error, {
         captureContext: { level: 'warning', tags: { provider: PaymentProvider.APPLE_PAY } }
       });
       return;
@@ -569,7 +569,7 @@ async function handleGooglePayPayment(payload: {
         message: 'Google Pay could not be opened in this browser. Please try another payment method.',
         data: {}
       });
-      Logger.client?.captureException(toCapturableError(errorMessage), {
+      Logger.captureException(toCapturableError(errorMessage), {
         captureContext: { level: 'warning', tags: { provider: PaymentProvider.GOOGLE_PAY } }
       });
       return;

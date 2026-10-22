@@ -147,7 +147,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
           ...getEventData(),
           ...tiktokContext
         });
-      }).catch(e => Logger.client?.captureException(e));
+      }).catch(e => Logger.captureException(e));
 
       try {
         setFormLoading(true);
@@ -163,7 +163,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
           refreshProviderConfigsFunction: refreshProviderConfigs
         });
       } catch (e) {
-        Logger.client?.captureException(e);
+        Logger.captureException(e);
       } finally {
         setFormLoading(false);
       }
@@ -270,7 +270,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         syncInputsOnTabs(tabName, ['subscriberId', 'discountCode']);
         initFormInputs();
       } catch (err) {
-        Logger.client?.captureException(err);
+        Logger.captureException(err);
       }
     }
 
@@ -356,7 +356,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         }
       }
     } catch (err) {
-      Logger.client?.captureException(err);
+      Logger.captureException(err);
     }
   }
 
