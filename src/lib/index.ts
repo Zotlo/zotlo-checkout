@@ -40,7 +40,7 @@ import { createPaymentSuccessForm, createPostPaymentOffersPage } from "./create"
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from './logger';
 import { getFormValues, loadSelectbox } from "./common";
-import { deleteSession } from "../utils/session";
+import { deleteSession, getSession } from "../utils/session";
 import { COOKIE } from "../utils/cookie";
 import { ErrorCodes } from "../utils/config/types";
 
@@ -49,6 +49,9 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   await Logger.loadSentry();
 
   let config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
+  // Uuid this instance got from /init. Sessions are stored per page, not per instance,
+  // so unmount compares against it to avoid dropping another instance's session.
+  let sessionId: string | undefined;
 
   await reloadSession();
 
@@ -79,6 +82,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         enableDiscountCodeEntry: params?.enableDiscountCodeEntry,
         events: params.events
       });
+      sessionId = getSession({ useCookie: !!params?.useCookie })?.id || undefined;
       await refreshProviderConfigs();
     }
   }
@@ -752,12 +756,26 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
     ZOTLO_GLOBAL.reset();
+
+    // The backend keeps the package and customParameters of the session's first /init,
+    // so a ZotloCheckout() call after unmount must not reuse this session.
+    const useCookie = !!params?.useCookie;
+    if (sessionId && getSession({ useCookie })?.id === sessionId) {
+      deleteSession({ useCookie, key: COOKIE.UUID });
+    }
   }
 
-  function mount(id: string) {
+  async function mount(id: string) {
     if (ZOTLO_GLOBAL.containerId) return;
 
     ZOTLO_GLOBAL.containerId = id;
+
+    // Remounting after unmount (or after the session expired) needs a new session,
+    // otherwise payment requests are sent without a Uuid
+    if (sessionId && !getSession({ useCookie: !!params?.useCookie })?.id) {
+      await reloadSession();
+    }
+
     refresh();
 
     handleUrlQuery({
