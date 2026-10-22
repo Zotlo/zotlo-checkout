@@ -315,7 +315,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
           let title = config?.general?.localization?.empty?.error?.title || 'An error occured';
           let message = ErrorHandler.response?.meta?.message;
 
-          if (ErrorHandler.response?.meta.errorCode === ErrorCodes.NO_PROVIDER_AVAILABLE) {
+          if (ErrorHandler.response?.meta?.errorCode === ErrorCodes.NO_PROVIDER_AVAILABLE) {
             title = '';
             message = '';
           }

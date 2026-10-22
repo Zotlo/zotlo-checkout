@@ -9,6 +9,13 @@ export const ErrorHandler = {
   response: null as ApiResponse | null,
 };
 
+// Only backend responses drive the error page. A request that got no response
+// (ApiRequestError) or a runtime error has no meta and would break its rendering,
+// so the form is left as it is, as when network errors rejected with "".
+export function setErrorResponse(e: any) {
+  if (e?.meta) ErrorHandler.response = e;
+}
+
 // Init errors caused by a stale session Uuid, recoverable by dropping the session
 export const SESSION_ERROR_CODES = [ErrorCodes.USER_NOT_FOUND, ErrorCodes.USER_NOT_EXIST];
 
