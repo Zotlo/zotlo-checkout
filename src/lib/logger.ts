@@ -41,6 +41,7 @@ interface ApiErrorFields {
   type: string;
   status: number;
   elapsedMs: number;
+  attempt: number;
   unloading: boolean;
   online: boolean;
   visibility: string;
@@ -126,6 +127,7 @@ export const Logger = {
             'api.type': String(err.type),
             'api.status': String(err.status),
             'api.elapsed': elapsedBucket(err.elapsedMs),
+            'api.attempt': String(err.attempt ?? 0),
             'api.unloading': String(!!err.unloading),
             'api.online': String(err.online !== false),
             'api.visibility': String(err.visibility),

@@ -5,6 +5,9 @@ interface RequestConfig {
   headers?: Record<string, string>;
   timeout?: number;
   responseType?: XMLHttpRequestResponseType;
+  // Extra attempts for requests that got no response (network error, not timeout),
+  // made only while the page is still visible and online. Only for idempotent requests.
+  retry?: number;
 }
 
 export interface ApiResponse {
@@ -55,13 +58,15 @@ export class ApiRequestError extends Error {
   status: number;
   elapsedMs: number;
   timeout: number;
+  // Retries already made before this failure
+  attempt: number;
   // Page state at the time of the failure (see pageState above)
   unloading: boolean;
   online: boolean;
   visibility: string;
   sinceLoadMs: number;
 
-  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout'>) {
+  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout' | 'attempt'>) {
     super(`${details.type === 'timeout' ? 'Request timeout' : 'Network error'}: ${details.method} ${details.endpoint}`);
     this.name = 'ApiRequestError';
     this.type = details.type;
@@ -70,6 +75,7 @@ export class ApiRequestError extends Error {
     this.status = details.status;
     this.elapsedMs = details.elapsedMs;
     this.timeout = details.timeout;
+    this.attempt = details.attempt;
 
     const page = getPageSnapshot();
     this.unloading = page.unloading;
@@ -82,7 +88,14 @@ export class ApiRequestError extends Error {
   get cancelledByNavigation() {
     return this.type !== 'timeout' && this.unloading;
   }
+
+  // Worth another attempt: no response, and the page can still receive one
+  get retryable() {
+    return this.type === 'network' && !this.unloading && this.online && this.visibility === 'visible';
+  }
 }
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
  * API utility class for making HTTP requests using XMLHttpRequest
@@ -93,6 +106,7 @@ export class API {
     "Content-Type": "application/json",
   };
   defaultTimeout = 30000;
+  retryDelay = 500;
   useCookie = false;
   sessionKey: string | undefined = undefined;
   // Session lifetime in minutes, must match the backend session timeout
@@ -138,11 +152,31 @@ export class API {
     return this.request("PATCH", endpoint, payload, config); 
   }
 
-  request(
+  async request(
     method: string,
     endpoint: string,
     data?: any,
     config?: RequestConfig
+  ): Promise<ApiResponse> {
+    const retries = config?.retry || 0;
+
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.send(method, endpoint, data, config, attempt);
+      } catch (err) {
+        if (!(err instanceof ApiRequestError) || !err.retryable || attempt >= retries) throw err;
+        await sleep(this.retryDelay * (attempt + 1));
+      }
+    }
+  }
+
+  // A single attempt; request() wraps it with the retry policy
+  send(
+    method: string,
+    endpoint: string,
+    data: any,
+    config: RequestConfig | undefined,
+    attempt: number
   ): Promise<ApiResponse> {
     return new Promise((resolve, reject) => {
       const {
@@ -203,7 +237,8 @@ export class API {
           endpoint,
           status: xhr.status,
           elapsedMs: Date.now() - startedAt,
-          timeout
+          timeout,
+          attempt
         }));
       };
 
