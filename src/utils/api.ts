@@ -17,10 +17,36 @@ export interface ApiResponse {
   result: Record<string, any>;
 }
 
+// Safari reports a request cancelled by a navigation (back button, closing the in-app
+// browser, tapping a link) through xhr.onerror with status 0, exactly like a real network
+// failure, where Chrome and Firefox abort it silently. Track the page lifecycle so the
+// error can tell the two apart; Sentry events that can't reach the user are not errors.
+const pageState = { unloading: false };
+if (typeof window !== 'undefined') {
+  const markUnloading = () => { pageState.unloading = true; };
+  window.addEventListener('pagehide', markUnloading);
+  window.addEventListener('beforeunload', markUnloading);
+  // Restored from the back/forward cache: the page is live again
+  window.addEventListener('pageshow', () => { pageState.unloading = false; });
+}
+
+export function isPageUnloading() {
+  return pageState.unloading;
+}
+
+function getPageSnapshot() {
+  return {
+    unloading: pageState.unloading,
+    online: typeof navigator === 'undefined' || navigator.onLine !== false,
+    visibility: (typeof document !== 'undefined' && document.visibilityState) || 'visible',
+    sinceLoadMs: typeof performance !== 'undefined' ? Math.round(performance.now()) : -1,
+  };
+}
+
 /**
  * A request that got no response (network error or timeout).
  * The message stays stable for Sentry grouping; the details are fields,
- * which Sentry records through extraErrorDataIntegration.
+ * which Sentry records through extraErrorDataIntegration and tags in Logger.
  */
 export class ApiRequestError extends Error {
   type: 'network' | 'timeout';
@@ -29,6 +55,11 @@ export class ApiRequestError extends Error {
   status: number;
   elapsedMs: number;
   timeout: number;
+  // Page state at the time of the failure (see pageState above)
+  unloading: boolean;
+  online: boolean;
+  visibility: string;
+  sinceLoadMs: number;
 
   constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout'>) {
     super(`${details.type === 'timeout' ? 'Request timeout' : 'Network error'}: ${details.method} ${details.endpoint}`);
@@ -39,6 +70,17 @@ export class ApiRequestError extends Error {
     this.status = details.status;
     this.elapsedMs = details.elapsedMs;
     this.timeout = details.timeout;
+
+    const page = getPageSnapshot();
+    this.unloading = page.unloading;
+    this.online = page.online;
+    this.visibility = page.visibility;
+    this.sinceLoadMs = page.sinceLoadMs;
+  }
+
+  // The user left the page mid-request (Safari reports it as a network error)
+  get cancelledByNavigation() {
+    return this.type !== 'timeout' && this.unloading;
   }
 }
 
@@ -138,6 +180,8 @@ export class API {
         xhr.responseType = responseType;
       }
 
+      const startedAt = Date.now();
+
       // Setup event handlers
       xhr.onload = () => {
         try {
@@ -152,7 +196,6 @@ export class API {
 
       // Network errors and timeouts carry no response (xhr.response is ""), so reject with
       // a descriptive error instead; otherwise Sentry gets an empty value with no context.
-      const startedAt = Date.now();
       const rejectWithRequestError = (type: ApiRequestError['type']) => {
         reject(new ApiRequestError({
           type,
