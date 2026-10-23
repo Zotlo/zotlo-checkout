@@ -1,5 +1,6 @@
 import { COOKIE } from "./cookie";
 import { getSession, refreshSession } from "./session";
+import { Logger } from "../lib/logger";
 
 interface RequestConfig {
   headers?: Record<string, string>;
@@ -47,12 +48,12 @@ function getPageSnapshot() {
 }
 
 /**
- * A request that got no response (network error or timeout).
+ * A request that got no response (network error, timeout or abort).
  * The message stays stable for Sentry grouping; the details are fields,
  * which Sentry records through extraErrorDataIntegration and tags in Logger.
  */
 export class ApiRequestError extends Error {
-  type: 'network' | 'timeout';
+  type: 'network' | 'timeout' | 'abort';
   method: string;
   endpoint: string;
   status: number;
@@ -67,7 +68,8 @@ export class ApiRequestError extends Error {
   sinceLoadMs: number;
 
   constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout' | 'attempt'>) {
-    super(`${details.type === 'timeout' ? 'Request timeout' : 'Network error'}: ${details.method} ${details.endpoint}`);
+    const label = details.type === 'timeout' ? 'Request timeout' : details.type === 'abort' ? 'Request aborted' : 'Network error';
+    super(`${label}: ${details.method} ${details.endpoint}`);
     this.name = 'ApiRequestError';
     this.type = details.type;
     this.method = details.method;
@@ -221,9 +223,17 @@ export class API {
         try {
           const responseData = this.getResponseData(xhr, mergedHeaders);
           this.handleSessionRefresh(existingUuid, responseData);
+          this.addBreadcrumb(method, endpoint, {
+            status: xhr.status,
+            elapsedMs: Date.now() - startedAt,
+            attempt,
+            ...(responseData?.meta?.errorCode && { errorCode: responseData.meta.errorCode }),
+            ...(responseData?.meta?.requestId && { requestId: responseData.meta.requestId }),
+          }, responseData?.meta?.errorCode ? 'warning' : 'info');
           resolve(responseData);
         } catch {
           const responseData = this.getResponseData(xhr, mergedHeaders);
+          this.addBreadcrumb(method, endpoint, { status: xhr.status, elapsedMs: Date.now() - startedAt, attempt, parseError: true }, 'warning');
           reject(responseData);
         }
       };
@@ -231,7 +241,7 @@ export class API {
       // Network errors and timeouts carry no response (xhr.response is ""), so reject with
       // a descriptive error instead; otherwise Sentry gets an empty value with no context.
       const rejectWithRequestError = (type: ApiRequestError['type']) => {
-        reject(new ApiRequestError({
+        const error = new ApiRequestError({
           type,
           method,
           endpoint,
@@ -239,11 +249,22 @@ export class API {
           elapsedMs: Date.now() - startedAt,
           timeout,
           attempt
-        }));
+        });
+        this.addBreadcrumb(method, endpoint, {
+          type,
+          status: xhr.status,
+          elapsedMs: error.elapsedMs,
+          attempt,
+          unloading: error.unloading,
+          online: error.online,
+          visibility: error.visibility
+        }, 'error');
+        reject(error);
       };
 
       xhr.onerror = () => rejectWithRequestError('network');
       xhr.ontimeout = () => rejectWithRequestError('timeout');
+      xhr.onabort = () => rejectWithRequestError('abort');
 
       // Send the request
       if (data && method !== "GET") {
@@ -255,6 +276,17 @@ export class API {
       } else {
         xhr.send();
       }
+    });
+  }
+
+  // Leaves the request sequence (e.g. "/init ok → /payment/init failed") on Sentry events.
+  // Only metadata: never the payload or the response body.
+  addBreadcrumb(method: string, endpoint: string, data: Record<string, unknown>, level: 'info' | 'warning' | 'error') {
+    Logger.addBreadcrumb({
+      category: 'api',
+      message: `${method} ${endpoint}`,
+      data,
+      level
     });
   }
 

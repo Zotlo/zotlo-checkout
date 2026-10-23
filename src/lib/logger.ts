@@ -246,6 +246,13 @@ export const Logger = {
     this.scope?.captureException(err, hint);
   },
 
+  // Breadcrumbs live on our scope only, so they're attached to our events and never to
+  // the host page's (the Breadcrumbs integration that patches globals is deliberately
+  // not loaded, see zotlo-sentry.ts)
+  addBreadcrumb(breadcrumb: Sentry.Breadcrumb) {
+    this.scope?.addBreadcrumb(breadcrumb);
+  },
+
   // Wraps an SDK entry point so errors thrown inside it are reported to Sentry
   // before propagating to the caller. This keeps capturing opt-in per function
   // instead of patching page globals (see zotlo-sentry.ts).
