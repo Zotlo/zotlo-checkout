@@ -32,6 +32,33 @@ export function toCapturableError(err: unknown): unknown {
   return error;
 }
 
+// Fields of ApiRequestError (utils/api.ts) and ApiResponseError (toCapturableError) read
+// in beforeSend. Duck-typed: api.ts imports the Logger, so the classes can't be imported here.
+interface ApiErrorFields {
+  name: string;
+  method: string;
+  endpoint: string;
+  type: string;
+  status: number;
+  elapsedMs: number;
+  attempt: number;
+  unloading: boolean;
+  online: boolean;
+  visibility: string;
+  errorCode: string;
+  httpStatus: number;
+}
+
+function elapsedBucket(ms?: number) {
+  if (typeof ms !== 'number') return 'unknown';
+  if (ms < 50) return '<50ms';
+  if (ms < 200) return '50-200ms';
+  if (ms < 1000) return '200ms-1s';
+  if (ms < 5000) return '1-5s';
+  if (ms < 15000) return '5-15s';
+  return '>15s';
+}
+
 // Captured at module evaluation: in iife/umd builds Rollup rewrites import.meta.url
 // to document.currentScript.src, which is only reliable during synchronous execution.
 const SCRIPT_URL = import.meta.url;
@@ -81,11 +108,51 @@ export const Logger = {
       ],
       // Sentry groups by stack trace, and these errors are always created in the same place
       // (the XHR handler, toCapturableError), so every endpoint or error code would land in
-      // a single issue. Group them by request and by error code instead.
+      // a single issue. Group them by request and by error code instead, and expose their
+      // fields as tags so the issue stream can be filtered (extra data can't be searched).
       beforeSend(event, hint) {
-        const err = hint?.originalException as { name?: string; method?: string; endpoint?: string; errorCode?: string } | undefined;
-        if (err?.name === 'ApiRequestError') event.fingerprint = ['ApiRequestError', `${err.method} ${err.endpoint}`];
-        if (err?.name === 'ApiResponseError') event.fingerprint = ['ApiResponseError', String(err.errorCode)];
+        const err = hint?.originalException as Partial<ApiErrorFields> | undefined;
+
+        if (err?.name === 'ApiRequestError') {
+          const request = `${err.method} ${err.endpoint}`;
+          // Safari reports requests cancelled by the user leaving the page as network
+          // errors (status 0). Nothing failed and nobody saw it: keep them apart and
+          // quiet, but still counted, so real network failures stand out.
+          const cancelledByNavigation = err.type !== 'timeout' && !!err.unloading;
+          const offline = err.online === false;
+
+          event.tags = {
+            ...event.tags,
+            'api.request': request,
+            'api.type': String(err.type),
+            'api.status': String(err.status),
+            'api.elapsed': elapsedBucket(err.elapsedMs),
+            'api.attempt': String(err.attempt ?? 0),
+            'api.unloading': String(!!err.unloading),
+            'api.online': String(err.online !== false),
+            'api.visibility': String(err.visibility),
+          };
+
+          if (cancelledByNavigation) {
+            event.level = 'info';
+            event.fingerprint = ['ApiRequestError', 'cancelled-by-navigation', request];
+          } else if (offline) {
+            event.level = 'warning';
+            event.fingerprint = ['ApiRequestError', 'offline', request];
+          } else {
+            event.fingerprint = ['ApiRequestError', request];
+          }
+        }
+
+        if (err?.name === 'ApiResponseError') {
+          event.tags = {
+            ...event.tags,
+            'api.errorCode': String(err.errorCode),
+            'api.httpStatus': String(err.httpStatus),
+          };
+          event.fingerprint = ['ApiResponseError', String(err.errorCode)];
+        }
+
         return event;
       },
       release,
@@ -177,6 +244,13 @@ export const Logger = {
   // error's custom fields (e.g. ApiRequestError's elapsedMs, ApiResponseError's requestId)
   captureException(err: unknown, hint?: Parameters<Sentry.Scope['captureException']>[1]) {
     this.scope?.captureException(err, hint);
+  },
+
+  // Breadcrumbs live on our scope only, so they're attached to our events and never to
+  // the host page's (the Breadcrumbs integration that patches globals is deliberately
+  // not loaded, see zotlo-sentry.ts)
+  addBreadcrumb(breadcrumb: Sentry.Breadcrumb) {
+    this.scope?.addBreadcrumb(breadcrumb);
   },
 
   // Wraps an SDK entry point so errors thrown inside it are reported to Sentry

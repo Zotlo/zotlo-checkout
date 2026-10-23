@@ -1,10 +1,14 @@
 import { COOKIE } from "./cookie";
 import { getSession, refreshSession } from "./session";
+import { Logger } from "../lib/logger";
 
 interface RequestConfig {
   headers?: Record<string, string>;
   timeout?: number;
   responseType?: XMLHttpRequestResponseType;
+  // Extra attempts for requests that got no response (network error, not timeout),
+  // made only while the page is still visible and online. Only for idempotent requests.
+  retry?: number;
 }
 
 export interface ApiResponse {
@@ -17,21 +21,55 @@ export interface ApiResponse {
   result: Record<string, any>;
 }
 
+// Safari reports a request cancelled by a navigation (back button, closing the in-app
+// browser, tapping a link) through xhr.onerror with status 0, exactly like a real network
+// failure, where Chrome and Firefox abort it silently. Track the page lifecycle so the
+// error can tell the two apart; Sentry events that can't reach the user are not errors.
+const pageState = { unloading: false };
+if (typeof window !== 'undefined') {
+  const markUnloading = () => { pageState.unloading = true; };
+  window.addEventListener('pagehide', markUnloading);
+  window.addEventListener('beforeunload', markUnloading);
+  // Restored from the back/forward cache: the page is live again
+  window.addEventListener('pageshow', () => { pageState.unloading = false; });
+}
+
+export function isPageUnloading() {
+  return pageState.unloading;
+}
+
+function getPageSnapshot() {
+  return {
+    unloading: pageState.unloading,
+    online: typeof navigator === 'undefined' || navigator.onLine !== false,
+    visibility: (typeof document !== 'undefined' && document.visibilityState) || 'visible',
+    sinceLoadMs: typeof performance !== 'undefined' ? Math.round(performance.now()) : -1,
+  };
+}
+
 /**
- * A request that got no response (network error or timeout).
+ * A request that got no response (network error, timeout or abort).
  * The message stays stable for Sentry grouping; the details are fields,
- * which Sentry records through extraErrorDataIntegration.
+ * which Sentry records through extraErrorDataIntegration and tags in Logger.
  */
 export class ApiRequestError extends Error {
-  type: 'network' | 'timeout';
+  type: 'network' | 'timeout' | 'abort';
   method: string;
   endpoint: string;
   status: number;
   elapsedMs: number;
   timeout: number;
+  // Retries already made before this failure
+  attempt: number;
+  // Page state at the time of the failure (see pageState above)
+  unloading: boolean;
+  online: boolean;
+  visibility: string;
+  sinceLoadMs: number;
 
-  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout'>) {
-    super(`${details.type === 'timeout' ? 'Request timeout' : 'Network error'}: ${details.method} ${details.endpoint}`);
+  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout' | 'attempt'>) {
+    const label = details.type === 'timeout' ? 'Request timeout' : details.type === 'abort' ? 'Request aborted' : 'Network error';
+    super(`${label}: ${details.method} ${details.endpoint}`);
     this.name = 'ApiRequestError';
     this.type = details.type;
     this.method = details.method;
@@ -39,8 +77,27 @@ export class ApiRequestError extends Error {
     this.status = details.status;
     this.elapsedMs = details.elapsedMs;
     this.timeout = details.timeout;
+    this.attempt = details.attempt;
+
+    const page = getPageSnapshot();
+    this.unloading = page.unloading;
+    this.online = page.online;
+    this.visibility = page.visibility;
+    this.sinceLoadMs = page.sinceLoadMs;
+  }
+
+  // The user left the page mid-request (Safari reports it as a network error)
+  get cancelledByNavigation() {
+    return this.type !== 'timeout' && this.unloading;
+  }
+
+  // Worth another attempt: no response, and the page can still receive one
+  get retryable() {
+    return this.type === 'network' && !this.unloading && this.online && this.visibility === 'visible';
   }
 }
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
  * API utility class for making HTTP requests using XMLHttpRequest
@@ -51,6 +108,7 @@ export class API {
     "Content-Type": "application/json",
   };
   defaultTimeout = 30000;
+  retryDelay = 500;
   useCookie = false;
   sessionKey: string | undefined = undefined;
   // Session lifetime in minutes, must match the backend session timeout
@@ -96,11 +154,31 @@ export class API {
     return this.request("PATCH", endpoint, payload, config); 
   }
 
-  request(
+  async request(
     method: string,
     endpoint: string,
     data?: any,
     config?: RequestConfig
+  ): Promise<ApiResponse> {
+    const retries = config?.retry || 0;
+
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.send(method, endpoint, data, config, attempt);
+      } catch (err) {
+        if (!(err instanceof ApiRequestError) || !err.retryable || attempt >= retries) throw err;
+        await sleep(this.retryDelay * (attempt + 1));
+      }
+    }
+  }
+
+  // A single attempt; request() wraps it with the retry policy
+  send(
+    method: string,
+    endpoint: string,
+    data: any,
+    config: RequestConfig | undefined,
+    attempt: number
   ): Promise<ApiResponse> {
     return new Promise((resolve, reject) => {
       const {
@@ -138,34 +216,55 @@ export class API {
         xhr.responseType = responseType;
       }
 
+      const startedAt = Date.now();
+
       // Setup event handlers
       xhr.onload = () => {
         try {
           const responseData = this.getResponseData(xhr, mergedHeaders);
           this.handleSessionRefresh(existingUuid, responseData);
+          this.addBreadcrumb(method, endpoint, {
+            status: xhr.status,
+            elapsedMs: Date.now() - startedAt,
+            attempt,
+            ...(responseData?.meta?.errorCode && { errorCode: responseData.meta.errorCode }),
+            ...(responseData?.meta?.requestId && { requestId: responseData.meta.requestId }),
+          }, responseData?.meta?.errorCode ? 'warning' : 'info');
           resolve(responseData);
         } catch {
           const responseData = this.getResponseData(xhr, mergedHeaders);
+          this.addBreadcrumb(method, endpoint, { status: xhr.status, elapsedMs: Date.now() - startedAt, attempt, parseError: true }, 'warning');
           reject(responseData);
         }
       };
 
       // Network errors and timeouts carry no response (xhr.response is ""), so reject with
       // a descriptive error instead; otherwise Sentry gets an empty value with no context.
-      const startedAt = Date.now();
       const rejectWithRequestError = (type: ApiRequestError['type']) => {
-        reject(new ApiRequestError({
+        const error = new ApiRequestError({
           type,
           method,
           endpoint,
           status: xhr.status,
           elapsedMs: Date.now() - startedAt,
-          timeout
-        }));
+          timeout,
+          attempt
+        });
+        this.addBreadcrumb(method, endpoint, {
+          type,
+          status: xhr.status,
+          elapsedMs: error.elapsedMs,
+          attempt,
+          unloading: error.unloading,
+          online: error.online,
+          visibility: error.visibility
+        }, 'error');
+        reject(error);
       };
 
       xhr.onerror = () => rejectWithRequestError('network');
       xhr.ontimeout = () => rejectWithRequestError('timeout');
+      xhr.onabort = () => rejectWithRequestError('abort');
 
       // Send the request
       if (data && method !== "GET") {
@@ -177,6 +276,17 @@ export class API {
       } else {
         xhr.send();
       }
+    });
+  }
+
+  // Leaves the request sequence (e.g. "/init ok → /payment/init failed") on Sentry events.
+  // Only metadata: never the payload or the response body.
+  addBreadcrumb(method: string, endpoint: string, data: Record<string, unknown>, level: 'info' | 'warning' | 'error') {
+    Logger.addBreadcrumb({
+      category: 'api',
+      message: `${method} ${endpoint}`,
+      data,
+      level
     });
   }
 

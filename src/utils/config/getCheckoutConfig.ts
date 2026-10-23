@@ -9,12 +9,17 @@ import { getPackageInfo } from "../getPackageInfo";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
 import { ErrorCodes, type InitResult } from "./types";
 
+// The init requests only read or (re)create a session, so a request that got no
+// response is retried once instead of showing the error page for a transient failure
+export const INIT_RETRY = 1;
+
 export async function getPaymentData(uuid?: string) {
   try {
     // Pass uuid manually in header if available.
-    const config = uuid
-      ? { headers: { Uuid: uuid || '' } }
-      : undefined;
+    const config = {
+      ...(uuid && { headers: { Uuid: uuid } }),
+      retry: INIT_RETRY
+    };
     const paymentRes = await CheckoutAPI.get('/payment/init', config);
     const paymentInitData = (paymentRes?.result || {}) as FormPaymentData;
 
@@ -71,7 +76,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     ...(enableDiscountCodeEntry !== undefined && { enableDiscountCodeEntry }),
   };
 
-  const reqConfig = { headers: { Language: language } };
+  const reqConfig = { headers: { Language: language }, retry: INIT_RETRY };
 
   try {
     let initRes = await CheckoutAPI.post('/init', payload, reqConfig);
@@ -192,7 +197,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
 
 export async function getProviderConfig(providerKey: PaymentProvider, returnUrl: string): Promise<Record<string, any>> {
   try {
-    const res = await CheckoutAPI.post('/payment/init', { providerKey, returnUrl });
+    const res = await CheckoutAPI.post('/payment/init', { providerKey, returnUrl }, { retry: INIT_RETRY });
     const data = res?.result || {};
     return { ...data, initMeta: res?.meta };
   } catch (e: any) {

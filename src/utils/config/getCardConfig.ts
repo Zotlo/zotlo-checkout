@@ -1,4 +1,5 @@
 import { captureInitError, setErrorResponse } from "./index";
+import { INIT_RETRY } from "./getCheckoutConfig";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import { DesignTheme, PaymentProvider, type FormConfig, type FormDesign, type FormSuccess, type IZotloCheckoutParams } from "../../lib/types";
 import { CardAPI } from "../api";
@@ -49,7 +50,7 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
     ...(customParameters && typeof customParameters === 'object' && { customParameters: JSON.stringify(customParameters) }),
   };
 
-  const reqConfig = { headers: { Language: language } };
+  const reqConfig = { headers: { Language: language }, retry: INIT_RETRY };
 
   try {
     const initRes = await CardAPI.post('/card/init', payload, reqConfig);
