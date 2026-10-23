@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.25.4
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.3...v1.25.4)
+
+### 🩹 Fixes
+
+- **Z3-6823:** Tell requests cancelled by navigation apart from network errors in Sentry ([b7c3d2e](https://github.com/Zotlo/zotlo-checkout/commit/b7c3d2e))
+- **Z3-6823:** Retry the init requests once after a network error ([2e577ba](https://github.com/Zotlo/zotlo-checkout/commit/2e577ba))
+- **Z3-6823:** Add API breadcrumbs and handle aborted requests ([67f4249](https://github.com/Zotlo/zotlo-checkout/commit/67f4249))
+
+### ❤️ Contributors
+
+- Sinan Mutlu
+
 ## v1.25.3
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.2...v1.25.3)
