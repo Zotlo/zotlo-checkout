@@ -45,6 +45,11 @@ export async function completePaymentSuccess(payload: {
       if (redirectUrl) window.location.href = redirectUrl;
     }
 
+    // A checkout link page cannot start a session on its own: the link is either consumed
+    // (one-link) or gets its Uuid from the server on page load, so an /init without one is
+    // rejected (404067) and the user who just paid would see an error page
+    if (config.general.isCheckoutLink) return;
+
     await reloadSession?.();
   }
 }
