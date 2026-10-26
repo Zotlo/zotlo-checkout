@@ -4,7 +4,7 @@ import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, For
 import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
 import { CheckoutAPI } from "../../utils/api";
-import { deleteSession, getSession, setSession } from "../session";
+import { deleteSession, setSession } from "../session";
 import { getPackageInfo } from "../getPackageInfo";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
 import { ErrorCodes, type InitResult } from "./types";
@@ -80,8 +80,10 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     let initRes = await CheckoutAPI.post('/init', payload, reqConfig);
 
     // A stale session Uuid sent with the request makes /init fail with "user not found";
-    // drop it and retry once instead of leaving it to the Retry button on the error page
-    if (isSessionError(initRes) && getSession({ useCookie })?.id) {
+    // drop it and retry once instead of leaving it to the Retry button on the error page.
+    // Not conditioned on the local session still existing: it may have expired while the
+    // request was in flight, which is exactly when the backend rejects it.
+    if (isSessionError(initRes)) {
       deleteSession({ useCookie });
       initRes = await CheckoutAPI.post('/init', payload, reqConfig);
     }
