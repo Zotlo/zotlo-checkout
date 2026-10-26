@@ -1,4 +1,4 @@
-import { captureInitError, setErrorResponse } from "./index";
+import { captureInitError, setErrorResponse, toErrorResponse } from "./index";
 import { INIT_RETRY } from "./getCheckoutConfig";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import { DesignTheme, PaymentProvider, type FormConfig, type FormDesign, type FormSuccess, type IZotloCheckoutParams } from "../../lib/types";
@@ -130,7 +130,7 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
   } catch (e: any) {
     setErrorResponse(e);
     ZOTLO_GLOBAL.ready = false;
-    params.events?.onError?.(e);
+    params.events?.onError?.(toErrorResponse(e));
     captureInitError(e);
     return config;
   }

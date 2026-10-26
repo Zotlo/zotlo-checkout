@@ -113,7 +113,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `events.onFail`         | no      | Triggered when a payment fails.                                                                                              |
 | `events.onOfferFail`    | no      | Triggered when a post payment offer request fails.                                                                           |
 | `events.onInvalidForm`  | no      | Triggers when form has an invalid field.                                                                                     |
-| `events.onError`        | no      | Triggers when pre-init errors occurs.                                                                                        |
+| `events.onError`        | no      | Triggers when pre-init errors occurs. Receives `{ meta, result }`; when no response was received, `meta.errorCode` is `NETWORK_ERROR`, `REQUEST_TIMEOUT` or `REQUEST_ABORTED`. |
 
 **Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L100) file.
 

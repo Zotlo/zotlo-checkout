@@ -1,4 +1,4 @@
-import { captureInitError, ErrorHandler, isSessionError, setErrorResponse } from "./index";
+import { captureInitError, ErrorHandler, isSessionError, setErrorResponse, toErrorResponse } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormPostPaymentOffers, FormSuccess, ProviderConfigs } from "../../lib/types";
 import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
@@ -184,7 +184,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     ZOTLO_GLOBAL.ready = true;
   } catch (e: any) {
     setErrorResponse(e);
-    params.events?.onError?.(e);
+    params.events?.onError?.(toErrorResponse(e));
     captureInitError(e);
     ZOTLO_GLOBAL.ready = false;
     return config;
