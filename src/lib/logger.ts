@@ -49,6 +49,19 @@ interface ApiErrorFields {
   httpStatus: number;
 }
 
+// A status 0 request error (type network/abort) raised while the user closes the in-app
+// browser or leaves the page is not a failure anyone saw. iOS Safari has no beforeunload
+// and fires pagehide only after the XHR error, so the unloading flag catches few of them;
+// most arrive with the page already hidden. Hold such errors briefly and drop them when
+// the page is hidden or left meanwhile. The api breadcrumb was already recorded, so a
+// later event still shows the request.
+const REQUEST_ERROR_HOLD_MS = 2000;
+
+function isHeldRequestError(err: unknown): err is Partial<ApiErrorFields> {
+  const e = err as Partial<ApiErrorFields> | null;
+  return e?.name === 'ApiRequestError' && e.type !== 'timeout';
+}
+
 function elapsedBucket(ms?: number) {
   if (typeof ms !== 'number') return 'unknown';
   if (ms < 50) return '<50ms';
@@ -243,7 +256,36 @@ export const Logger = {
   // puts originalException on the hint, which extraErrorDataIntegration needs to record the
   // error's custom fields (e.g. ApiRequestError's elapsedMs, ApiResponseError's requestId)
   captureException(err: unknown, hint?: Parameters<Sentry.Scope['captureException']>[1]) {
+    if (isHeldRequestError(err)) return this.holdRequestError(err, hint);
     this.scope?.captureException(err, hint);
+  },
+
+  // See REQUEST_ERROR_HOLD_MS. Errors raised with the page already hidden or unloading are
+  // dropped right away; the rest are sent after the hold unless the page goes away first.
+  holdRequestError(err: Partial<ApiErrorFields>, hint?: Parameters<Sentry.Scope['captureException']>[1]) {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return this.scope?.captureException(err, hint);
+    }
+    if (err.unloading || err.visibility === 'hidden' || document.visibilityState === 'hidden') return;
+
+    const cleanup = () => {
+      window.removeEventListener('pagehide', drop);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+    const drop = () => {
+      clearTimeout(timer);
+      cleanup();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') drop();
+    };
+    const timer = setTimeout(() => {
+      cleanup();
+      this.scope?.captureException(err, hint);
+    }, REQUEST_ERROR_HOLD_MS);
+
+    window.addEventListener('pagehide', drop, { once: true });
+    document.addEventListener('visibilitychange', onVisibilityChange);
   },
 
   // Breadcrumbs live on our scope only, so they're attached to our events and never to
