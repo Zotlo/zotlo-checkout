@@ -10,7 +10,7 @@ import { loadFontsOnPage } from "../utils/fonts";
 import { generateEmptyPage, generateTheme } from "./theme";
 import { createStyle } from "../utils/createStyle";
 import { createPaymentSuccessForm } from "./create";
-import { getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
+import { clearFormRedirectLock, getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
@@ -348,11 +348,17 @@ async function createZotloCard(params: IZotloCardParams) {
     }
   }
 
+  // A bfcache restore after the return redirect brings the form back still locked
+  function onPageShow(event: PageTransitionEvent) {
+    if (event.persisted) clearFormRedirectLock();
+  }
+
   function unmount() {
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
     ZOTLO_GLOBAL.reset();
+    window.removeEventListener('pageshow', onPageShow);
   }
 
   function mount(id: string) {
@@ -360,6 +366,7 @@ async function createZotloCard(params: IZotloCardParams) {
 
     ZOTLO_GLOBAL.containerId = id;
     ZOTLO_GLOBAL.cardUpdate = true;
+    window.addEventListener('pageshow', onPageShow);
     refresh();
   }
 

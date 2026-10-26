@@ -53,6 +53,17 @@ export function refreshSession(params: { expireTimeInMinutes: number, path?: str
   return setSession({ id: session.id, expireTimeInMinutes, path, useCookie, key });
 }
 
+/**
+ * Drops the session once the browser actually leaves the page. Deleting it before the
+ * navigation commits leaves a still interactive form without a session (slow or blocked
+ * redirects, e.g. in-app browsers), so a second attempt would be rejected.
+ */
+export function deleteSessionOnPageHide(params?: { path?: string, useCookie?: boolean, key?: string }): void {
+  const path = params?.path || globalThis?.location?.pathname || "/";
+  if (typeof window === 'undefined') return deleteSession({ ...params, path });
+  window.addEventListener('pagehide', () => deleteSession({ ...params, path }), { once: true });
+}
+
 export function deleteSession(params?: { path?: string, useCookie?: boolean, key?: string }): void {
   const { path, useCookie = false, key = COOKIE.UUID } = params || {};
   if (useCookie) return deleteUuidCookie(key);

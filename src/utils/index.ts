@@ -5,7 +5,7 @@ import { getPackageTemplateParams } from './getPackageInfo';
 import { getCDNUrl } from './getCDNUrl';
 import { useI18n } from './i18n';
 import { template } from "./template";
-import { deleteSession } from './session';
+import { deleteSessionOnPageHide } from './session';
 import { FORM_ITEMS } from '../lib/fields';
 import { COOKIE, getCookie } from './cookie';
 import { CheckoutAPI } from './api';
@@ -208,7 +208,34 @@ function disableTabKeyNavigation(formEl: HTMLFormElement, disable:boolean = true
   });
 }
 
+// How long the form stays locked after a redirect was started but the page did not
+// leave (blocked or slow navigation, e.g. in-app browsers)
+export const REDIRECT_LOCK_MS = 10000;
+let redirectLockTimer: ReturnType<typeof setTimeout> | undefined;
+let isRedirectPending = false;
+
+/**
+ * Keeps the form locked while the browser navigates away, so a second tap cannot start
+ * another checkout with the still valid session. The payment flows unlock the form in
+ * their finally blocks; that unlock is ignored until the lock expires or is cleared.
+ */
+export function lockFormForRedirect() {
+  isRedirectPending = true;
+  setFormLoading(true);
+  clearTimeout(redirectLockTimer);
+  redirectLockTimer = setTimeout(clearFormRedirectLock, REDIRECT_LOCK_MS);
+}
+
+export function clearFormRedirectLock() {
+  clearTimeout(redirectLockTimer);
+  if (!isRedirectPending) return;
+  isRedirectPending = false;
+  setFormLoading(false);
+}
+
 export function setFormLoading(loading: boolean = true) {
+  if (!loading && isRedirectPending) return;
+
   const formElement = ZOTLO_GLOBAL.formElement;
 
   if (!formElement) return;
@@ -596,19 +623,21 @@ export async function handleResponseRedirection(payload: {
   const returnUrlBase = returnUrlObj.origin + returnUrlObj.pathname;
   const isSamePage = returnUrlBase === currentUrlBase;
 
-  if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && currentUrl) {
+  function redirectTo(url: string) {
+    // The session is the auth header of a possible retry, so it is only dropped once
+    // the browser actually leaves the page
     if (!isSamePage) {
-      deleteSession({ useCookie: !!params.useCookie, key: sessionKey });
+      deleteSessionOnPageHide({ useCookie: !!params.useCookie, key: sessionKey });
     }
-    globalThis.location.href = redirectUrl;
+    lockFormForRedirect();
+    globalThis.location.href = url;
+  }
+
+  if (status === PaymentResultStatus.REDIRECT && !!redirectUrl && currentUrl) {
+    redirectTo(redirectUrl);
   }
   if (status === PaymentResultStatus.COMPLETE && payment) {
-    if (returnUrl) {
-      if (!isSamePage) {
-        deleteSession({ useCookie: !!params.useCookie, key: sessionKey });
-      }
-      globalThis.location.href = returnUrl;
-    }
+    if (returnUrl) redirectTo(returnUrl);
   }
 }
 

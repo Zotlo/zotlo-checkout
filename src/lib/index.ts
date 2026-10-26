@@ -12,6 +12,7 @@ import {
   getMaskByCode,
   preparePaymentMethods,
   setFormLoading,
+  clearFormRedirectLock,
   setFormDisabled,
   debounce,
   handleSubscriberIdInputEventListeners,
@@ -751,11 +752,24 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     });
   }
 
+  // A bfcache restore after a payment redirect brings the form back locked and, when
+  // the return page differs, without the session dropped on pagehide
+  async function onPageShow(event: PageTransitionEvent) {
+    if (!event.persisted) return;
+    clearFormRedirectLock();
+    if (getSession({ useCookie: !!params?.useCookie })?.id) return;
+    // A checkout link page gets its session from the server, an /init without one fails
+    if (config?.general?.isCheckoutLink) return;
+    await reloadSession();
+    await refresh();
+  }
+
   function unmount() {
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
     ZOTLO_GLOBAL.reset();
+    window.removeEventListener('pageshow', onPageShow);
 
     // The backend keeps the package and customParameters of the session's first /init,
     // so a ZotloCheckout() call after unmount must not reuse this session.
@@ -776,6 +790,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       await reloadSession();
     }
 
+    window.addEventListener('pageshow', onPageShow);
     refresh();
 
     handleUrlQuery({
