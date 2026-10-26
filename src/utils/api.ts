@@ -99,6 +99,21 @@ export class ApiRequestError extends Error {
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+// Session end time (ISO 8601, UTC), sent by the backend on every response. It and Date
+// have to be listed in Access-Control-Expose-Headers, otherwise the browser hides them.
+export const SESSION_EXPIRES_AT_HEADER = 'Session-Expires-At';
+
+// Remaining session lifetime in seconds, measured against the server clock (Date header)
+// so that a wrong device clock does not shift it
+function getSessionExpiresIn(xhr: XMLHttpRequest): number | null {
+  const expiresAt = Date.parse(xhr.getResponseHeader(SESSION_EXPIRES_AT_HEADER) || '');
+  if (Number.isNaN(expiresAt)) return null;
+  const serverNow = Date.parse(xhr.getResponseHeader('Date') || '');
+  const now = Number.isNaN(serverNow) ? Date.now() : serverNow;
+  const seconds = (expiresAt - now) / 1000;
+  return seconds > 0 ? seconds : null;
+}
+
 /**
  * API utility class for making HTTP requests using XMLHttpRequest
  */
@@ -111,7 +126,8 @@ export class API {
   retryDelay = 500;
   useCookie = false;
   sessionKey: string | undefined = undefined;
-  // Session lifetime in minutes, must match the backend session timeout
+  // Session lifetime in minutes. Starting value for older backends; overwritten by the
+  // end time the backend reports in every response (SESSION_EXPIRES_AT_HEADER)
   sessionTimeout = 15;
 
   constructor(payload?: {
@@ -222,7 +238,7 @@ export class API {
       xhr.onload = () => {
         try {
           const responseData = this.getResponseData(xhr, mergedHeaders);
-          this.handleSessionRefresh(existingUuid, responseData);
+          this.handleSessionRefresh(existingUuid, responseData, xhr);
           this.addBreadcrumb(method, endpoint, {
             status: xhr.status,
             elapsedMs: Date.now() - startedAt,
@@ -291,11 +307,18 @@ export class API {
   }
 
   /**
-   * Backend resets the session timeout only on successful responses,
-   * so keep the local expiry in sync with it.
+   * Keeps the local session expiry in sync with the backend. Every response carries the
+   * session end time in SESSION_EXPIRES_AT_HEADER; a backend without it only restarts
+   * the timeout on successful responses, which the fallback mirrors.
    */
-  handleSessionRefresh(sentUuid: string | undefined, responseData: ApiResponse) {
-    if (!sentUuid || !responseData?.meta || responseData.meta.errorCode) return;
+  handleSessionRefresh(sentUuid: string | undefined, responseData: ApiResponse, xhr: XMLHttpRequest) {
+    if (!responseData?.meta || responseData.meta.errorCode) return;
+
+    const expiresInSeconds = getSessionExpiresIn(xhr);
+    // Also covers /init, whose session is stored by setSession with this timeout right after
+    if (expiresInSeconds) this.sessionTimeout = expiresInSeconds / 60;
+
+    if (!sentUuid) return;
 
     refreshSession({
       expireTimeInMinutes: this.sessionTimeout,
