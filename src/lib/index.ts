@@ -72,11 +72,11 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   let destroyDiscountEvents = { discounted: null, undiscounted: null } as ReturnType<typeof useDiscount>;
 
   async function reloadSession() {
-    config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
+    let next = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
     if (import.meta.env.VITE_SDK_API_URL) {
       CheckoutAPI.setUseCookie(!!params?.useCookie);
-      config = await getCheckoutConfig({
+      next = await getCheckoutConfig({
         token: params.token,
         packageId: params.packageId,
         language: params.language,
@@ -92,8 +92,12 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         events: params.events
       });
       sessionId = getSession({ useCookie: !!params?.useCookie })?.id || undefined;
-      await refreshProviderConfigs();
     }
+
+    // Swapped in only once it is loaded: a reload started from the middle of another
+    // flow (session renewal before a request) must not leave that flow with an empty config
+    config = next;
+    if (import.meta.env.VITE_SDK_API_URL) await refreshProviderConfigs();
   }
 
   async function refreshProviderConfigs() {
@@ -465,6 +469,16 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   }
 
   async function onFormInputChange() {
+    // Detach before anything async: the request below may wait for a session renewal,
+    // and every input changed meanwhile would send the event again
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
+    const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
+
+    formInputs?.forEach((input) => {
+      input.removeEventListener('change', onFormInputChange);
+    });
+
     const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
       registerType: config.settings.registerType,
       subscriberId: config.general.subscriberId
@@ -489,14 +503,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         pageType: 'Payment',
         pageSlug: globalThis?.location?.pathname,
       }
-    });
-
-    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
-    const formElement = ZOTLO_GLOBAL.formElement;
-    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
-
-    formInputs?.forEach((input) => {
-      input.removeEventListener('change', onFormInputChange);
     });
   }
 
