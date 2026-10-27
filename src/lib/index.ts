@@ -54,6 +54,14 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   // so unmount compares against it to avoid dropping another instance's session.
   let sessionId: string | undefined;
 
+  // Any request made after the session expired (e.g. subscriberId register after the
+  // form sat idle) gets a fresh session first instead of failing with 403105. Not on a
+  // checkout link page: its session comes from the server with the page, an /init
+  // from the SDK is rejected there (404067)
+  CheckoutAPI.setSessionRenewer(async () => {
+    if (config?.general?.isCheckoutLink) return;
+    await reloadSession();
+  });
   await reloadSession();
 
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
@@ -786,6 +794,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   }
 
   function unmount() {
+    CheckoutAPI.setSessionRenewer(null);
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';

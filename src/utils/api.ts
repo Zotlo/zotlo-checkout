@@ -103,6 +103,9 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 // have to be listed in Access-Control-Expose-Headers, otherwise the browser hides them.
 export const SESSION_EXPIRES_AT_HEADER = 'Session-Expires-At';
 
+// The requests that create a session; every other request needs an existing one
+const SESSION_INIT_ENDPOINTS = ['/init', '/card/init'];
+
 // getResponseHeader() logs "Refused to get unsafe header" on a cross-origin response for
 // every header the server did not expose; getAllResponseHeaders() lists the exposed
 // ones silently, so the value is read from that list instead
@@ -159,6 +162,25 @@ export class API {
     this.useCookie = value;
   }
 
+  // Opens a new session when the local one has expired while the form sat idle (the
+  // form registers its own reload here). Without it a request would go out without the
+  // Uuid header and be rejected with 403105.
+  sessionRenewer: (() => Promise<void>) | null = null;
+  private renewing: Promise<void> | null = null;
+
+  setSessionRenewer(renewer: (() => Promise<void>) | null) {
+    this.sessionRenewer = renewer;
+  }
+
+  private async ensureSession(endpoint: string, headers?: Record<string, any>) {
+    if (!this.sessionRenewer || SESSION_INIT_ENDPOINTS.includes(endpoint) || headers?.Uuid) return;
+    if (getSession({ useCookie: this.useCookie, key: this.sessionKey })?.id) return;
+    // Concurrent requests wait for the same renewal; the renewer's own requests find
+    // the new session and pass straight through
+    this.renewing ||= this.sessionRenewer().finally(() => { this.renewing = null; });
+    await this.renewing;
+  }
+
   get(endpoint: string, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("GET", endpoint, null, config);
   }
@@ -186,6 +208,8 @@ export class API {
     config?: RequestConfig
   ): Promise<ApiResponse> {
     const retries = config?.retry || 0;
+
+    await this.ensureSession(endpoint, config?.headers);
 
     for (let attempt = 0; ; attempt++) {
       try {

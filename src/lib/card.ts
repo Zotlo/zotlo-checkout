@@ -48,6 +48,7 @@ async function createZotloCard(params: IZotloCardParams) {
     });
   }
 
+  CardAPI.setSessionRenewer(reloadSession);
   await reloadSession();
 
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
@@ -378,6 +379,7 @@ async function createZotloCard(params: IZotloCardParams) {
   }
 
   function unmount() {
+    CardAPI.setSessionRenewer(null);
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
