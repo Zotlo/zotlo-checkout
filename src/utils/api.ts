@@ -103,12 +103,21 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 // have to be listed in Access-Control-Expose-Headers, otherwise the browser hides them.
 export const SESSION_EXPIRES_AT_HEADER = 'Session-Expires-At';
 
+// getResponseHeader() logs "Refused to get unsafe header" on a cross-origin response for
+// every header the server did not expose; getAllResponseHeaders() lists the exposed
+// ones silently, so the value is read from that list instead
+function getExposedHeader(xhr: XMLHttpRequest, name: string): string | null {
+  const headers = xhr.getAllResponseHeaders() || '';
+  const match = headers.match(new RegExp(`^${name}:\\s*(.*)$`, 'im'));
+  return match ? match[1].trim() : null;
+}
+
 // Remaining session lifetime in seconds, measured against the server clock (Date header)
 // so that a wrong device clock does not shift it
 function getSessionExpiresIn(xhr: XMLHttpRequest): number | null {
-  const expiresAt = Date.parse(xhr.getResponseHeader(SESSION_EXPIRES_AT_HEADER) || '');
+  const expiresAt = Date.parse(getExposedHeader(xhr, SESSION_EXPIRES_AT_HEADER) || '');
   if (Number.isNaN(expiresAt)) return null;
-  const serverNow = Date.parse(xhr.getResponseHeader('Date') || '');
+  const serverNow = Date.parse(getExposedHeader(xhr, 'Date') || '');
   const now = Number.isNaN(serverNow) ? Date.now() : serverNow;
   const seconds = (expiresAt - now) / 1000;
   return seconds > 0 ? seconds : null;
