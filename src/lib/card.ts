@@ -16,6 +16,8 @@ import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
 import { handlePaymentSuccess } from "../utils/sendPayment";
 import { updateCard } from "../utils/updateCard";
+import { getSession } from "../utils/session";
+import { COOKIE } from "../utils/cookie";
 
 async function createZotloCard(params: IZotloCardParams) {
   // Load Sentry for error tracking
@@ -29,14 +31,15 @@ async function createZotloCard(params: IZotloCardParams) {
     { ...(params?.style || {}) }
   ) as FormConfig;
 
-  if (import.meta.env.VITE_SDK_CARD_API_URL) {
+  async function reloadSession() {
+    if (!import.meta.env.VITE_SDK_CARD_API_URL) return;
     CardAPI.setUseCookie(!!params?.useCookie);
     config = await getCardConfig({
       token: params.token,
       packageId: params.packageId,
       language: params.language,
       subscriberId: params.subscriberId,
-      returnUrl: params.returnUrl,
+      returnUrl: params.returnUrl || globalThis?.location?.href,
       style: params.style,
       customParameters: params.customParameters,
       useCookie: !!params?.useCookie,
@@ -45,12 +48,31 @@ async function createZotloCard(params: IZotloCardParams) {
     });
   }
 
+  await reloadSession();
+
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
 
   function hasAnyConfig() {
     return Object.keys(config.settings).length > 0;
+  }
+
+  // Same rule as the checkout form: an expired session is renewed before the card
+  // request is sent, keeping the typed values. False when no session could be opened.
+  async function ensureSession() {
+    if (getSession({ useCookie: !!params?.useCookie, key: COOKIE.CARD_UUID })?.id) return true;
+
+    setFormLoading(true);
+    try {
+      await reloadSession();
+    } finally {
+      setFormLoading(false);
+    }
+    if (hasAnyConfig()) return true;
+
+    await refresh();
+    return false;
   }
 
   function handleTabView() {
@@ -101,6 +123,8 @@ async function createZotloCard(params: IZotloCardParams) {
     if (!validation.isValid) return;
     
     if (import.meta.env.VITE_SDK_CARD_API_URL) {
+      if (!(await ensureSession())) return;
+
       const result = getFormValues(config);
       params.events?.onSubmit?.();
 

@@ -92,6 +92,25 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
   }
 
+  // A payment started on an expired session gets a fresh one first. The form is not
+  // re-rendered, so the values the user typed are kept and the payment continues
+  // instead of failing with "user not found". Returns false when no session could be
+  // opened; the error page (with its Retry button) is shown instead.
+  async function ensureSession() {
+    if (getSession({ useCookie: !!params?.useCookie })?.id) return true;
+
+    setFormLoading(true);
+    try {
+      await reloadSession();
+    } finally {
+      setFormLoading(false);
+    }
+    if (hasAnyConfig()) return true;
+
+    await refresh();
+    return false;
+  }
+
   async function refreshPaymentInitData() {
     const paymentInitData = await getPaymentData();
     config.paymentData = paymentInitData;
@@ -135,6 +154,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     if (!validation.isValid) return;
 
     if (import.meta.env.VITE_SDK_API_URL) {
+      if (!(await ensureSession())) return;
+
       const result = getFormValues(config);
       const cardId = getActiveSavedCardId({ providerKey, config });
       params.events?.onSubmit?.();
