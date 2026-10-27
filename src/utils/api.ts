@@ -9,6 +9,9 @@ interface RequestConfig {
   // Extra attempts for requests that got no response (network error, not timeout),
   // made only while the page is still visible and online. Only for idempotent requests.
   retry?: number;
+  // false for requests bound to the session a payment was made in (post payment offer):
+  // a fresh session would not know that payment, so renewing it cannot help
+  renewSession?: boolean;
 }
 
 export interface ApiResponse {
@@ -172,8 +175,9 @@ export class API {
     this.sessionRenewer = renewer;
   }
 
-  private async ensureSession(endpoint: string, headers?: Record<string, any>) {
-    if (!this.sessionRenewer || SESSION_INIT_ENDPOINTS.includes(endpoint) || headers?.Uuid) return;
+  private async ensureSession(endpoint: string, config?: RequestConfig) {
+    if (!this.sessionRenewer || SESSION_INIT_ENDPOINTS.includes(endpoint)) return;
+    if (config?.renewSession === false || config?.headers?.Uuid) return;
     if (getSession({ useCookie: this.useCookie, key: this.sessionKey })?.id) return;
     // Concurrent requests wait for the same renewal; the renewer's own requests find
     // the new session and pass straight through
@@ -209,7 +213,7 @@ export class API {
   ): Promise<ApiResponse> {
     const retries = config?.retry || 0;
 
-    await this.ensureSession(endpoint, config?.headers);
+    await this.ensureSession(endpoint, config);
 
     for (let attempt = 0; ; attempt++) {
       try {
