@@ -53,6 +53,7 @@ export type CardInitResult = {
   tosUrl: string;
   privacyAndTosUrlStatus: 1 | 0;
   appName?: string;
+  statementName?: string;
   subscriberId: string;
   customerSupportUrl: string;
   zotloUrls: {
