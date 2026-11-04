@@ -31,6 +31,7 @@ async function createZotloCard(params: IZotloCardParams) {
 
   if (import.meta.env.VITE_SDK_CARD_API_URL) {
     CardAPI.setUseCookie(!!params?.useCookie);
+    CardAPI.setBaseUrl(params?.apiUrl);
     config = await getCardConfig({
       token: params.token,
       packageId: params.packageId,
