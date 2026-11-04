@@ -104,6 +104,8 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
  */
 export class API {
   baseUrl = import.meta.env.VITE_SDK_API_URL || '';
+  // The url to go back to when a custom one is not given (see setBaseUrl)
+  defaultBaseUrl: string;
   defaultHeaders: Record<string, any> = {
     "Content-Type": "application/json",
   };
@@ -128,10 +130,19 @@ export class API {
     if (payload?.useCookie) this.useCookie = payload.useCookie;
     if (payload?.sessionKey) this.sessionKey = payload.sessionKey;
     if (payload?.sessionTimeout) this.sessionTimeout = payload.sessionTimeout;
+    this.defaultBaseUrl = this.baseUrl;
   }
 
   setUseCookie(value: boolean) {
     this.useCookie = value;
+  }
+
+  /**
+   * Points the requests to a custom API url.
+   * Without a url, it falls back to the url the instance was created with.
+   */
+  setBaseUrl(url?: string) {
+    this.baseUrl = url?.trim() || this.defaultBaseUrl;
   }
 
   get(endpoint: string, config?: RequestConfig): Promise<ApiResponse> { 

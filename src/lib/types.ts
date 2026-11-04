@@ -151,6 +151,9 @@ export interface IZotloCheckoutParams {
   };
 
   useCookie?: boolean;
+
+  /** (Optional) Base URL of the API the checkout sends its requests to. Defaults to the Zotlo Checkout API. */
+  apiUrl?: string;
 }
 
 export interface IZotloCheckoutReturn {
@@ -848,12 +851,15 @@ export interface IFormInvalid {
   result: ValidationResult;
 }
 
-export interface IZotloCardParams extends Omit<IZotloCheckoutParams, 'returnUrl'> {
+export interface IZotloCardParams extends Omit<IZotloCheckoutParams, 'returnUrl' | 'apiUrl'> {
   /** Default subscriber ID for registration; can be an email, phone number, or UUID v4. */
   subscriberId: string;
 
   /** The URL to redirect the user after card update completion.  */
   returnUrl?: string;
+
+  /** (Optional) Base URL of the API the card update form sends its requests to. Defaults to the Zotlo Card API. */
+  apiUrl?: string;
 
   /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
   style?: IZotloCardStyle;
