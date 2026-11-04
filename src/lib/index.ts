@@ -67,6 +67,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
 
     if (import.meta.env.VITE_SDK_API_URL) {
       CheckoutAPI.setUseCookie(!!params?.useCookie);
+      CheckoutAPI.setBaseUrl(params?.apiUrl);
       config = await getCheckoutConfig({
         token: params.token,
         packageId: params.packageId,

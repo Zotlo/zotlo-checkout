@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.25.5
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.4...v1.25.5)
+
+### 🚀 Enhancements
+
+- **Z3-6852:** Add the apiUrl param to set the API url of the checkout and card forms ([bc21717](https://github.com/Zotlo/zotlo-checkout/commit/bc21717))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.25.4
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.3...v1.25.4)
