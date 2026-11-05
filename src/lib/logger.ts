@@ -252,6 +252,11 @@ export const Logger = {
     this.scope = scope;
   },
 
+  // Tags every later event from this page, e.g. checkoutType = embed | link
+  setTag(key: string, value: string) {
+    this.scope?.setTag(key, value);
+  },
+
   // Captures through our scope instead of the client directly: only Scope.captureException
   // puts originalException on the hint, which extraErrorDataIntegration needs to record the
   // error's custom fields (e.g. ApiRequestError's elapsedMs, ApiResponseError's requestId)

@@ -1,4 +1,5 @@
 import { captureInitError, setErrorResponse, toErrorResponse } from "./index";
+import { Logger } from "../../lib/logger";
 import { INIT_RETRY } from "./getCheckoutConfig";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import { DesignTheme, PaymentProvider, type FormConfig, type FormDesign, type FormSuccess, type IZotloCheckoutParams } from "../../lib/types";
@@ -59,6 +60,8 @@ export async function getCardConfig(params: IZotloCheckoutParams): Promise<FormC
 
     if (!initData || Array.isArray(initData)) return config;
     setSession({ id: initData?.uuid, expireTimeInMinutes: CardAPI.sessionTimeout, useCookie, key: COOKIE.CARD_UUID });
+    // The card update form only exists embedded in a merchant page
+    Logger.setTag('checkoutType', 'embed');
 
     config.customerSupportUrl = initData?.customerSupportUrl || '';
 

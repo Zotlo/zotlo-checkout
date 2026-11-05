@@ -93,6 +93,8 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
 
     if (!initData || Array.isArray(initData)) return config;
     setSession({ id: initData?.uuid, expireTimeInMinutes: CheckoutAPI.sessionTimeout, useCookie });
+    // Known only from /init: a hosted checkout link page or the SDK embedded in a merchant page
+    Logger.setTag('checkoutType', initData?.isCheckoutLink ? 'link' : 'embed');
 
     const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
