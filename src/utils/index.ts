@@ -291,6 +291,10 @@ export function setFormLoading(loading: boolean = true) {
   }
 }
 
+export function isFormLoading() {
+  return ZOTLO_GLOBAL.formElement?.getAttribute('data-loading') === 'true';
+}
+
 export function isPlainObject(item: unknown) {
   return (!!item && typeof item === 'object' && !Array.isArray(item));
 }
