@@ -13,6 +13,7 @@ import {
   preparePaymentMethods,
   setFormLoading,
   clearFormRedirectLock,
+  isFormLoading,
   setFormDisabled,
   debounce,
   handleSubscriberIdInputEventListeners,
@@ -53,6 +54,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   // Uuid this instance got from /init. Sessions are stored per page, not per instance,
   // so unmount compares against it to avoid dropping another instance's session.
   let sessionId: string | undefined;
+  // Guards against duplicate submits (e.g. Enter pressed repeatedly while a payment is in flight)
+  let isSubmitting = false;
 
   // Any request made after the session expired (e.g. subscriberId register after the
   // form sat idle) gets a fresh session first instead of failing with 403105. Not on a
@@ -167,42 +170,47 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
 
     if (!validation.isValid) return;
 
-    if (import.meta.env.VITE_SDK_API_URL) {
-      if (!(await ensureSession())) return;
+    isSubmitting = true;
+    try {
+      if (import.meta.env.VITE_SDK_API_URL) {
+        if (!(await ensureSession())) return;
+        
+        const result = getFormValues(config);
+        const cardId = getActiveSavedCardId({ providerKey, config });
+        params.events?.onSubmit?.();
 
-      const result = getFormValues(config);
-      const cardId = getActiveSavedCardId({ providerKey, config });
-      params.events?.onSubmit?.();
+        getUserDataForIntegration({
+          registerType: config.settings.registerType,
+          subscriberId: result.subscriberId || config.general.subscriberId
+        }).then(({ user_data: fbSiteData, context: tiktokContext }) => {
+          window?.Facebook?.track('AddToCart', fbSiteData);
+          window?.Tiktok?.track('AddToCart', {
+            ...getEventData(),
+            ...tiktokContext
+          });
+        }).catch(e => Logger.captureException(e));
 
-      getUserDataForIntegration({
-        registerType: config.settings.registerType,
-        subscriberId: result.subscriberId || config.general.subscriberId
-      }).then(({ user_data: fbSiteData, context: tiktokContext }) => {
-        window?.Facebook?.track('AddToCart', fbSiteData);
-        window?.Tiktok?.track('AddToCart', {
-          ...getEventData(),
-          ...tiktokContext
-        });
-      }).catch(e => Logger.captureException(e));
-
-      try {
-        setFormLoading(true);
-        await sendPayment({
-          providerKey,
-          formData: {
-            packageId: params.packageId,
-            ...result,
-            ...(cardId && { cardId }),
-          },
-          params,
-          config,
-          refreshProviderConfigsFunction: refreshProviderConfigs
-        });
-      } catch (e) {
-        Logger.captureException(e);
-      } finally {
-        setFormLoading(false);
+        try {
+          setFormLoading(true);
+          await sendPayment({
+            providerKey,
+            formData: {
+              packageId: params.packageId,
+              ...result,
+              ...(cardId && { cardId }),
+            },
+            params,
+            config,
+            refreshProviderConfigsFunction: refreshProviderConfigs
+          });
+        } catch (e) {
+          Logger.captureException(e);
+        } finally {
+          setFormLoading(false);
+        }
       }
+    } finally {
+      isSubmitting = false;
     }
   }
 
@@ -211,6 +219,9 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   }
 
   async function onClickSubmitButton(this: HTMLButtonElement, e: PointerEvent | MouseEvent) {
+    // Enter key triggers an implicit submit (synthetic click) which pointer-events: none does not block
+    if (isSubmitting || isFormLoading()) return;
+
     const isMouseClick = (e as PointerEvent)?.pointerId !== -1;
     const clickedProvider = this.dataset.provider as PaymentProvider;
     const providerKey = isMouseClick || config.design.theme === DesignTheme.HORIZONTAL

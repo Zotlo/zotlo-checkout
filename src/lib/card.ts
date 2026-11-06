@@ -10,7 +10,7 @@ import { loadFontsOnPage } from "../utils/fonts";
 import { generateEmptyPage, generateTheme } from "./theme";
 import { createStyle } from "../utils/createStyle";
 import { createPaymentSuccessForm } from "./create";
-import { clearFormRedirectLock, getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
+import { clearFormRedirectLock, getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, isFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
@@ -55,6 +55,8 @@ async function createZotloCard(params: IZotloCardParams) {
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
+  // Guards against duplicate submits (e.g. Enter pressed repeatedly while a request is in flight)
+  let isSubmitting = false;
 
   function hasAnyConfig() {
     return Object.keys(config.settings).length > 0;
@@ -123,34 +125,42 @@ async function createZotloCard(params: IZotloCardParams) {
     });
     
     if (!validation.isValid) return;
-    
-    if (import.meta.env.VITE_SDK_CARD_API_URL) {
-      if (!(await ensureSession())) return;
 
-      const result = getFormValues(config);
-      params.events?.onSubmit?.();
+    isSubmitting = true;
+    try {
+      if (import.meta.env.VITE_SDK_CARD_API_URL) {
+        if (!(await ensureSession())) return;
 
-      try {
-        setFormLoading(true);
-        const response = await updateCard({
-          formData: result,
-          config,
-          params
-        });
+        const result = getFormValues(config);
+        params.events?.onSubmit?.();
 
-        if (response?.result?.status === PaymentResultStatus.COMPLETE) {
-          const paymentDetail = await handlePaymentSuccess({ config, params });
-          if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
+        try {
+          setFormLoading(true);
+          const response = await updateCard({
+            formData: result,
+            config,
+            params
+          });
+
+          if (response?.result?.status === PaymentResultStatus.COMPLETE) {
+            const paymentDetail = await handlePaymentSuccess({ config, params });
+            if (paymentDetail) createPaymentSuccessForm({ config, paymentDetail });
+          }
+        } catch (e) {
+          Logger.captureException(e);
+        } finally {
+          setFormLoading(false);
         }
-      } catch (e) {
-        Logger.captureException(e);
-      } finally {
-        setFormLoading(false);
       }
+    } finally {
+      isSubmitting = false;
     }
   }
 
   async function onClickSubmitButton(this: HTMLButtonElement, e: PointerEvent | MouseEvent) {
+    // Enter key triggers an implicit submit (synthetic click) which pointer-events: none does not block
+    if (isSubmitting || isFormLoading()) return;
+
     const isMouseClick = (e as PointerEvent)?.pointerId !== -1;
     const clickedProvider = this.dataset.provider as PaymentProvider;
     const providerKey = isMouseClick || config.design.theme === DesignTheme.HORIZONTAL
