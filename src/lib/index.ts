@@ -27,7 +27,8 @@ import {
   isPixAvailable,
   isDLocalEnabled,
   getUserDataForIntegration,
-  sendIntegrationCAPIInfo
+  sendIntegrationCAPIInfo,
+  formatCpfCnpjMask
 } from "../utils";
 import { ErrorHandler, isSessionError } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
@@ -569,24 +570,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       }
     }
 
-    function formatCpfCnpjMask(item: HTMLInputElement, options: IMaskInputOnInput) {
-      const digits = options.value.replace(/\D/g, '').slice(0, 14);
-
-      // The base mask (CNPJ) already formats 12-14 digit values correctly.
-      if (digits.length > 11) return;
-
-      // Apply the CPF pattern (###.###.###-##) for values up to 11 digits.
-      let formatted = digits;
-      if (digits.length > 9) {
-        formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-      } else if (digits.length > 6) {
-        formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-      } else if (digits.length > 3) {
-        formatted = `${digits.slice(0, 3)}.${digits.slice(3)}`;
-      }
-      item.value = formatted;
-    }
-
     function applyMaskAndValidation() {
       if (maskInputs) {
         for (const item of maskInputs as NodeListOf<HTMLInputElement>) {
@@ -596,7 +579,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
               if (payload.name === FORM_ITEMS.CARD_NUMBER.input.name) {
                 formatCardMask(item, payload);
               } else if (payload.name === FORM_ITEMS.CPF_CNPJ.input.name) {
-                formatCpfCnpjMask(item, payload);
+                const val = formatCpfCnpjMask(item.value);
+                if (val !== undefined) item.value = val;
               }
             }
           });
