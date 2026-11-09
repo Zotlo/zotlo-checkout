@@ -1,4 +1,4 @@
-import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, isDLocalEnabled, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
+import { formatCpfCnpjMask, getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, isDLocalEnabled, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
 import { getCardMask } from "./getCardMask";
 import { type FormConfig, PaymentProvider } from "../lib/types";
 import { FORM_ITEMS } from "../lib/fields";
@@ -49,6 +49,24 @@ function getValidationMessage(key: string, params: any[] = []) {
 export function updateValidationMessages(messages: Record<string, string>) {
   if (typeof messages !== 'object' || messages === null) return false;
   ValidationMessages.messages = messages;
+}
+
+function isValidCNPJ(input: string) {
+  const c = String(input).toUpperCase().replace(/[.\/\-\s]/g, "");
+  // 12 karakter [0-9A-Z] + 2 rakam kontrol hanesi
+  if (!/^[0-9A-Z]{12}\d{2}$/.test(c)) return false;
+  if (/^(\d)\1{13}$/.test(c)) return false; // 00000000000000 vb.
+  const val = (ch: string) => ch.charCodeAt(0) - 48; // '0'->0, 'A'->17
+  const calc = (base: any, weights: any) => {
+    const sum = [...base].reduce((s, ch, i) => s + val(ch) * weights[i], 0);
+    const r = sum % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const w2 = [6, ...w1];
+  const d1 = calc(c.slice(0, 12), w1);
+  const d2 = calc(c.slice(0, 12) + d1, w2);
+  return c.endsWith(`${d1}${d2}`);
 }
 
 export class Validator {
@@ -177,8 +195,15 @@ export const ValidationRules = {
   },
   cpfCnpj(value: string) {
     const digits = (value || '').replace(/\D/g, '');
-    // CPF has 11 digits, CNPJ has 14 digits.
-    if (digits.length === 11 || digits.length === 14) return true;
+    // CPF has 11 digits
+    if (digits.length === 11) return true;
+
+    // CNPJ has 14 digits.
+    if (digits.length === 14) {
+      const masked = formatCpfCnpjMask(digits) || '';
+      if (isValidCNPJ(masked)) return true;
+    }
+
     return getValidationMessage('cpfCnpj');
   }
 };
