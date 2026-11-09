@@ -64,13 +64,15 @@ export class ApiRequestError extends Error {
   timeout: number;
   // Retries already made before this failure
   attempt: number;
+  // Value of the X-Client-Request-Id header this attempt was sent with
+  clientRequestId: string;
   // Page state at the time of the failure (see pageState above)
   unloading: boolean;
   online: boolean;
   visibility: string;
   sinceLoadMs: number;
 
-  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout' | 'attempt'>) {
+  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout' | 'attempt' | 'clientRequestId'>) {
     const label = details.type === 'timeout' ? 'Request timeout' : details.type === 'abort' ? 'Request aborted' : 'Network error';
     super(`${label}: ${details.method} ${details.endpoint}`);
     this.name = 'ApiRequestError';
@@ -81,6 +83,7 @@ export class ApiRequestError extends Error {
     this.elapsedMs = details.elapsedMs;
     this.timeout = details.timeout;
     this.attempt = details.attempt;
+    this.clientRequestId = details.clientRequestId;
 
     const page = getPageSnapshot();
     this.unloading = page.unloading;
@@ -108,6 +111,15 @@ export const SESSION_EXPIRES_AT_HEADER = 'Session-Expires-At';
 
 // The requests that create a session; every other request needs an existing one
 const SESSION_INIT_ENDPOINTS = ['/init', '/card/init'];
+
+// Client-side id sent with every request so a Sentry event can be matched to the backend
+// log line even when no response (and so no backend requestId) ever arrived
+export const CLIENT_REQUEST_ID_HEADER = 'X-Client-Request-Id';
+function newClientRequestId(): string {
+  const c = typeof crypto !== 'undefined' ? crypto : undefined;
+  if (c?.randomUUID) return c.randomUUID();
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
 
 // getResponseHeader() logs "Refused to get unsafe header" on a cross-origin response for
 // every header the server did not expose; getAllResponseHeaders() lists the exposed
@@ -244,15 +256,17 @@ export class API {
       const xhr = new XMLHttpRequest();
       const existingUuid = getSession({ useCookie: this.useCookie, key: this.sessionKey })?.id;
       const clientDomain = window.location.hostname || window.location.host || "";
+      const clientRequestId = newClientRequestId();
 
       // Initialize the request
       xhr.open(method, url, true);
 
       // Set default headers and custom headers
-      const mergedHeaders = { 
+      const mergedHeaders: Record<string, string> = { 
         ...this.defaultHeaders,
         ...(existingUuid && { Uuid: existingUuid } as Record<string, string>),
         ...(clientDomain && { "Client-Domain": clientDomain } as Record<string, string>),
+        [CLIENT_REQUEST_ID_HEADER]: clientRequestId,
         ...headers 
       };
       Object.keys(mergedHeaders).forEach((key) => {
@@ -280,13 +294,14 @@ export class API {
             status: xhr.status,
             elapsedMs: Date.now() - startedAt,
             attempt,
+            clientRequestId,
             ...(responseData?.meta?.errorCode && { errorCode: responseData.meta.errorCode }),
             ...(responseData?.meta?.requestId && { requestId: responseData.meta.requestId }),
           }, responseData?.meta?.errorCode ? 'warning' : 'info');
           resolve(responseData);
         } catch {
           const responseData = this.getResponseData(xhr, mergedHeaders);
-          this.addBreadcrumb(method, endpoint, { status: xhr.status, elapsedMs: Date.now() - startedAt, attempt, parseError: true }, 'warning');
+          this.addBreadcrumb(method, endpoint, { status: xhr.status, elapsedMs: Date.now() - startedAt, attempt, clientRequestId, parseError: true }, 'warning');
           reject(responseData);
         }
       };
@@ -301,13 +316,15 @@ export class API {
           status: xhr.status,
           elapsedMs: Date.now() - startedAt,
           timeout,
-          attempt
+          attempt,
+          clientRequestId
         });
         this.addBreadcrumb(method, endpoint, {
           type,
           status: xhr.status,
           elapsedMs: error.elapsedMs,
           attempt,
+          clientRequestId,
           unloading: error.unloading,
           online: error.online,
           visibility: error.visibility
