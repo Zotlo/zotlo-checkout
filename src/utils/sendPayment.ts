@@ -1,7 +1,8 @@
 import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalEnabled, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
 import { getGooglePayClient, hasValidApplePayConfig, hasValidGooglePayConfig, isApplePayInsecureDocumentError } from "./loadProviderSdks";
-import { CheckoutAPI } from "./api";
+import { CheckoutAPI, type ApiResponse } from "./api";
+import { type CheckoutLookup, isCheckoutResultUnknown, recoverCheckoutResult } from "./recoverCheckoutResult";
 import { deleteSession, getSession } from "./session";
 import { Logger, toCapturableError } from "../lib/logger";
 import { COOKIE, getCookie } from "./cookie";
@@ -335,6 +336,23 @@ export async function handlePaymentSuccess(payload: { config: FormConfig; params
   }
 }
 
+/**
+ * Sends the checkout. When no response arrives although the page is still live, the
+ * payment may have gone through anyway, so the result is looked up before the error is
+ * passed on; a recovered payment comes back as a regular COMPLETE response.
+ */
+async function postCheckout(payload: Record<string, any>, lookup: CheckoutLookup): Promise<ApiResponse> {
+  const startedAt = Date.now();
+  try {
+    return await CheckoutAPI.post("/payment/checkout", payload);
+  } catch (error) {
+    if (!isCheckoutResultUnknown(error)) throw error;
+    const recovered = await recoverCheckoutResult({ lookup, error, startedAt });
+    if (recovered) return recovered;
+    throw error;
+  }
+}
+
 async function handleCheckoutResponse(payload: {
   checkoutResponse: Record<string, any>;
   params: IZotloCheckoutParams;
@@ -465,7 +483,7 @@ async function handleApplePayPayment(payload: {
         applePayToken,
       };
       try {
-        const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
+        const checkoutResponse = await postCheckout(payload, { providerKey, transactionId, returnUrl: params?.returnUrl });
         await handleCheckoutResponse({
           checkoutResponse,
           params,
@@ -567,7 +585,7 @@ async function handleGooglePayPayment(payload: {
       googlePayToken: JSON.stringify(googleClientResponse || '{}'),
     }
 
-    const checkoutResponse = await CheckoutAPI.post("/payment/checkout", checkoutPayload);
+    const checkoutResponse = await postCheckout(checkoutPayload, { providerKey: PaymentProvider.GOOGLE_PAY, transactionId, returnUrl: params?.returnUrl });
     await handleCheckoutResponse({
       checkoutResponse,
       params,
@@ -632,7 +650,7 @@ export async function sendPayment(paymentParams: {
     if (registerResponse?.meta?.errorCode) return;
 
     // Send payment
-    const checkoutResponse = await CheckoutAPI.post("/payment/checkout", payload);
+    const checkoutResponse = await postCheckout(payload, { providerKey, returnUrl: params?.returnUrl });
     handleCheckoutResponse({ checkoutResponse, params, refreshProviderConfigsFunction });
   } catch (err:any) {
     handlePaymentErrorMessage(err, params);
