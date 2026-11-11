@@ -221,6 +221,7 @@ export function getPackageTemplateParams(config: FormConfig) {
 
   let periodLabel = '';
   let periodNaming = '';
+  let periodUnit = '';
   let trialPeriodLabel = '';
   let trialPeriodNaming = '';
   let trialPeriodWeekly = '';
@@ -229,10 +230,15 @@ export function getPackageTemplateParams(config: FormConfig) {
   if (period !== 0) {
     periodLabel = $t(`common.periodBase.${periodType}`, { count: period });
 
+    // Translated noun form for "/{{PERIOD}}" style texts: "month", "4 weeks" (the count is dropped for a single unit)
+    const periods = $t(`common.periods.${periodType}`, { count: period });
+
     if (period === 1) {
       periodNaming = $t(`common.periodNaming.${periodType}`);
+      periodUnit = periods.replace(/\s*\b1\b\s*/, ' ').trim();
     } else {
       periodNaming = periodLabel;
+      periodUnit = periods;
     }
   }
 
@@ -240,7 +246,7 @@ export function getPackageTemplateParams(config: FormConfig) {
     trialPeriodLabel = $t(`common.periodBase.${trialPeriodType}`, { count: trialPeriod })
 
     if (trialPeriod === 1) {
-      periodNaming = $t(`common.periodNaming.${trialPeriodType}`);
+      trialPeriodNaming = $t(`common.periodNaming.${trialPeriodType}`);
 
       if (trialPeriodType === 'week') {
         trialPeriodWeekly = $t('common.periodBase.day', { count: 7 })
@@ -270,6 +276,7 @@ export function getPackageTemplateParams(config: FormConfig) {
     PERIOD: periodLabel,
     PERIOD_TYPE: periodType,
     PERIOD_NAMING: periodNaming,
+    PERIOD_UNIT: periodUnit,
     TRIAL_PERIOD: trialPeriodLabel,
     TRIAL_PERIOD_TYPE: trialPeriodType,
     TRIAL_PERIOD_NAMING: trialPeriodNaming,
