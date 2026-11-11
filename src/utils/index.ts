@@ -423,9 +423,9 @@ export function getSubmitButtonContent(config: FormConfig) {
         params.PERIOD = params.PERIOD_NAMING;
         params.TRIAL_PERIOD = params.TRIAL_PERIOD_NAMING;
         break;
-      case 1:
-        params.PERIOD = (config?.packageInfo?.period || 0) > 1 ? params.PERIOD_NAMING : params.PERIOD_TYPE;
-        params.TRIAL_PERIOD = params.TRIAL_PERIOD_TYPE;
+      // "/every {{PERIOD}}" and "/{{PERIOD}}" texts need the noun form (e.g. "month"), not the adjective (e.g. "Monthly")
+      case 1: case 7:
+        params.PERIOD = params.PERIOD_UNIT;
         break;
     }
   }
