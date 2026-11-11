@@ -139,6 +139,9 @@ export interface IZotloCheckoutParams {
     }
   };
 
+  /** API-provided token used to validate and initialize the custom price. */
+  customPriceToken?: string;
+
   /** Show saved credit cards if the user has any saved cards. Default is `false`. (To use this feature contact with support, a permission must be granted.) */
   showSavedCards?: boolean;
 

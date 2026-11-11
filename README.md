@@ -107,6 +107,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `customParameters`      | no      | Send custom parameters to webhooks                                                                                           |
 | `variantId`             | no      | String id of the A/B test variant to render. Defaults to the base variant. If an A/B test running, this param has no effect. |
 | `apiUrl`                | no      | Base URL of the API the checkout sends its requests to. Defaults to the Zotlo Checkout API. **Required in the sandbox environment:** set it to `https://checkout-sandbox.zotlo.com/v1`. |
+| `customPriceToken`      | no      | API-provided token used to validate and initialize the custom price.                                                         |
 | `events`                | no      | Event listeners that can be used during the checkout process.                                                                |
 | `events.onLoad`         | no      | Triggers after form loaded.                                                                                                  |
 | `events.onSubmit`       | no      | Triggered after the form is submitted.                                                                                       |
