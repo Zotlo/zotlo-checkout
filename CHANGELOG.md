@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.26.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.5...v1.26.0)
+
+### 🚀 Enhancements
+
+- **Z3-6740**: add customPriceToken param support for checkout ([c12f148](https://github.com/Zotlo/zotlo-checkout/commit/c12f148))
+
+### 🩹 Fixes
+
+- **Z3-6818:** Show the statement name in the card update form footer ([d2e2f1e](https://github.com/Zotlo/zotlo-checkout/commit/d2e2f1e))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.25.5
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.4...v1.25.5)
