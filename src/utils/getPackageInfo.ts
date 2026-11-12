@@ -224,6 +224,7 @@ export function getPackageTemplateParams(config: FormConfig) {
   let periodUnit = '';
   let trialPeriodLabel = '';
   let trialPeriodNaming = '';
+  let trialPeriodUnit = '';
   let trialPeriodWeekly = '';
 
 
@@ -244,6 +245,8 @@ export function getPackageTemplateParams(config: FormConfig) {
 
   if (trialPeriod !== 0) {
     trialPeriodLabel = $t(`common.periodBase.${trialPeriodType}`, { count: trialPeriod })
+    // Translated noun form with the count, e.g. "3 days", "1 month"
+    trialPeriodUnit = $t(`common.periods.${trialPeriodType}`, { count: trialPeriod });
 
     if (trialPeriod === 1) {
       trialPeriodNaming = $t(`common.periodNaming.${trialPeriodType}`);
@@ -280,6 +283,7 @@ export function getPackageTemplateParams(config: FormConfig) {
     TRIAL_PERIOD: trialPeriodLabel,
     TRIAL_PERIOD_TYPE: trialPeriodType,
     TRIAL_PERIOD_NAMING: trialPeriodNaming,
+    TRIAL_PERIOD_UNIT: trialPeriodUnit,
     TRIAL_PERIOD_NAMING_WEEKLY: trialPeriodWeekly,
   };
 }

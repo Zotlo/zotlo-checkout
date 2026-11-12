@@ -398,8 +398,15 @@ export function getFooterPriceInfo(config: FormConfig) {
     `footer.priceInfo.discounted.${packageCondition}.${discountTrialKey}.${discountRecurringKey}` :
     `footer.priceInfo.${packageCondition}`;
 
-  return template($t(finalLocalizationKey), params);
-
+  // Footer sentences ("for {{TRIAL_PERIOD}}, then {{PRICE}} per {{PERIOD}}") need the noun form
+  // (e.g. "1 month", "2 months"), not the adjective one used on buttons (e.g. "1-month")
+  return template($t(finalLocalizationKey), {
+    ...params,
+    PERIOD: params.PERIOD_UNIT,
+    TRIAL_PERIOD: params.TRIAL_PERIOD_UNIT,
+    PERIOD_BASE: params.PERIOD,
+    TRIAL_PERIOD_BASE: params.TRIAL_PERIOD,
+  });
 }
 
 export function getSubmitButtonContent(config: FormConfig) {
