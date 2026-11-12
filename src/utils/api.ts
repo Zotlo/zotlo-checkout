@@ -9,6 +9,9 @@ interface RequestConfig {
   // Extra attempts for requests that got no response (network error, not timeout),
   // made only while the page is still visible and online. Only for idempotent requests.
   retry?: number;
+  // false for requests bound to the session a payment was made in (post payment offer):
+  // a fresh session would not know that payment, so renewing it cannot help
+  renewSession?: boolean;
 }
 
 export interface ApiResponse {
@@ -61,13 +64,15 @@ export class ApiRequestError extends Error {
   timeout: number;
   // Retries already made before this failure
   attempt: number;
+  // Value of the X-Client-Request-Id header this attempt was sent with
+  clientRequestId: string;
   // Page state at the time of the failure (see pageState above)
   unloading: boolean;
   online: boolean;
   visibility: string;
   sinceLoadMs: number;
 
-  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout' | 'attempt'>) {
+  constructor(details: Pick<ApiRequestError, 'type' | 'method' | 'endpoint' | 'status' | 'elapsedMs' | 'timeout' | 'attempt' | 'clientRequestId'>) {
     const label = details.type === 'timeout' ? 'Request timeout' : details.type === 'abort' ? 'Request aborted' : 'Network error';
     super(`${label}: ${details.method} ${details.endpoint}`);
     this.name = 'ApiRequestError';
@@ -78,6 +83,7 @@ export class ApiRequestError extends Error {
     this.elapsedMs = details.elapsedMs;
     this.timeout = details.timeout;
     this.attempt = details.attempt;
+    this.clientRequestId = details.clientRequestId;
 
     const page = getPageSnapshot();
     this.unloading = page.unloading;
@@ -99,6 +105,42 @@ export class ApiRequestError extends Error {
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+// Session end time (ISO 8601, UTC), sent by the backend on every response. It and Date
+// have to be listed in Access-Control-Expose-Headers, otherwise the browser hides them.
+export const SESSION_EXPIRES_AT_HEADER = 'Session-Expires-At';
+
+// The requests that create a session; every other request needs an existing one
+const SESSION_INIT_ENDPOINTS = ['/init', '/card/init'];
+
+// Client-side id sent with every request so a Sentry event can be matched to the backend
+// log line even when no response (and so no backend requestId) ever arrived
+export const CLIENT_REQUEST_ID_HEADER = 'X-Client-Request-Id';
+function newClientRequestId(): string {
+  const c = typeof crypto !== 'undefined' ? crypto : undefined;
+  if (c?.randomUUID) return c.randomUUID();
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
+
+// getResponseHeader() logs "Refused to get unsafe header" on a cross-origin response for
+// every header the server did not expose; getAllResponseHeaders() lists the exposed
+// ones silently, so the value is read from that list instead
+function getExposedHeader(xhr: XMLHttpRequest, name: string): string | null {
+  const headers = xhr.getAllResponseHeaders() || '';
+  const match = headers.match(new RegExp(`^${name}:\\s*(.*)$`, 'im'));
+  return match ? match[1].trim() : null;
+}
+
+// Remaining session lifetime in seconds, measured against the server clock (Date header)
+// so that a wrong device clock does not shift it
+function getSessionExpiresIn(xhr: XMLHttpRequest): number | null {
+  const expiresAt = Date.parse(getExposedHeader(xhr, SESSION_EXPIRES_AT_HEADER) || '');
+  if (Number.isNaN(expiresAt)) return null;
+  const serverNow = Date.parse(getExposedHeader(xhr, 'Date') || '');
+  const now = Number.isNaN(serverNow) ? Date.now() : serverNow;
+  const seconds = (expiresAt - now) / 1000;
+  return seconds > 0 ? seconds : null;
+}
+
 /**
  * API utility class for making HTTP requests using XMLHttpRequest
  */
@@ -113,7 +155,8 @@ export class API {
   retryDelay = 500;
   useCookie = false;
   sessionKey: string | undefined = undefined;
-  // Session lifetime in minutes, must match the backend session timeout
+  // Session lifetime in minutes. Starting value for older backends; overwritten by the
+  // end time the backend reports in every response (SESSION_EXPIRES_AT_HEADER)
   sessionTimeout = 15;
 
   constructor(payload?: {
@@ -145,6 +188,26 @@ export class API {
     this.baseUrl = url?.trim() || this.defaultBaseUrl;
   }
 
+  // Opens a new session when the local one has expired while the form sat idle (the
+  // form registers its own reload here). Without it a request would go out without the
+  // Uuid header and be rejected with 403105.
+  sessionRenewer: (() => Promise<void>) | null = null;
+  private renewing: Promise<void> | null = null;
+
+  setSessionRenewer(renewer: (() => Promise<void>) | null) {
+    this.sessionRenewer = renewer;
+  }
+
+  private async ensureSession(endpoint: string, config?: RequestConfig) {
+    if (!this.sessionRenewer || SESSION_INIT_ENDPOINTS.includes(endpoint)) return;
+    if (config?.renewSession === false || config?.headers?.Uuid) return;
+    if (getSession({ useCookie: this.useCookie, key: this.sessionKey })?.id) return;
+    // Concurrent requests wait for the same renewal; the renewer's own requests find
+    // the new session and pass straight through
+    this.renewing ||= this.sessionRenewer().finally(() => { this.renewing = null; });
+    await this.renewing;
+  }
+
   get(endpoint: string, config?: RequestConfig): Promise<ApiResponse> { 
     return this.request("GET", endpoint, null, config);
   }
@@ -172,6 +235,8 @@ export class API {
     config?: RequestConfig
   ): Promise<ApiResponse> {
     const retries = config?.retry || 0;
+
+    await this.ensureSession(endpoint, config);
 
     for (let attempt = 0; ; attempt++) {
       try {
@@ -202,15 +267,17 @@ export class API {
       const xhr = new XMLHttpRequest();
       const existingUuid = getSession({ useCookie: this.useCookie, key: this.sessionKey })?.id;
       const clientDomain = window.location.hostname || window.location.host || "";
+      const clientRequestId = newClientRequestId();
 
       // Initialize the request
       xhr.open(method, url, true);
 
       // Set default headers and custom headers
-      const mergedHeaders = { 
+      const mergedHeaders: Record<string, string> = { 
         ...this.defaultHeaders,
         ...(existingUuid && { Uuid: existingUuid } as Record<string, string>),
         ...(clientDomain && { "Client-Domain": clientDomain } as Record<string, string>),
+        [CLIENT_REQUEST_ID_HEADER]: clientRequestId,
         ...headers 
       };
       Object.keys(mergedHeaders).forEach((key) => {
@@ -233,18 +300,19 @@ export class API {
       xhr.onload = () => {
         try {
           const responseData = this.getResponseData(xhr, mergedHeaders);
-          this.handleSessionRefresh(existingUuid, responseData);
+          this.handleSessionRefresh(existingUuid, responseData, xhr);
           this.addBreadcrumb(method, endpoint, {
             status: xhr.status,
             elapsedMs: Date.now() - startedAt,
             attempt,
+            clientRequestId,
             ...(responseData?.meta?.errorCode && { errorCode: responseData.meta.errorCode }),
             ...(responseData?.meta?.requestId && { requestId: responseData.meta.requestId }),
           }, responseData?.meta?.errorCode ? 'warning' : 'info');
           resolve(responseData);
         } catch {
           const responseData = this.getResponseData(xhr, mergedHeaders);
-          this.addBreadcrumb(method, endpoint, { status: xhr.status, elapsedMs: Date.now() - startedAt, attempt, parseError: true }, 'warning');
+          this.addBreadcrumb(method, endpoint, { status: xhr.status, elapsedMs: Date.now() - startedAt, attempt, clientRequestId, parseError: true }, 'warning');
           reject(responseData);
         }
       };
@@ -259,13 +327,15 @@ export class API {
           status: xhr.status,
           elapsedMs: Date.now() - startedAt,
           timeout,
-          attempt
+          attempt,
+          clientRequestId
         });
         this.addBreadcrumb(method, endpoint, {
           type,
           status: xhr.status,
           elapsedMs: error.elapsedMs,
           attempt,
+          clientRequestId,
           unloading: error.unloading,
           online: error.online,
           visibility: error.visibility
@@ -302,11 +372,18 @@ export class API {
   }
 
   /**
-   * Backend resets the session timeout only on successful responses,
-   * so keep the local expiry in sync with it.
+   * Keeps the local session expiry in sync with the backend. Every response carries the
+   * session end time in SESSION_EXPIRES_AT_HEADER; a backend without it only restarts
+   * the timeout on successful responses, which the fallback mirrors.
    */
-  handleSessionRefresh(sentUuid: string | undefined, responseData: ApiResponse) {
-    if (!sentUuid || !responseData?.meta || responseData.meta.errorCode) return;
+  handleSessionRefresh(sentUuid: string | undefined, responseData: ApiResponse, xhr: XMLHttpRequest) {
+    if (!responseData?.meta || responseData.meta.errorCode) return;
+
+    const expiresInSeconds = getSessionExpiresIn(xhr);
+    // Also covers /init, whose session is stored by setSession with this timeout right after
+    if (expiresInSeconds) this.sessionTimeout = expiresInSeconds / 60;
+
+    if (!sentUuid) return;
 
     refreshSession({
       expireTimeInMinutes: this.sessionTimeout,

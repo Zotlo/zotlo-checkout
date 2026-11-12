@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../api';
+import { ApiRequestError, type ApiResponse } from '../api';
 import { Logger, toCapturableError } from '../../lib/logger';
 import { ErrorCodes } from './types';
 
@@ -14,6 +14,30 @@ export const ErrorHandler = {
 // so the form is left as it is, as when network errors rejected with "".
 export function setErrorResponse(e: any) {
   if (e?.meta) ErrorHandler.response = e;
+}
+
+const REQUEST_ERROR_CODES: Record<ApiRequestError['type'], string> = {
+  network: ErrorCodes.NETWORK_ERROR,
+  timeout: ErrorCodes.REQUEST_TIMEOUT,
+  abort: ErrorCodes.REQUEST_ABORTED,
+};
+
+// onError is documented to receive the backend response. A request that got no response
+// (ApiRequestError) or a runtime error has no meta, so it's given the same shape instead of
+// leaking the internal error object; integrations reading error.meta.errorCode keep working.
+export function toErrorResponse(e: any): ApiResponse {
+  if (e?.meta) return e;
+
+  const requestError = e instanceof ApiRequestError ? e : null;
+  return {
+    meta: {
+      requestId: '',
+      httpStatus: requestError?.status || 0,
+      errorCode: requestError ? REQUEST_ERROR_CODES[requestError.type] : ErrorCodes.SDK_ERROR,
+      message: (typeof e === 'string' ? e : e?.message) || 'Unknown error',
+    },
+    result: {},
+  };
 }
 
 // Init errors caused by a stale session Uuid, recoverable by dropping the session

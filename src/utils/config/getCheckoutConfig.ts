@@ -1,10 +1,10 @@
-import { captureInitError, ErrorHandler, isSessionError, setErrorResponse } from "./index";
+import { captureInitError, ErrorHandler, isSessionError, setErrorResponse, toErrorResponse } from "./index";
 import { mergeDeep, ZOTLO_GLOBAL } from "../index";
 import type { FormConfig, FormDesign, IZotloCheckoutParams, FormPaymentData, FormPostPaymentOffers, FormSuccess, ProviderConfigs } from "../../lib/types";
 import { DesignTheme, DiscountRecurringType, PackageType, PaymentProvider, SuccessTheme } from "../../lib/types";
 import { Logger } from "../../lib/logger";
 import { CheckoutAPI } from "../../utils/api";
-import { deleteSession, getSession, setSession } from "../session";
+import { deleteSession, setSession } from "../session";
 import { getPackageInfo } from "../getPackageInfo";
 import { DefaultThemeConfig } from "../getDefaultThemeConfig";
 import { ErrorCodes, type InitResult } from "./types";
@@ -82,8 +82,10 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     let initRes = await CheckoutAPI.post('/init', payload, reqConfig);
 
     // A stale session Uuid sent with the request makes /init fail with "user not found";
-    // drop it and retry once instead of leaving it to the Retry button on the error page
-    if (isSessionError(initRes) && getSession({ useCookie })?.id) {
+    // drop it and retry once instead of leaving it to the Retry button on the error page.
+    // Not conditioned on the local session still existing: it may have expired while the
+    // request was in flight, which is exactly when the backend rejects it.
+    if (isSessionError(initRes)) {
       deleteSession({ useCookie });
       initRes = await CheckoutAPI.post('/init', payload, reqConfig);
     }
@@ -93,6 +95,8 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
 
     if (!initData || Array.isArray(initData)) return config;
     setSession({ id: initData?.uuid, expireTimeInMinutes: CheckoutAPI.sessionTimeout, useCookie });
+    // Known only from /init: a hosted checkout link page or the SDK embedded in a merchant page
+    Logger.setTag('checkoutType', initData?.isCheckoutLink ? 'link' : 'embed');
 
     const paymentInitData = await getPaymentData();
     const settings = initData?.settings;
@@ -186,7 +190,7 @@ export async function getCheckoutConfig(params: IZotloCheckoutParams): Promise<F
     ZOTLO_GLOBAL.ready = true;
   } catch (e: any) {
     setErrorResponse(e);
-    params.events?.onError?.(e);
+    params.events?.onError?.(toErrorResponse(e));
     captureInitError(e);
     ZOTLO_GLOBAL.ready = false;
     return config;

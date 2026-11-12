@@ -12,6 +12,7 @@ import {
   getMaskByCode,
   preparePaymentMethods,
   setFormLoading,
+  clearFormRedirectLock,
   setFormDisabled,
   debounce,
   handleSubscriberIdInputEventListeners,
@@ -53,6 +54,14 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   // so unmount compares against it to avoid dropping another instance's session.
   let sessionId: string | undefined;
 
+  // Any request made after the session expired (e.g. subscriberId register after the
+  // form sat idle) gets a fresh session first instead of failing with 403105. Not on a
+  // checkout link page: its session comes from the server with the page, an /init
+  // from the SDK is rejected there (404067)
+  CheckoutAPI.setSessionRenewer(async () => {
+    if (config?.general?.isCheckoutLink) return;
+    await reloadSession();
+  });
   await reloadSession();
 
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
@@ -63,12 +72,12 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   let destroyDiscountEvents = { discounted: null, undiscounted: null } as ReturnType<typeof useDiscount>;
 
   async function reloadSession() {
-    config = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
+    let next = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
 
     if (import.meta.env.VITE_SDK_API_URL) {
       CheckoutAPI.setUseCookie(!!params?.useCookie);
       CheckoutAPI.setBaseUrl(params?.apiUrl);
-      config = await getCheckoutConfig({
+      next = await getCheckoutConfig({
         token: params.token,
         packageId: params.packageId,
         language: params.language,
@@ -85,12 +94,35 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         events: params.events
       });
       sessionId = getSession({ useCookie: !!params?.useCookie })?.id || undefined;
-      await refreshProviderConfigs();
     }
+
+    // Swapped in only once it is loaded: a reload started from the middle of another
+    // flow (session renewal before a request) must not leave that flow with an empty config
+    config = next;
+    if (import.meta.env.VITE_SDK_API_URL) await refreshProviderConfigs();
   }
 
   async function refreshProviderConfigs() {
     config.providerConfigs = await prepareProviders(config, params?.returnUrl || '') as ProviderConfigs;
+  }
+
+  // A payment started on an expired session gets a fresh one first. The form is not
+  // re-rendered, so the values the user typed are kept and the payment continues
+  // instead of failing with "user not found". Returns false when no session could be
+  // opened; the error page (with its Retry button) is shown instead.
+  async function ensureSession() {
+    if (getSession({ useCookie: !!params?.useCookie })?.id) return true;
+
+    setFormLoading(true);
+    try {
+      await reloadSession();
+    } finally {
+      setFormLoading(false);
+    }
+    if (hasAnyConfig()) return true;
+
+    await refresh();
+    return false;
   }
 
   async function refreshPaymentInitData() {
@@ -136,6 +168,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     if (!validation.isValid) return;
 
     if (import.meta.env.VITE_SDK_API_URL) {
+      if (!(await ensureSession())) return;
+
       const result = getFormValues(config);
       const cardId = getActiveSavedCardId({ providerKey, config });
       params.events?.onSubmit?.();
@@ -437,6 +471,16 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   }
 
   async function onFormInputChange() {
+    // Detach before anything async: the request below may wait for a session renewal,
+    // and every input changed meanwhile would send the event again
+    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
+    const formElement = ZOTLO_GLOBAL.formElement;
+    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
+
+    formInputs?.forEach((input) => {
+      input.removeEventListener('change', onFormInputChange);
+    });
+
     const { user_data: fbSiteData, context: tiktokContext } = await getUserDataForIntegration({
       registerType: config.settings.registerType,
       subscriberId: config.general.subscriberId
@@ -461,14 +505,6 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         pageType: 'Payment',
         pageSlug: globalThis?.location?.pathname,
       }
-    });
-
-    const wrapper = config.design.theme !== DesignTheme.MOBILEAPP ? '[data-tab-active="true"] ' : '';
-    const formElement = ZOTLO_GLOBAL.formElement;
-    const formInputs = formElement?.querySelectorAll(wrapper + 'input');
-
-    formInputs?.forEach((input) => {
-      input.removeEventListener('change', onFormInputChange);
     });
   }
 
@@ -753,11 +789,25 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     });
   }
 
+  // A bfcache restore after a payment redirect brings the form back locked and, when
+  // the return page differs, without the session dropped on pagehide
+  async function onPageShow(event: PageTransitionEvent) {
+    if (!event.persisted) return;
+    clearFormRedirectLock();
+    if (getSession({ useCookie: !!params?.useCookie })?.id) return;
+    // A checkout link page gets its session from the server, an /init without one fails
+    if (config?.general?.isCheckoutLink) return;
+    await reloadSession();
+    await refresh();
+  }
+
   function unmount() {
+    CheckoutAPI.setSessionRenewer(null);
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
     ZOTLO_GLOBAL.reset();
+    window.removeEventListener('pageshow', onPageShow);
 
     // The backend keeps the package and customParameters of the session's first /init,
     // so a ZotloCheckout() call after unmount must not reuse this session.
@@ -778,6 +828,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       await reloadSession();
     }
 
+    window.addEventListener('pageshow', onPageShow);
     refresh();
 
     handleUrlQuery({
