@@ -437,6 +437,10 @@
   background-color: #f6c444;
 }
 
+.zotlo-checkout__button.provider.xendit img {
+  max-height: 16px;
+}
+
 .zotlo-checkout__cardSubmit {
   color: var(--zc-form-submit-color);
   background-color: var(--zc-form-submit-backgroundColor);

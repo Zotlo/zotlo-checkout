@@ -113,6 +113,7 @@ export function preparePaymentMethods(config: FormConfig) {
     const isAvailable = isPanelEditMode ? true : !!config?.paymentData?.providers?.[item?.providerKey];
     const isPixAvailable = isPanelEditMode ? !!config.general?.showPix : !!config?.paymentData?.providers?.[PaymentProvider.PIX];
     const isAlipayAvailable = isPanelEditMode ? !!config.general?.showAliPay : !!config?.paymentData?.providers?.[PaymentProvider.ALIPAY];
+    const isXenditAvailable = isPanelEditMode ? !!config.general?.showXendit : !!config?.paymentData?.providers?.[PaymentProvider.XENDIT];
     const isApplePayCanMakePayments = isPanelEditMode ? true : config?.providerConfigs?.applePay?.canMakePayments;
     const isGooglePayReadyToPay = isPanelEditMode ? true : config?.providerConfigs?.googlePay?.isReadyToPay;
     if (item.providerKey === PaymentProvider.APPLE_PAY) return isApplePayCanMakePayments && isAvailable;
@@ -120,6 +121,7 @@ export function preparePaymentMethods(config: FormConfig) {
     if (item.providerKey === PaymentProvider.PAYPAL) return config.general.showPaypal;
     if (item.providerKey === PaymentProvider.PIX) return isPixAvailable;
     if (item.providerKey === PaymentProvider.ALIPAY) return isAlipayAvailable;
+    if (item.providerKey === PaymentProvider.XENDIT) return isXenditAvailable;
     return isAvailable;
   }) || [];
 }
@@ -173,23 +175,33 @@ export function generateTabButtons(config: FormConfig, paymentMethods: FormSetti
       [PaymentProvider.GOOGLE_PAY]: { dark: '.svg', light: '.svg' },
       [PaymentProvider.APPLE_PAY]: { dark: '.svg', light: '.svg' },
       [PaymentProvider.PIX]: { dark: '_white.svg', light: '.svg' },
-      [PaymentProvider.ALIPAY]: { dark: '_white.svg', light: '_black.svg' }
+      [PaymentProvider.ALIPAY]: { dark: '_white.svg', light: '_black.svg' },
+      [PaymentProvider.XENDIT]: { dark: '_tab_white.png', light: '_tab_black.png' },
+    }
+    const labelKeys: Partial<Record<PaymentProvider, string>> = {
+      [PaymentProvider.CREDIT_CARD]: 'common.card',
+      [PaymentProvider.XENDIT]: 'common.eWallet',
     }
 
     const tabButtons = paymentMethods.reduce((acc, item, index) => {
       const postfix = theme[item.providerKey]?.[config.design.darkMode ? 'dark' : 'light'];
       const imgSrc = getCDNUrl(`editor/payment-providers/${item.providerKey}${postfix}`);
+      const labelKey = labelKeys[item.providerKey];
+      const label = labelKey ? $t(labelKey) : '';
+      // Escape quotes so a translated label can't break out of the attribute value
+      const labelAttr = label.replace(/"/g, '&quot;');
 
       return acc + createButton({
         content: `<img src="${imgSrc}" alt="${item.providerKey}">${
-          item.providerKey === PaymentProvider.CREDIT_CARD ? $t('common.card') : ''
+          label ? `<span class="zotlo-checkout__tab__label">${label}</span>` : ''
         }`,
         className: 'zotlo-checkout__tab__button',
         attrs: {
           type: 'button',
           'data-active': index === 0 ? 'true' : 'false',
           'data-tab': item.providerKey,
-          'aria-label': item.providerKey
+          'aria-label': labelAttr || item.providerKey,
+          ...(labelAttr && { title: labelAttr })
         }
       });
     }, '');

@@ -10,6 +10,7 @@
 
 .zotlo-checkout__tab > div {
   flex: 1;
+  min-width: 0;
 }
 
 .zotlo-checkout__tab__button {
@@ -20,6 +21,7 @@
   font-size: 11px;
   height: 44px;
   flex: 1;
+  min-width: 0;
   padding: 6px;
   gap: 2px;
   color: #000000;
@@ -39,7 +41,15 @@
   pointer-events: none;
 }
 
+.zotlo-checkout__tab__label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .zotlo-checkout__tab__button[data-tab="creditCard"] img,
+.zotlo-checkout__tab__button[data-tab="xendit"] img,
 .zotlo-checkout__tab__button[data-tab="paypal"] img {
   max-height: 14px;
 }

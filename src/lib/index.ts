@@ -284,7 +284,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
 
     function handleTabClick(e: Event) {
       try {
-        const target = e.target as HTMLElement;
+        // currentTarget is always the button; target may be a child element (e.g. the label span)
+        const target = e.currentTarget as HTMLElement;
         const tabName = target.getAttribute('data-tab');
         const tabContent =  document.querySelector(`.zotlo-checkout [data-tab-content="${tabName}"]`) as HTMLElement;
 
