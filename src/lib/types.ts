@@ -8,6 +8,7 @@ export enum PaymentProvider {
   CREDIT_CARD = 'creditCard',
   PIX = 'pix',
   ALIPAY = 'alipay',
+  XENDIT = 'xendit',
 };
 
 export enum PaymentResultStatus {
@@ -479,6 +480,7 @@ export type FormGeneral = {
   showPaypal: boolean;
   showPix?: boolean;
   showAliPay?: boolean;
+  showXendit?: boolean;
   language: string;
   countryCode: string;
   currency: string;
