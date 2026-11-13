@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.26.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.26.0...v1.26.1)
+
+### 🩹 Fixes
+
+- **Z3-6882:** Don't hide wallet buttons when iframe payment policy disallows payment ([8ee678b](https://github.com/Zotlo/zotlo-checkout/commit/8ee678b))
+
+### ❤️ Contributors
+
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.26.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.5...v1.26.0)
