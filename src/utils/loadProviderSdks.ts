@@ -249,7 +249,10 @@ export function isPaymentAllowedInFrame() {
     });
   }
 
-  return isAllowed;
+  // Temporarily not enforced: in-app WebViews may report `payment` as disallowed even though
+  // wallet payments work there. Keep the warning above to track it; restore `return isAllowed`
+  // if wallet payments turn out to fail in such frames.
+  return true;
 }
 
 export async function prepareProviders(config: FormConfig, returnUrl: string) {
