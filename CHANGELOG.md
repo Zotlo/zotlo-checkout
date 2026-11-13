@@ -28,6 +28,7 @@
 - **Z3-6828:** Look up the payment result when the checkout request gets no response ([4b7fb39](https://github.com/Zotlo/zotlo-checkout/commit/4b7fb39))
 - **Z3-6872:** Use translated period on subscription activation button ([5ac6dfa](https://github.com/Zotlo/zotlo-checkout/commit/5ac6dfa))
 - **Z3-6872:** Use the noun period form in footer price texts ([e891315](https://github.com/Zotlo/zotlo-checkout/commit/e891315))
+- **Z3-6881**: don't send wallet taps as empty credit card payments ([e7b11d6](https://github.com/Zotlo/zotlo-checkout/commit/e7b11d6))
 
 ### ❤️ Contributors
 
