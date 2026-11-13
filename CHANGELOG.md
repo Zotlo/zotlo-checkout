@@ -1,5 +1,40 @@
 # Changelog
 
+## v1.26.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.5...v1.26.0)
+
+### 🚀 Enhancements
+
+- **Z3-6740**: add customPriceToken param support for checkout ([c12f148](https://github.com/Zotlo/zotlo-checkout/commit/c12f148))
+- **Z3-6828:** Tag Sentry events with checkoutType (embed ([ link)](https://github.com/Zotlo/zotlo-checkout/commit/ link)))
+- **Z3-6828:** Send X-Client-Request-Id with every request and keep it on Sentry events ([03d796d](https://github.com/Zotlo/zotlo-checkout/commit/03d796d))
+
+### 🩹 Fixes
+
+- **Z3-6828:** Give onError a response-shaped payload for requests without a response ([fbec4c9](https://github.com/Zotlo/zotlo-checkout/commit/fbec4c9))
+- **Z3-6828:** Keep the session until the payment redirect leaves the page ([23553f0](https://github.com/Zotlo/zotlo-checkout/commit/23553f0))
+- **Z3-6828:** Retry /init after a session error even if the local session already expired ([8bd88f7](https://github.com/Zotlo/zotlo-checkout/commit/8bd88f7))
+- **Z3-6828:** Do not re-init the form on a checkout link page after a successful payment ([105dbaf](https://github.com/Zotlo/zotlo-checkout/commit/105dbaf))
+- **Z3-6828:** Take the session lifetime from the Session-Expires-At response header ([7b137b5](https://github.com/Zotlo/zotlo-checkout/commit/7b137b5))
+- **Z3-6828:** Hold status 0 request errors briefly and drop them when the page goes away ([9f83bef](https://github.com/Zotlo/zotlo-checkout/commit/9f83bef))
+- **Z3-6818:** Show the statement name in the card update form footer ([d2e2f1e](https://github.com/Zotlo/zotlo-checkout/commit/d2e2f1e))
+- **Z3-6828:** Report a redirect that never left the page through onFail ([7699011](https://github.com/Zotlo/zotlo-checkout/commit/7699011))
+- **Z3-6828:** Renew an expired session before a payment starts, keeping the form values ([9db0b1e](https://github.com/Zotlo/zotlo-checkout/commit/9db0b1e))
+- **Z3-6828:** Read the session headers without triggering 'Refused to get unsafe header' ([7260d73](https://github.com/Zotlo/zotlo-checkout/commit/7260d73))
+- **Z3-6828:** Renew an expired session before any request, not only before a payment ([991d9c5](https://github.com/Zotlo/zotlo-checkout/commit/991d9c5))
+- **Z3-6828:** Do not renew the session for the post payment offer request ([6be0196](https://github.com/Zotlo/zotlo-checkout/commit/6be0196))
+- **Z3-6828:** Send the AddPaymentInfo event once when the session is renewed first ([d076ea7](https://github.com/Zotlo/zotlo-checkout/commit/d076ea7))
+- **Z3-6828:** Look up the payment result when the checkout request gets no response ([4b7fb39](https://github.com/Zotlo/zotlo-checkout/commit/4b7fb39))
+- **Z3-6872:** Use translated period on subscription activation button ([5ac6dfa](https://github.com/Zotlo/zotlo-checkout/commit/5ac6dfa))
+- **Z3-6872:** Use the noun period form in footer price texts ([e891315](https://github.com/Zotlo/zotlo-checkout/commit/e891315))
+- **Z3-6881**: don't send wallet taps as empty credit card payments ([e7b11d6](https://github.com/Zotlo/zotlo-checkout/commit/e7b11d6))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
+
 ## v1.25.5
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.25.4...v1.25.5)

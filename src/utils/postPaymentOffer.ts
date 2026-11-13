@@ -23,10 +23,12 @@ export async function sendOfferDecision(payload: {
   const { offer, decision, params } = payload;
 
   try {
+    // The offer belongs to the session the payment was made in; a renewed session
+    // would not know it, so an expired session is reported as a failed offer instead
     const response = await CheckoutAPI.post('/payment/offer', {
       offerId: offer.offerId,
       decision
-    });
+    }, { renewSession: false });
 
     if (response?.meta?.errorCode) {
       params.events?.onOfferFail?.({ message: response.meta?.message, data: offer });

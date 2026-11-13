@@ -10,12 +10,14 @@ import { loadFontsOnPage } from "../utils/fonts";
 import { generateEmptyPage, generateTheme } from "./theme";
 import { createStyle } from "../utils/createStyle";
 import { createPaymentSuccessForm } from "./create";
-import { getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
+import { clearFormRedirectLock, getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
 import { handlePaymentSuccess } from "../utils/sendPayment";
 import { updateCard } from "../utils/updateCard";
+import { getSession } from "../utils/session";
+import { COOKIE } from "../utils/cookie";
 
 async function createZotloCard(params: IZotloCardParams) {
   // Load Sentry for error tracking
@@ -29,7 +31,8 @@ async function createZotloCard(params: IZotloCardParams) {
     { ...(params?.style || {}) }
   ) as FormConfig;
 
-  if (import.meta.env.VITE_SDK_CARD_API_URL) {
+  async function reloadSession() {
+    if (!import.meta.env.VITE_SDK_CARD_API_URL) return;
     CardAPI.setUseCookie(!!params?.useCookie);
     CardAPI.setBaseUrl(params?.apiUrl);
     config = await getCardConfig({
@@ -37,7 +40,7 @@ async function createZotloCard(params: IZotloCardParams) {
       packageId: params.packageId,
       language: params.language,
       subscriberId: params.subscriberId,
-      returnUrl: params.returnUrl,
+      returnUrl: params.returnUrl || globalThis?.location?.href,
       style: params.style,
       customParameters: params.customParameters,
       useCookie: !!params?.useCookie,
@@ -46,12 +49,32 @@ async function createZotloCard(params: IZotloCardParams) {
     });
   }
 
+  CardAPI.setSessionRenewer(reloadSession);
+  await reloadSession();
+
   const maskItems: Record<string, ReturnType<typeof maskInput>> = {};
   const validations: Record<string, ReturnType<typeof validateInput>> = {};
   const selectboxList: Record<string, ReturnType<typeof loadSelectbox>> = {};
 
   function hasAnyConfig() {
     return Object.keys(config.settings).length > 0;
+  }
+
+  // Same rule as the checkout form: an expired session is renewed before the card
+  // request is sent, keeping the typed values. False when no session could be opened.
+  async function ensureSession() {
+    if (getSession({ useCookie: !!params?.useCookie, key: COOKIE.CARD_UUID })?.id) return true;
+
+    setFormLoading(true);
+    try {
+      await reloadSession();
+    } finally {
+      setFormLoading(false);
+    }
+    if (hasAnyConfig()) return true;
+
+    await refresh();
+    return false;
   }
 
   function handleTabView() {
@@ -102,6 +125,8 @@ async function createZotloCard(params: IZotloCardParams) {
     if (!validation.isValid) return;
     
     if (import.meta.env.VITE_SDK_CARD_API_URL) {
+      if (!(await ensureSession())) return;
+
       const result = getFormValues(config);
       params.events?.onSubmit?.();
 
@@ -127,12 +152,13 @@ async function createZotloCard(params: IZotloCardParams) {
 
   async function onClickSubmitButton(this: HTMLButtonElement, e: PointerEvent | MouseEvent) {
     const isMouseClick = (e as PointerEvent)?.pointerId !== -1;
+    const clickedProvider = this.dataset.provider as PaymentProvider;
     const providerKey = isMouseClick || config.design.theme === DesignTheme.HORIZONTAL
-      ? this.dataset.provider as PaymentProvider // Provider by click
+      ? clickedProvider // Provider by click
       : detectAndValidateForm({
           config,
           validations
-        }); // Detect provider where input is focused
+        }) ?? clickedProvider; // Detect provider where input is focused
 
     return handleFormSubmit(providerKey);
   }
@@ -349,11 +375,18 @@ async function createZotloCard(params: IZotloCardParams) {
     }
   }
 
+  // A bfcache restore after the return redirect brings the form back still locked
+  function onPageShow(event: PageTransitionEvent) {
+    if (event.persisted) clearFormRedirectLock();
+  }
+
   function unmount() {
+    CardAPI.setSessionRenewer(null);
     destroyFormInputs();
     const container = ZOTLO_GLOBAL.container;
     if (container) container.innerHTML = '';
     ZOTLO_GLOBAL.reset();
+    window.removeEventListener('pageshow', onPageShow);
   }
 
   function mount(id: string) {
@@ -361,6 +394,7 @@ async function createZotloCard(params: IZotloCardParams) {
 
     ZOTLO_GLOBAL.containerId = id;
     ZOTLO_GLOBAL.cardUpdate = true;
+    window.addEventListener('pageshow', onPageShow);
     refresh();
   }
 
