@@ -608,8 +608,25 @@ export async function sendPayment(paymentParams: {
   const { providerKey, formData, params, config, refreshProviderConfigsFunction } = paymentParams;
   try {
     const isSandboxPayment = !!config?.paymentData?.sandboxPayment;
-    const payload = preparePayload({ providerKey, formData, params, config });
+    const payload: Record<string, any> = preparePayload({ providerKey, formData, params, config });
     const { subscriberId = "" } = formData || {};
+
+    // A credit card payment without a saved card or card number can only come from a
+    // misrouted submit (e.g. a wallet button tap), never send it to /payment/checkout
+    if (providerKey === PaymentProvider.CREDIT_CARD && !payload.cardId && !payload.creditCardDetails?.cardNumber) {
+      Logger.captureException(new Error('Credit card payment blocked: card details are missing'), {
+        captureContext: {
+          level: 'warning',
+          tags: { provider: providerKey },
+          extra: {
+            theme: config?.design?.theme,
+            formFields: Object.keys(formData || {}),
+            activeElement: document.activeElement?.nodeName,
+          }
+        }
+      });
+      return;
+    }
 
     if (!isSandboxPayment && providerKey === PaymentProvider.APPLE_PAY) return handleApplePayPayment({
       formPayload: payload, 
