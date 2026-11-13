@@ -6,6 +6,7 @@ import { deleteSession, getSession } from "./session";
 import { Logger, toCapturableError } from "../lib/logger";
 import { COOKIE, getCookie } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
+import { normalizeCpfCnpj } from "./cpfCnpj";
 
 const googlePayPopupError = 'failed to open window';
 
@@ -73,7 +74,7 @@ function preparePayload(payload: {
   if (cpfCnpj && (providerKey === PaymentProvider.PIX || isDLocalEnabled(config))) {
     data = {
       ...data,
-      identityCardNumber: cpfCnpj.replace(/\D/g, ''),
+      identityCardNumber: normalizeCpfCnpj(cpfCnpj),
     }
   }
 

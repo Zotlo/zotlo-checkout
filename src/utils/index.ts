@@ -719,28 +719,3 @@ function prepareFBCAPIParams(siteUrl: string, fbParams?: Record<string, string>)
 
   return fbParams;
 }
-
-export function formatCpfCnpjMask(value: string) {
-  const digits = value.replace(/\D/g, '').slice(0, 14);
-  let formatted = digits;
-
-  // The base mask (CNPJ) already formats 12-14 digit values correctly.
-  if (digits.length > 11) {
-    const last = formatted.slice(12);
-
-    const newFormat = `${formatted.slice(0, 2)}.${formatted.slice(2, 5)}.${formatted.slice(5, 8)}/${formatted.slice(8, 12)}${last ? `-${last}` : ''}`;
-
-    return newFormat;
-  }
-
-  // Apply the CPF pattern (###.###.###-##) for values up to 11 digits.
-  if (digits.length > 9) {
-    formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  } else if (digits.length > 6) {
-    formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  } else if (digits.length > 3) {
-    formatted = `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  }
-  
-  return formatted;
-}

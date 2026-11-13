@@ -1,5 +1,6 @@
 import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, isDLocalEnabled, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
 import { getCardMask } from "./getCardMask";
+import { isValidCpfCnpj } from "./cpfCnpj";
 import { type FormConfig, PaymentProvider } from "../lib/types";
 import { FORM_ITEMS } from "../lib/fields";
 
@@ -49,41 +50,6 @@ function getValidationMessage(key: string, params: any[] = []) {
 export function updateValidationMessages(messages: Record<string, string>) {
   if (typeof messages !== 'object' || messages === null) return false;
   ValidationMessages.messages = messages;
-}
-
-function cpfCnpjCheckDigit(sum: number) {
-  const r = sum % 11;
-  return r < 2 ? 0 : 11 - r;
-}
-
-function isValidCPF(input: string) {
-  const c = String(input).replace(/\D/g, "");
-  if (!/^\d{11}$/.test(c)) return false;
-  if (/^(\d)\1{10}$/.test(c)) return false; // 11111111111 vb.
-  const d = [...c].map(Number);
-  const calc = (length: number) => {
-    let sum = 0;
-    for (let i = 0; i < length; i++) sum += d[i] * (length + 1 - i);
-    return cpfCnpjCheckDigit(sum);
-  };
-  return calc(9) === d[9] && calc(10) === d[10];
-}
-
-function isValidCNPJ(input: string) {
-  const c = String(input).toUpperCase().replace(/[.\/\-\s]/g, "");
-  // 12 karakter [0-9A-Z] + 2 rakam kontrol hanesi
-  if (!/^[0-9A-Z]{12}\d{2}$/.test(c)) return false;
-  if (/^(\d)\1{13}$/.test(c)) return false; // 00000000000000 vb.
-  const val = (ch: string) => ch.charCodeAt(0) - 48; // '0'->0, 'A'->17
-  const calc = (base: string, weights: number[]) => {
-    const sum = [...base].reduce((s, ch, i) => s + val(ch) * weights[i], 0);
-    return cpfCnpjCheckDigit(sum);
-  };
-  const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-  const w2 = [6, ...w1];
-  const d1 = calc(c.slice(0, 12), w1);
-  const d2 = calc(c.slice(0, 12) + d1, w2);
-  return c.endsWith(`${d1}${d2}`);
 }
 
 export class Validator {
@@ -211,11 +177,8 @@ export const ValidationRules = {
     return true;
   },
   cpfCnpj(value: string) {
-    const digits = (value || '').replace(/\D/g, '');
-    // CPF has 11 digits, CNPJ has 14 digits; both are verified by their check digits.
-    if (digits.length === 11 && isValidCPF(digits)) return true;
-    if (digits.length === 14 && isValidCNPJ(digits)) return true;
-
+    // CPF: 11 digits, CNPJ: 14 alphanumeric chars; both are verified by their check digits.
+    if (isValidCpfCnpj(value || '')) return true;
     return getValidationMessage('cpfCnpj');
   }
 };

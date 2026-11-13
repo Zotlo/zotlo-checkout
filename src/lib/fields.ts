@@ -70,10 +70,14 @@ export const FORM_ITEMS = {
       name: 'cpfCnpj',
       type: 'text',
       placeholder: 'CPF/CNPJ number',
-      inputmode: 'numeric',
+      // Alphanumeric CNPJ accepts letters, so the keyboard must not be numeric-only.
+      inputmode: 'text',
+      autocapitalize: 'characters',
+      autocomplete: 'off',
+      spellcheck: 'false',
+      maxlength: 18,
       'data-rules': 'required|cpfCnpj',
-      // Base mask is the wider CNPJ pattern so digits are never truncated while typing.
-      // The CPF pattern is applied dynamically on input (see formatCpfCnpjMask).
+      // The CPF/CNPJ pattern is picked dynamically on input (see formatCpfCnpjMask in utils/cpfCnpj).
       'data-mask': '##.###.###/####-##',
     }
   },

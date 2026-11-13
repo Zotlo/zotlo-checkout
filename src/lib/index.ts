@@ -27,9 +27,9 @@ import {
   isPixAvailable,
   isDLocalEnabled,
   getUserDataForIntegration,
-  sendIntegrationCAPIInfo,
-  formatCpfCnpjMask
+  sendIntegrationCAPIInfo
 } from "../utils";
+import { formatCpfCnpjMask } from "../utils/cpfCnpj";
 import { ErrorHandler, isSessionError } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
@@ -575,12 +575,11 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         for (const item of maskInputs as NodeListOf<HTMLInputElement>) {
           maskItems[item.name] = maskInput(item, {
             mask: item.getAttribute('data-mask') || '',
+            // CPF/CNPJ switches pattern by input and accepts letters (alphanumeric CNPJ)
+            format: item.name === FORM_ITEMS.CPF_CNPJ.input.name ? formatCpfCnpjMask : undefined,
             onInput(payload) {
               if (payload.name === FORM_ITEMS.CARD_NUMBER.input.name) {
                 formatCardMask(item, payload);
-              } else if (payload.name === FORM_ITEMS.CPF_CNPJ.input.name) {
-                const val = formatCpfCnpjMask(item.value);
-                if (val !== undefined) item.value = val;
               }
             }
           });
