@@ -74,14 +74,37 @@ class InputMask {
 function maskInput(
   inputElement: HTMLInputElement,
   options: InputMaskOptions & {
-    onInput?: (payload: IMaskInputOnInput) => void
+    onInput?: (payload: IMaskInputOnInput) => void,
+    /** Custom formatter that replaces the default digit-only masking (e.g. alphanumeric CNPJ). */
+    format?: (value: string) => string
   }
 ) {
   if (!inputElement) throw new Error('Element not found');
 
   let mask = new InputMask(options);
 
+  function updateFormattedValue(val?: string) {
+    const oldValue = val || inputElement.value;
+    const caret = inputElement.selectionStart ?? oldValue.length;
+    const charsBeforeCaret = oldValue.slice(0, caret).replace(/[^0-9A-Za-z]/g, '').length;
+    const maskedValue = options.format!(oldValue);
+    inputElement.value = maskedValue;
+
+    // Keep the caret after the same number of characters when editing in the middle
+    if (document.activeElement === inputElement && caret < oldValue.length) {
+      let pos = 0;
+      let count = 0;
+      while (pos < maskedValue.length && count < charsBeforeCaret) {
+        if (/[0-9A-Za-z]/.test(maskedValue[pos])) count++;
+        pos++;
+      }
+      inputElement.setSelectionRange(pos, pos);
+    }
+    return maskedValue;
+  }
+
   function updateValue(val?: string) {
+    if (options.format) return updateFormattedValue(val);
     const tempVal = val || inputElement.value;
     const value = mask.isRegexMask() ? tempVal : tempVal.replace(/\D/g, ''); // Remove non-digits
     const maskedValue = mask.apply(value);
