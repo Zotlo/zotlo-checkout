@@ -324,10 +324,17 @@ export function validateForm(params: {
   }
 }
 
+/**
+ * Detects the provider from the focused element (e.g. Enter pressed in an input).
+ * Returns undefined when focus says nothing about the form, e.g. WebKit does not
+ * focus buttons on tap, so focus stays on body after the Apple Pay sheet closes.
+ * The caller must then use the clicked button's provider, otherwise a wallet tap
+ * is sent as an empty credit card payment.
+ */
 export function detectAndValidateForm(params: {
   config: FormConfig;
   validations: Record<string, ReturnType<typeof validateInput>>;
-}) {
+}): PaymentProvider | undefined {
   const { config, validations } = params;
   const el = document.activeElement as HTMLInputElement;
   const container = ZOTLO_GLOBAL.container;
@@ -336,7 +343,7 @@ export function detectAndValidateForm(params: {
   if (['INPUT', 'BUTTON'].includes(el?.nodeName)) {
     const skipBillingFields = shouldSkipBillingFields(config);
 
-    if (!container?.contains(el)) return PaymentProvider.CREDIT_CARD;
+    if (!container?.contains(el)) return undefined;
 
     // Reset form validations
     for (const validation of Object.values(validations)) {
@@ -391,7 +398,10 @@ export function detectAndValidateForm(params: {
         return providerKey;
       }
     }
+
+    // Focus is on another field of the form, keep the card form as the default
+    return PaymentProvider.CREDIT_CARD;
   }
 
-  return PaymentProvider.CREDIT_CARD;
+  return undefined;
 }

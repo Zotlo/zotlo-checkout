@@ -152,12 +152,13 @@ async function createZotloCard(params: IZotloCardParams) {
 
   async function onClickSubmitButton(this: HTMLButtonElement, e: PointerEvent | MouseEvent) {
     const isMouseClick = (e as PointerEvent)?.pointerId !== -1;
+    const clickedProvider = this.dataset.provider as PaymentProvider;
     const providerKey = isMouseClick || config.design.theme === DesignTheme.HORIZONTAL
-      ? this.dataset.provider as PaymentProvider // Provider by click
+      ? clickedProvider // Provider by click
       : detectAndValidateForm({
           config,
           validations
-        }); // Detect provider where input is focused
+        }) ?? clickedProvider; // Detect provider where input is focused
 
     return handleFormSubmit(providerKey);
   }
