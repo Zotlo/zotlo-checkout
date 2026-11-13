@@ -107,6 +107,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `customParameters`      | no      | Send custom parameters to webhooks                                                                                           |
 | `variantId`             | no      | String id of the A/B test variant to render. Defaults to the base variant. If an A/B test running, this param has no effect. |
 | `apiUrl`                | no      | Base URL of the API the checkout sends its requests to. Defaults to the Zotlo Checkout API. **Required in the sandbox environment:** set it to `https://checkout-sandbox.zotlo.com/v1`. |
+| `customPriceToken`      | no      | API-provided token used to validate and initialize the custom price.                                                         |
 | `events`                | no      | Event listeners that can be used during the checkout process.                                                                |
 | `events.onLoad`         | no      | Triggers after form loaded.                                                                                                  |
 | `events.onSubmit`       | no      | Triggered after the form is submitted.                                                                                       |
@@ -114,7 +115,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `events.onFail`         | no      | Triggered when a payment fails.                                                                                              |
 | `events.onOfferFail`    | no      | Triggered when a post payment offer request fails.                                                                           |
 | `events.onInvalidForm`  | no      | Triggers when form has an invalid field.                                                                                     |
-| `events.onError`        | no      | Triggers when pre-init errors occurs.                                                                                        |
+| `events.onError`        | no      | Triggers when pre-init errors occurs. Receives `{ meta, result }`; when no response was received, `meta.errorCode` is `NETWORK_ERROR`, `REQUEST_TIMEOUT` or `REQUEST_ABORTED`. |
 
 **Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L102) file.
 
@@ -147,7 +148,7 @@ Triggers after form loaded.
 onLoad?: (params: IFormLoad) => void;
 ```
 
-**Note:** You can see `params` details on type [`IFormLoad`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L835)
+**Note:** You can see `params` details on type [`IFormLoad`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L838)
 
 ```typescript
 {
@@ -186,7 +187,7 @@ Triggers after a successful payment.
 onSuccess?: (result: PaymentDetail) => void;
 ```
 
-**Note:** You can see `result` details on type [`PaymentDetail`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L774)
+**Note:** You can see `result` details on type [`PaymentDetail`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L777)
 
 ```typescript
 {
@@ -207,7 +208,7 @@ Triggers when a payment fails.
 ```typescript
 onFail?: (error: FailEventData) => void;
 ```
-**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L167)
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L170)
 
 ```typescript
 {
@@ -226,7 +227,7 @@ Triggers when a post payment offer request fails. `error.data` holds the offer t
 ```typescript
 onOfferFail?: (error: FailEventData) => void;
 ```
-**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L167) and the offer on type [`OffersObject`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L754)
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L170) and the offer on type [`OffersObject`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L757)
 
 ```typescript
 {
@@ -247,7 +248,7 @@ Triggers when form has an invalid field.
 onInvalidForm?: (error: IFormInvalid) => void;
 ```
 
-**Note:** You can see `error` details on type [`IFormInvalid`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L846)
+**Note:** You can see `error` details on type [`IFormInvalid`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L849)
 
 
 ```typescript
@@ -431,4 +432,4 @@ These parameters specify the parameters and descriptions used in the Zotlo Card.
 | `events.onInvalidForm`    | no       | Triggers when form has an invalid field.                                                                                     |
 | `events.onError`          | no       | Triggers when pre-init errors occurs.                                                                                        |
 
-**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L851) file.
+**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L854) file.

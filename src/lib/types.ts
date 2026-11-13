@@ -95,7 +95,12 @@ export interface IZotloCheckoutEvents {
   /** Triggers when form has an invalid field. */
   onInvalidForm?: (error: IFormInvalid) => void;
 
-  /** Triggers when pre-init errors occurs */
+  /**
+   * Triggers when pre-init errors occurs. Always receives a response-shaped object:
+   * a backend error carries its own `meta`; a request that got no response is reported
+   * with `meta.errorCode` `NETWORK_ERROR`, `REQUEST_TIMEOUT` or `REQUEST_ABORTED`
+   * (`meta.httpStatus` 0), and a runtime error with `SDK_ERROR`.
+   */
   onError?: (error: ApiResponse) => void;
 }
 
@@ -138,6 +143,9 @@ export interface IZotloCheckoutParams {
       utmContent?: string;
     }
   };
+
+  /** API-provided token used to validate and initialize the custom price. */
+  customPriceToken?: string;
 
   /** Show saved credit cards if the user has any saved cards. Default is `false`. (To use this feature contact with support, a permission must be granted.) */
   showSavedCards?: boolean;

@@ -53,6 +53,7 @@ export type CardInitResult = {
   tosUrl: string;
   privacyAndTosUrlStatus: 1 | 0;
   appName?: string;
+  statementName?: string;
   subscriberId: string;
   customerSupportUrl: string;
   zotloUrls: {
@@ -66,4 +67,9 @@ export const ErrorCodes = {
   NO_PROVIDER_AVAILABLE: '404039',
   USER_NOT_EXIST: '403105',
   USER_NOT_FOUND: '403130',
+  // SDK-side codes for failures that have no backend response (see toErrorResponse)
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  REQUEST_TIMEOUT: 'REQUEST_TIMEOUT',
+  REQUEST_ABORTED: 'REQUEST_ABORTED',
+  SDK_ERROR: 'SDK_ERROR',
 }
