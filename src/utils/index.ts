@@ -132,10 +132,25 @@ export function isDLocalEnabled(config: FormConfig) {
   return !!config?.paymentData?.dLocal;
 }
 
-// The CPF/CNPJ field is rendered when dLocal is enabled (all methods) or when
-// PIX is available (PIX-only behaviour).
+// CPF/CNPJ applies to every payment method only when dLocal is enabled and the
+// backend marks the identity number as required.
+export function isDLocalIdentityRequired(config: FormConfig) {
+  return isDLocalEnabled(config) && !!config?.paymentData?.dLocalIdentityRequired;
+}
+
+// The CPF/CNPJ field is rendered when dLocal requires identity (all methods) or
+// when PIX is available (PIX-only behaviour).
 export function isCpfCnpjAvailable(config: FormConfig) {
-  return isDLocalEnabled(config) || isPixAvailable(config);
+  return isDLocalIdentityRequired(config) || isPixAvailable(config);
+}
+
+// When dLocal requires identity the CPF/CNPJ field stays visible regardless of
+// the active tab. Otherwise it is only relevant for PIX: in tabbed layouts it is
+// visible while the PIX tab is active; in tab-less layouts whenever PIX is available.
+export function isCpfCnpjVisible(params: { config: FormConfig; activeTab?: string | null }) {
+  const { config, activeTab } = params;
+  if (isDLocalIdentityRequired(config)) return true;
+  return activeTab ? activeTab === PaymentProvider.PIX : isPixAvailable(config);
 }
 
 /**
