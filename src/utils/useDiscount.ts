@@ -86,6 +86,7 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
       } catch (e) {
         Logger.captureException(e);
         setLoadingForDiscount(false);
+        return;
       }
 
       destroyList.undiscounted?.();
@@ -194,6 +195,7 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
       } catch (e) {
         Logger.captureException(e);
         setLoadingForDiscount(false);
+        return;
       }
 
       destroyList.discounted?.();
