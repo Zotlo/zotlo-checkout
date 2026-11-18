@@ -441,6 +441,7 @@ export type FormPaymentData = {
   showSavedCards: boolean;
   savedCardList?: SavedCreditCardData[];
   dLocal?: boolean;
+  dLocalIdentityRequired?: boolean;
 }
 
 export type PackageInfoType = {
