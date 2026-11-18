@@ -19,7 +19,7 @@ import footerHTML from '../html/footer.html?raw'
 import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, getLegalTextParams, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isPixAvailable, isDLocalEnabled, calculatePaymentStartDate } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, getLegalTextParams, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isCpfCnpjAvailable, isDLocalIdentityRequired, calculatePaymentStartDate } from "../utils";
 import type { PaymentPeriodType, PaymentDateInfo } from '../utils/paymentStartCalculation';
 import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions, getPackageTemplateParams } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
@@ -307,8 +307,8 @@ export function createCreditCardForm(params: {
   const registerType = config.settings.registerType === 'other' ? 'email' : config.settings.registerType;
   const isPhoneRegister = registerType === 'phoneNumber';
   const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
-  const dLocalEnabled = isDLocalEnabled(config);
-  const hasCpfCnpjField = dLocalEnabled || isPixAvailable(config);
+  const dLocalIdentityRequired = isDLocalIdentityRequired(config);
+  const hasCpfCnpjField = isCpfCnpjAvailable(config);
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
     if (config.settings.hideSubscriberIdIfAlreadySet) {
@@ -361,10 +361,10 @@ export function createCreditCardForm(params: {
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
         break;
       case "CPF_CNPJ": {
-        // Render when dLocal is enabled (applies to all payment methods) or when
-        // PIX is an available payment method. With dLocal the field is always
-        // visible; otherwise its visibility is toggled so it shows only while the
-        // PIX tab/provider is active.
+        // Render when dLocal requires identity (applies to all payment methods) or
+        // when PIX is an available payment method. When dLocal requires identity
+        // the field is always visible; otherwise its visibility is toggled so it
+        // shows only while the PIX tab/provider is active.
         if (!hasCpfCnpjField) break;
         const cpfCnpjInput = createInput({
           ...options,
@@ -374,7 +374,7 @@ export function createCreditCardForm(params: {
             placeholder: FORM_ITEMS.CPF_CNPJ.input.placeholder,
           }
         });
-        const styleAttr = dLocalEnabled ? '' : ' style="display:none;"';
+        const styleAttr = dLocalIdentityRequired ? '' : ' style="display:none;"';
         fieldContent = `<div data-cpf-cnpj-field${styleAttr}>${cpfCnpjInput}</div>`;
       }
         break;

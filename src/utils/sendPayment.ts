@@ -1,4 +1,4 @@
-import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalEnabled, setFormLoading, ZOTLO_GLOBAL } from "./index";
+import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalIdentityRequired, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
 import { getGooglePayClient, hasValidApplePayConfig, hasValidGooglePayConfig, isApplePayInsecureDocumentError } from "./loadProviderSdks";
 import { CheckoutAPI, type ApiResponse } from "./api";
@@ -70,9 +70,9 @@ function preparePayload(payload: {
     }
   }
 
-  // When dLocal is enabled identityCardNumber is required for every payment method,
-  // When dLocal is not enabled identityCardNumber is required only for PIX
-  if (cpfCnpj && (providerKey === PaymentProvider.PIX || isDLocalEnabled(config))) {
+  // When dLocal requires identity, identityCardNumber is sent for every payment method;
+  // otherwise it is sent only for PIX
+  if (cpfCnpj && (providerKey === PaymentProvider.PIX || isDLocalIdentityRequired(config))) {
     data = {
       ...data,
       identityCardNumber: normalizeCpfCnpj(cpfCnpj),

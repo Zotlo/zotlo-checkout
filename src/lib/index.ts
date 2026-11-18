@@ -26,8 +26,7 @@ import {
   ZOTLO_GLOBAL,
   shouldSkipBillingFields,
   toggleCpfCnpjVisibility,
-  isPixAvailable,
-  isDLocalEnabled,
+  isCpfCnpjVisible,
   getUserDataForIntegration,
   sendIntegrationCAPIInfo
 } from "../utils";
@@ -701,17 +700,12 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
 
-    // When dLocal is enabled the CPF/CNPJ field applies to every payment method,
-    // so it stays visible regardless of the active tab. Otherwise it is only
-    // relevant for PIX: in tabbed layouts show it while the PIX tab is active; in
-    // tab-less layouts show it whenever PIX is available.
+    // Visible for every method when dLocal requires identity; otherwise only for PIX
     const activeTab = container
       ?.querySelector('button[data-tab][data-active="true"]')
       ?.getAttribute('data-tab');
 
-    const isCpfCnpjVisible = isDLocalEnabled(config)
-      || (activeTab ? activeTab === PaymentProvider.PIX : isPixAvailable(config));
-    toggleCpfCnpjVisibility(isCpfCnpjVisible);
+    toggleCpfCnpjVisibility(isCpfCnpjVisible({ config, activeTab }));
   }
 
   function destroyFormInputs() {
