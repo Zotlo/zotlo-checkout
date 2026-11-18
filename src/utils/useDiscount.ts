@@ -9,8 +9,8 @@ import { createDiscountInput, createAppliedDiscountSection } from "../lib/create
 import { CheckoutAPI } from "../utils/api";
 import { Logger } from '../lib/logger';
 
-export function useDiscount(payload: { params: IZotloCheckoutParams; config: FormConfig, syncAllPrices: () => Promise<void> }) {
-  const { params, config, syncAllPrices } = payload;
+export function useDiscount(payload: { params: IZotloCheckoutParams; config: FormConfig, syncAllPrices: () => Promise<void>, initialCode?: string }) {
+  const { params, config, syncAllPrices, initialCode } = payload;
   const isMobileAppTheme = config.design.theme === 'mobileapp';
   const isSubscription = config.general.canViewPriceTable;
   const tabList = isMobileAppTheme || isSubscription ? [ZOTLO_GLOBAL.formElement] : ZOTLO_GLOBAL.container?.querySelectorAll('[data-tab-content]');
@@ -65,10 +65,13 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
     const discountCodeInput = activeTab?.querySelector('input[name="discountCode"]') as HTMLInputElement;
     const actionButton = activeTab?.querySelector('[data-discount-action]') as HTMLButtonElement;
 
-    async function applyDiscount() {
+    async function applyDiscount(isInitialCode = false) {
       const discountCode = ZOTLO_GLOBAL.data.discountCode;
       if (!validateDiscountCode(discountCode)) {
-        setDiscountErrorMessage($t('form.discount.validationWithMinMax', { min: 3, max: 15 }));
+        const message = $t('form.discount.validationWithMinMax', { min: 3, max: 15 });
+        setDiscountErrorMessage(message);
+        // Nobody typed the code given on init, so the page is told about it like an API rejection
+        if (isInitialCode) params.events?.onFail?.({ message, data: { discountCode } });
         return;
       }
       setDiscountErrorMessage();
@@ -103,6 +106,23 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
       setLoadingForDiscount(false);
       discountCodeInput?.focus();
       destroyList.discounted = loadDiscountedState();
+    }
+
+    // Applies the code given on init (`discountCode` param) the same way the Apply button
+    // does. The field is opened and filled in every tab, so a rejected code stays visible
+    // with its error and the user can correct it.
+    function applyInitialCode(code: string) {
+      const value = code.trim().toUpperCase();
+      if (!value || !discountCodeInput) return;
+
+      tabList?.forEach((tab) => {
+        const input = tab?.querySelector('input[name="discountCode"]') as HTMLInputElement;
+        if (input) input.value = value;
+        tab?.querySelector('[data-discount-content]')?.setAttribute('data-discount-content', 'true');
+      });
+
+      onInput({ target: discountCodeInput } as unknown as Event);
+      applyDiscount(true);
     }
 
     function cancelDiscount() {
@@ -168,6 +188,8 @@ export function useDiscount(payload: { params: IZotloCheckoutParams; config: For
     discountCodeInput?.addEventListener('keyup', onKeyUpDiscountCode);
     discountCodeInput?.addEventListener('input', onInput);
     actionButton?.addEventListener('click', onClickAction);
+
+    if (typeof initialCode === 'string') applyInitialCode(initialCode);
 
     return function destroy() {
       toggleButton?.removeEventListener('click', onClickToggle);

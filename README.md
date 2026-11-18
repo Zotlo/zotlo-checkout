@@ -108,6 +108,8 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `variantId`             | no      | String id of the A/B test variant to render. Defaults to the base variant. If an A/B test running, this param has no effect. |
 | `apiUrl`                | no      | Base URL of the API the checkout sends its requests to. Defaults to the Zotlo Checkout API. **Required in the sandbox environment:** set it to `https://checkout-sandbox.zotlo.com/v1`. |
 | `customPriceToken`      | no      | API-provided token used to validate and initialize the custom price.                                                         |
+| `enableDiscountCodeEntry` | no    | Allow users to enter discount code on form. Default is `false`.                                                              |
+| `discountCode`          | no      | Discount code to apply automatically when the form is loaded. See [Discount Code](#discount-code).                           |
 | `events`                | no      | Event listeners that can be used during the checkout process.                                                                |
 | `events.onLoad`         | no      | Triggers after form loaded.                                                                                                  |
 | `events.onSubmit`       | no      | Triggered after the form is submitted.                                                                                       |
@@ -137,6 +139,25 @@ Besides sending arbitrary parameters, you can associate your UTM data with the s
   ...
 }
 ```
+
+### Discount Code
+Set `enableDiscountCodeEntry` to show the discount code field on the form. If you already know the code, e.g. from a campaign link, pass it as `discountCode` and the form applies it as soon as it is loaded:
+```js
+{
+  ...
+  discountCode: 'WELCOME20',
+  events: {
+    onFail(error) {
+      // Also triggered when the given discount code is rejected
+      console.log(error.message)
+    }
+  }
+  ...
+}
+```
+- `discountCode` enables the discount code field by itself, unless you set `enableDiscountCodeEntry` to `false`.
+- The code is trimmed, converted to upper case and applied once. Switching the payment method or calling `refresh` does not apply it again, and it is skipped when the session already has a discount.
+- If the code is not valid, it stays in the field with its error message and `events.onFail` is triggered. The form stays usable, so the user can pay without it or enter another code.
 
 ## Events
 Please view [`IZotloCheckoutEvents`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L79) for full details on [src/lib/types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L79) file.

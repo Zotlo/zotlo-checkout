@@ -126,6 +126,13 @@ export interface IZotloCheckoutParams {
   /** (Optional) Enable or disable the discount code entry field in the checkout form. Default is `false`. */
   enableDiscountCodeEntry?: boolean;
 
+  /**
+   * (Optional) Discount code to apply automatically when the form is loaded, e.g. a code from a campaign link.
+   * It enables the discount code entry field unless `enableDiscountCodeEntry` is set to `false`.
+   * A rejected code is shown in the field with its error and reported through `events.onFail`; the form stays usable.
+   */
+  discountCode?: string;
+
   /** You can customize your form on config with style parameter. If you do not define any parameters, the settings made in the Zotlo Console will apply by default. */
   style?: IZotloCheckoutStyle;
 
