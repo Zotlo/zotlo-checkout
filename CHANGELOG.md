@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### 🚀 Enhancements
+
+- Add `discountCode` param to apply a discount code when the form is loaded
+
+### 🩹 Fixes
+
+- Keep the discount field as it is when the apply or remove request gets no response
+
 ## v1.26.1
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.26.0...v1.26.1)
