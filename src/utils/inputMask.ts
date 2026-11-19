@@ -122,10 +122,28 @@ function maskInput(
     });
   }
 
+  // Strip punctuation on paste: maxlength would otherwise cut a formatted value
+  // (e.g. "20.123.456.786.") before the formatter can clean it up.
+  function handlePaste(event: ClipboardEvent) {
+    const text = event.clipboardData?.getData('text');
+    if (text == null) return;
+    event.preventDefault();
+    const cleaned = text.replace(/[^0-9A-Za-z]/g, '');
+    const { value } = inputElement;
+    const start = inputElement.selectionStart ?? value.length;
+    const end = inputElement.selectionEnd ?? value.length;
+    inputElement.value = value.slice(0, start) + cleaned + value.slice(end);
+    const caret = start + cleaned.length;
+    inputElement.setSelectionRange(caret, caret);
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
   inputElement.addEventListener('input', handleInput);
+  if (options.format) inputElement.addEventListener('paste', handlePaste);
 
   function destroy() {
     inputElement.removeEventListener('input', handleInput);
+    inputElement.removeEventListener('paste', handlePaste);
     mask = null as any;
   }
 
