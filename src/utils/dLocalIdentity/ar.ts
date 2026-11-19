@@ -5,6 +5,10 @@ import type { DLocalIdentityRule } from './types';
 const CUIT_PATTERN = '##-########-#';
 const PERSON_PREFIXES = ['20', '23', '24', '25', '26', '27'];
 const COMPANY_PREFIXES = ['30', '33', '34'];
+// Non-residents: 50 foreign individuals, 51 foreign legal entities,
+// 55 other foreign entities / international organizations
+const FOREIGN_PREFIXES = ['50', '51', '55'];
+const CUIT_PREFIXES = [...PERSON_PREFIXES, ...COMPANY_PREFIXES, ...FOREIGN_PREFIXES];
 const CUIT_WEIGHTS = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
 
 function sanitize(value: string) {
@@ -35,8 +39,7 @@ export function isValidDNI(value: string) {
 export function isValidCUIT(value: string) {
   const s = sanitize(value);
   if (!/^\d{11}$/.test(s)) return false;
-  const prefix = s.slice(0, 2);
-  if (!PERSON_PREFIXES.includes(prefix) && !COMPANY_PREFIXES.includes(prefix)) return false;
+  if (!CUIT_PREFIXES.includes(s.slice(0, 2))) return false;
   let dv = 11 - (CUIT_WEIGHTS.reduce((sum, w, i) => sum + Number(s[i]) * w, 0) % 11);
   if (dv === 11) dv = 0;
   if (dv === 10) return false; // no valid number exists for this body
