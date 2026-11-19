@@ -1,4 +1,4 @@
-import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalIdentityRequired, setFormLoading, ZOTLO_GLOBAL } from "./index";
+import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalIdentityRequired, getDLocalIdentityCountry, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
 import { getGooglePayClient, hasValidApplePayConfig, hasValidGooglePayConfig, isApplePayInsecureDocumentError } from "./loadProviderSdks";
 import { CheckoutAPI, type ApiResponse } from "./api";
@@ -7,7 +7,7 @@ import { deleteSession, getSession } from "./session";
 import { Logger, toCapturableError } from "../lib/logger";
 import { COOKIE, getCookie } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
-import { normalizeCpfCnpj } from "./cpfCnpj";
+import { normalizeDLocalIdentity } from "./dLocalIdentity";
 
 const googlePayPopupError = 'failed to open window';
 
@@ -34,7 +34,7 @@ function preparePayload(payload: {
   config: FormConfig
 }) {
   const { providerKey, formData, params, config } = payload;
-  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, saveCard, cardId = 0, cpfCnpj } = formData || {};
+  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, saveCard, cardId = 0, dLocalIdentity } = formData || {};
   const { returnUrl } = params || {};
   const showSavedCards = config.general.showSavedCards;
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
@@ -72,10 +72,10 @@ function preparePayload(payload: {
 
   // When dLocal requires identity, identityCardNumber is sent for every payment method;
   // otherwise it is sent only for PIX
-  if (cpfCnpj && (providerKey === PaymentProvider.PIX || isDLocalIdentityRequired(config))) {
+  if (dLocalIdentity && (providerKey === PaymentProvider.PIX || isDLocalIdentityRequired(config))) {
     data = {
       ...data,
-      identityCardNumber: normalizeCpfCnpj(cpfCnpj),
+      identityCardNumber: normalizeDLocalIdentity(getDLocalIdentityCountry(config), dLocalIdentity),
     }
   }
 

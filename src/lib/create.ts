@@ -19,7 +19,8 @@ import footerHTML from '../html/footer.html?raw'
 import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, getLegalTextParams, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isCpfCnpjAvailable, isDLocalIdentityRequired, calculatePaymentStartDate } from "../utils";
+import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, getLegalTextParams, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isDLocalIdentityAvailable, isDLocalIdentityRequired, getDLocalIdentityCountry, calculatePaymentStartDate } from "../utils";
+import { getDLocalIdentityRule } from '../utils/dLocalIdentity';
 import type { PaymentPeriodType, PaymentDateInfo } from '../utils/paymentStartCalculation';
 import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions, getPackageTemplateParams } from '../utils/getPackageInfo';
 import { template } from "../utils/template";
@@ -308,7 +309,12 @@ export function createCreditCardForm(params: {
   const isPhoneRegister = registerType === 'phoneNumber';
   const isVerticalTheme = config.design.theme === DesignTheme.VERTICAL;
   const dLocalIdentityRequired = isDLocalIdentityRequired(config);
-  const hasCpfCnpjField = isCpfCnpjAvailable(config);
+  const hasDLocalIdentityField = isDLocalIdentityAvailable(config);
+  // $t returns the key itself when the translation is missing
+  const translateOr = (key: string, fallback: string, params?: Record<string, any>) => {
+    const value = $t(key, params);
+    return typeof value === 'string' && value && value !== key ? value : fallback;
+  };
 
   for (const [key, inputOptions] of Object.entries(FORM_ITEMS)) {
     if (config.settings.hideSubscriberIdIfAlreadySet) {
@@ -360,22 +366,33 @@ export function createCreditCardForm(params: {
       case "SAVE_CARD_CHECKBOX":
         fieldContent = config.general.showSavedCards ? createCheckbox(options) : '';
         break;
-      case "CPF_CNPJ": {
+      case "DLOCAL_IDENTITY": {
         // Render when dLocal requires identity (applies to all payment methods) or
         // when PIX is an available payment method. When dLocal requires identity
         // the field is always visible; otherwise its visibility is toggled so it
         // shows only while the PIX tab/provider is active.
-        if (!hasCpfCnpjField) break;
-        const cpfCnpjInput = createInput({
+        if (!hasDLocalIdentityField) break;
+        const identityCountry = getDLocalIdentityCountry(config);
+        const rule = getDLocalIdentityRule(identityCountry);
+        // Countries with rules use their document acronyms (CPF/CNPJ, DNI/CUIT/CUIL);
+        // others use the localized generic label.
+        const label = rule.label ?? translateOr('form.DLOCAL_IDENTITY.label', FORM_ITEMS.DLOCAL_IDENTITY.label);
+        const placeholder = rule.label
+          ? translateOr('form.DLOCAL_IDENTITY.placeholder', `${label} number`, { label })
+          : label;
+        const identityInput = createInput({
           ...options,
-          label: FORM_ITEMS.CPF_CNPJ.label,
+          label,
           input: {
             ...options.input,
-            placeholder: FORM_ITEMS.CPF_CNPJ.input.placeholder,
+            placeholder,
+            maxlength: rule.maxLength,
+            inputmode: rule.inputMode,
+            'data-rules': `required|dLocalIdentity:${identityCountry ?? ''}`,
           }
         });
         const styleAttr = dLocalIdentityRequired ? '' : ' style="display:none;"';
-        fieldContent = `<div data-cpf-cnpj-field${styleAttr}>${cpfCnpjInput}</div>`;
+        fieldContent = `<div data-dlocal-identity-field${styleAttr}>${identityInput}</div>`;
       }
         break;
       default:

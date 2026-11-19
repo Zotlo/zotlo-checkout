@@ -25,12 +25,13 @@ import {
   getActiveSavedCardId,
   ZOTLO_GLOBAL,
   shouldSkipBillingFields,
-  toggleCpfCnpjVisibility,
-  isCpfCnpjVisible,
+  toggleDLocalIdentityVisibility,
+  isDLocalIdentityVisible,
+  getDLocalIdentityCountry,
   getUserDataForIntegration,
   sendIntegrationCAPIInfo
 } from "../utils";
-import { formatCpfCnpjMask } from "../utils/cpfCnpj";
+import { formatDLocalIdentity } from "../utils/dLocalIdentity";
 import { ErrorHandler, isSessionError } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
@@ -624,8 +625,10 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         for (const item of maskInputs as NodeListOf<HTMLInputElement>) {
           maskItems[item.name] = maskInput(item, {
             mask: item.getAttribute('data-mask') || '',
-            // CPF/CNPJ switches pattern by input and accepts letters (alphanumeric CNPJ)
-            format: item.name === FORM_ITEMS.CPF_CNPJ.input.name ? formatCpfCnpjMask : undefined,
+            // Identity number is masked by the country formatter (pattern may switch while typing)
+            format: item.name === FORM_ITEMS.DLOCAL_IDENTITY.input.name
+              ? (value: string) => formatDLocalIdentity(getDLocalIdentityCountry(config), value)
+              : undefined,
             onInput(payload) {
               if (payload.name === FORM_ITEMS.CARD_NUMBER.input.name) {
                 formatCardMask(item, payload);
@@ -705,7 +708,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       ?.querySelector('button[data-tab][data-active="true"]')
       ?.getAttribute('data-tab');
 
-    toggleCpfCnpjVisibility(isCpfCnpjVisible({ config, activeTab }));
+    toggleDLocalIdentityVisibility(isDLocalIdentityVisible({ config, activeTab }));
   }
 
   function destroyFormInputs() {
