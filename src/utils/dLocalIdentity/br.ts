@@ -1,5 +1,7 @@
-// CPF (11 digits) and CNPJ (14 chars, alphanumeric since 2026) helpers.
+// Brazil: CPF (11 digits) and CNPJ (14 chars, alphanumeric since 2026).
 // CNPJ: the first 12 positions accept [0-9A-Z], the last 2 (check digits) are always digits.
+import { applyPattern } from './pattern';
+import type { DLocalIdentityRule } from './types';
 
 const CPF_PATTERN = '###.###.###-##';
 const CNPJ_PATTERN = '##.###.###/####-##';
@@ -41,17 +43,7 @@ export function formatCpfCnpjMask(value: string) {
   const raw = String(value ?? '');
   const s = sanitize(raw);
   const pattern = detectCpfCnpj(raw) === 'CNPJ' ? CNPJ_PATTERN : CPF_PATTERN;
-  let out = '';
-  let i = 0;
-  let k = 0;
-  for (; k < pattern.length && i < s.length; k++) {
-    out += pattern[k] === '#' ? s[i++] : pattern[k];
-  }
-  // Keep a separator the user just typed if it is the next char in the pattern
-  if (/[./-]$/.test(raw.trim()) && k < pattern.length && pattern[k] !== '#') {
-    out += pattern[k];
-  }
-  return out;
+  return applyPattern(raw, s, pattern);
 }
 
 function checkDigit(sum: number) {
@@ -91,3 +83,12 @@ export function isValidCpfCnpj(value: string) {
   if (s.length === 14) return isValidCNPJ(s);
   return false;
 }
+
+export const BR: DLocalIdentityRule = {
+  label: 'CPF/CNPJ',
+  maxLength: CPF_CNPJ_MAX_LENGTH,
+  inputMode: 'text', // alphanumeric CNPJ accepts letters
+  normalize: normalizeCpfCnpj,
+  format: formatCpfCnpjMask,
+  isValid: isValidCpfCnpj,
+};
