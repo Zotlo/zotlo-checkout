@@ -74,14 +74,37 @@ class InputMask {
 function maskInput(
   inputElement: HTMLInputElement,
   options: InputMaskOptions & {
-    onInput?: (payload: IMaskInputOnInput) => void
+    onInput?: (payload: IMaskInputOnInput) => void,
+    /** Custom formatter that replaces the default digit-only masking (e.g. alphanumeric CNPJ). */
+    format?: (value: string) => string
   }
 ) {
   if (!inputElement) throw new Error('Element not found');
 
   let mask = new InputMask(options);
 
+  function updateFormattedValue(val?: string) {
+    const oldValue = val || inputElement.value;
+    const caret = inputElement.selectionStart ?? oldValue.length;
+    const charsBeforeCaret = oldValue.slice(0, caret).replace(/[^0-9A-Za-z]/g, '').length;
+    const maskedValue = options.format!(oldValue);
+    inputElement.value = maskedValue;
+
+    // Keep the caret after the same number of characters when editing in the middle
+    if (document.activeElement === inputElement && caret < oldValue.length) {
+      let pos = 0;
+      let count = 0;
+      while (pos < maskedValue.length && count < charsBeforeCaret) {
+        if (/[0-9A-Za-z]/.test(maskedValue[pos])) count++;
+        pos++;
+      }
+      inputElement.setSelectionRange(pos, pos);
+    }
+    return maskedValue;
+  }
+
   function updateValue(val?: string) {
+    if (options.format) return updateFormattedValue(val);
     const tempVal = val || inputElement.value;
     const value = mask.isRegexMask() ? tempVal : tempVal.replace(/\D/g, ''); // Remove non-digits
     const maskedValue = mask.apply(value);
@@ -99,10 +122,28 @@ function maskInput(
     });
   }
 
+  // Strip punctuation on paste: maxlength would otherwise cut a formatted value
+  // (e.g. "20.123.456.786.") before the formatter can clean it up.
+  function handlePaste(event: ClipboardEvent) {
+    const text = event.clipboardData?.getData('text');
+    if (text == null) return;
+    event.preventDefault();
+    const cleaned = text.replace(/[^0-9A-Za-z]/g, '');
+    const { value } = inputElement;
+    const start = inputElement.selectionStart ?? value.length;
+    const end = inputElement.selectionEnd ?? value.length;
+    inputElement.value = value.slice(0, start) + cleaned + value.slice(end);
+    const caret = start + cleaned.length;
+    inputElement.setSelectionRange(caret, caret);
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
   inputElement.addEventListener('input', handleInput);
+  if (options.format) inputElement.addEventListener('paste', handlePaste);
 
   function destroy() {
     inputElement.removeEventListener('input', handleInput);
+    inputElement.removeEventListener('paste', handlePaste);
     mask = null as any;
   }
 
