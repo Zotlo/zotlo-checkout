@@ -119,7 +119,7 @@ These parameters specify the parameters and descriptions used in the Zotlo Check
 | `events.onInvalidForm`  | no      | Triggers when form has an invalid field.                                                                                     |
 | `events.onError`        | no      | Triggers when pre-init errors occurs. Receives `{ meta, result }`; when no response was received, `meta.errorCode` is `NETWORK_ERROR`, `REQUEST_TIMEOUT` or `REQUEST_ABORTED`. |
 
-**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L102) file.
+**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L107) file.
 
 ### Custom Parameters
 Besides sending arbitrary parameters, you can associate your UTM data with the subscriber by passing a `utmData` object under `customParameters`:
@@ -169,7 +169,7 @@ Triggers after form loaded.
 onLoad?: (params: IFormLoad) => void;
 ```
 
-**Note:** You can see `params` details on type [`IFormLoad`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L838)
+**Note:** You can see `params` details on type [`IFormLoad`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L851)
 
 ```typescript
 {
@@ -208,7 +208,7 @@ Triggers after a successful payment.
 onSuccess?: (result: PaymentDetail) => void;
 ```
 
-**Note:** You can see `result` details on type [`PaymentDetail`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L777)
+**Note:** You can see `result` details on type [`PaymentDetail`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L790)
 
 ```typescript
 {
@@ -229,7 +229,7 @@ Triggers when a payment fails.
 ```typescript
 onFail?: (error: FailEventData) => void;
 ```
-**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L170)
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L182)
 
 ```typescript
 {
@@ -248,7 +248,7 @@ Triggers when a post payment offer request fails. `error.data` holds the offer t
 ```typescript
 onOfferFail?: (error: FailEventData) => void;
 ```
-**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L170) and the offer on type [`OffersObject`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L757)
+**Note:** You can see `error` details on type [`FailEventData`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L182) and the offer on type [`OffersObject`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L770)
 
 ```typescript
 {
@@ -269,7 +269,7 @@ Triggers when form has an invalid field.
 onInvalidForm?: (error: IFormInvalid) => void;
 ```
 
-**Note:** You can see `error` details on type [`IFormInvalid`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L849)
+**Note:** You can see `error` details on type [`IFormInvalid`](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L862)
 
 
 ```typescript
@@ -453,4 +453,4 @@ These parameters specify the parameters and descriptions used in the Zotlo Card.
 | `events.onInvalidForm`    | no       | Triggers when form has an invalid field.                                                                                     |
 | `events.onError`          | no       | Triggers when pre-init errors occurs.                                                                                        |
 
-**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L854) file.
+**Note:** For more details, please visit [types.ts](https://github.com/Zotlo/zotlo-checkout/blob/master/src/lib/types.ts#L867) file.
