@@ -1,7 +1,85 @@
 interface InputMaskOptions {
-  mask: string;
+  /** A single mask, or several alternatives (e.g. phone formats of a country) picked by the typed value. */
+  mask: string | string[];
   maskChar?: string;
   validChars?: RegExp;
+}
+
+type MaskMatch = {
+  mask: string;
+  /** Masked output */
+  value: string;
+  /** Every value char found a place in the mask */
+  consumed: boolean;
+  /** A fixed digit in the mask (e.g. the 8 of "(8##)") differs from the typed digit */
+  mismatch: boolean;
+  /** Fixed digits in the mask that the typed digits matched */
+  matchedLiterals: number;
+  /** Digits the mask holds: placeholders plus fixed digits */
+  slots: number;
+};
+
+function matchMask(mask: string, value: string, validChars: RegExp = /\d/): MaskMatch {
+  let maskedValue = '';
+  let valueIndex = 0;
+  let mismatch = false;
+  let matchedLiterals = 0;
+
+  for (let i = 0; i < mask.length && valueIndex < value.length; i++) {
+    const maskChar: string = mask[i];
+    const valueChar: string = value[valueIndex];
+
+    if (maskChar === '#') {
+      if (validChars.test(valueChar)) {
+        maskedValue += valueChar;
+        valueIndex++;
+      }
+    } else {
+      maskedValue += maskChar;
+
+      // If the mask character is a placeholder, we need to skip the value character
+      if (valueChar === maskChar) {
+        valueIndex++;
+        if (/\d/.test(maskChar)) matchedLiterals++;
+      } else if (/\d/.test(maskChar) && /\d/.test(valueChar)) {
+        mismatch = true;
+      }
+    }
+  }
+
+  return {
+    mask,
+    value: maskedValue,
+    consumed: valueIndex >= value.length,
+    mismatch,
+    matchedLiterals,
+    slots: (mask.match(/[#\d]/g) || []).length
+  };
+}
+
+/**
+ * Picks the mask that fits the value among alternatives:
+ * 1. Masks that hold the whole value without contradicting their fixed digits,
+ *    the most specific one first (e.g. "(8##)###-###" for a value starting with 8), then the shortest.
+ * 2. Otherwise the shortest mask that holds the whole value.
+ * 3. Otherwise the longest mask (value gets truncated).
+ */
+function resolveMask(masks: string[], value: string, validChars: RegExp = /\d/): MaskMatch {
+  const matches = masks.map((mask, index) => ({ index, ...matchMask(mask, value, validChars) }));
+  const bySize = [...matches].sort((a, b) => a.slots - b.slots || a.index - b.index);
+  const bySpecificity = [...bySize].sort((a, b) => b.matchedLiterals - a.matchedLiterals);
+
+  return bySpecificity.find((item) => item.consumed && !item.mismatch)
+    ?? bySize.find((item) => item.consumed)
+    ?? bySize[bySize.length - 1];
+}
+
+/** True when the digits fill one of the masks completely without contradicting its fixed digits. */
+function isMaskComplete(masks: string[], digits: string): boolean {
+  return masks.some((mask) => {
+    const match = matchMask(mask, digits);
+    return match.consumed && !match.mismatch && digits.length === match.slots;
+  });
 }
 
 type IMaskInputOnInput = {
@@ -23,15 +101,20 @@ class InputMask {
   }
 
   public isRegexMask(): boolean {
-    return this.options.mask.startsWith('/') && /\/(g?m?d?i?y?s?u?v?)?$/.test(this.options.mask);
+    const { mask } = this.options;
+    return typeof mask === 'string' && mask.startsWith('/') && /\/(g?m?d?i?y?s?u?v?)?$/.test(mask);
   }
 
   public apply(value: string): string {
-    let maskedValue = '';
-    let valueIndex = 0;
+    const { mask, validChars } = this.options;
+
+    if (Array.isArray(mask)) {
+      if (!mask.length) return value;
+      return resolveMask(mask, value, validChars).value;
+    }
 
     if (this.isRegexMask()) {
-      let stringPattern = this.options.mask.slice(1);
+      let stringPattern = mask.slice(1);
       const endOfPattern = stringPattern.match(/\/(g?m?d?i?y?s?u?v?)?$/)?.[0];
       if (endOfPattern) {
         stringPattern = stringPattern.replace(new RegExp(endOfPattern+'$'), '');
@@ -41,26 +124,7 @@ class InputMask {
       return value.slice(0, -1);
     }
 
-    for (let i = 0; i < this.options.mask.length && valueIndex < value.length; i++) {
-      const maskChar: string = this.options.mask[i];
-      const valueChar: string = value[valueIndex];
-
-      if (maskChar === '#') {
-        if (this.options.validChars.test(valueChar)) {
-          maskedValue += valueChar;
-          valueIndex++;
-        }
-      } else {
-        maskedValue += maskChar;
-
-        // If the mask character is a placeholder, we need to skip the value character
-        if (valueChar === maskChar) {
-          valueIndex++;
-        }
-      }
-    }
-
-    return maskedValue;
+    return matchMask(mask, value, validChars).value;
   }
 
   public updateOptions(options: InputMaskOptions) {
@@ -155,4 +219,4 @@ function maskInput(
 }
 
 // Export the types and class
-export { maskInput, InputMask, type InputMaskOptions, type IMaskInputOnInput };
+export { maskInput, InputMask, isMaskComplete, type InputMaskOptions, type IMaskInputOnInput };

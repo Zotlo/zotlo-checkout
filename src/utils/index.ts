@@ -10,6 +10,7 @@ import { FORM_ITEMS } from '../lib/fields';
 import { COOKIE, getCookie } from './cookie';
 import { CheckoutAPI } from './api';
 import { hasDLocalIdentityRule } from './dLocalIdentity';
+import { isMaskComplete } from './inputMask';
 
 export { getCDNUrl } from './getCDNUrl';
 export { useI18n } from './i18n';
@@ -68,13 +69,10 @@ export function shouldSkipBillingFields(config: FormConfig) {
 }
 
 export function getCountryCodeByNumber(phoneNumber: string | number, matchLength = true): string {
-  const clearPattern = /[\s-()+]/g
-  const cleanPhoneNumber = `${phoneNumber}`.replace(clearPattern, '');
+  const cleanPhoneNumber = `${phoneNumber}`.replace(/\D/g, '');
   const country = Countries.find((item) => {
     const code = item.code.replace(/\D/g, '');
-    const mask = (Array.isArray(item.mask) ? item.mask[0] : item.mask).replace(clearPattern, '');
-    const fullMask = `${code}${mask}`;
-    const isMatchingLength = matchLength ? fullMask.length === cleanPhoneNumber.length : true;
+    const isMatchingLength = matchLength ? isMaskComplete(getPhoneMasks(item), cleanPhoneNumber) : true;
     const codeByItem = cleanPhoneNumber.substring(0, code.length);
     return isMatchingLength && code === codeByItem;
   });
@@ -82,25 +80,44 @@ export function getCountryCodeByNumber(phoneNumber: string | number, matchLength
   return country?.iso ?? '';
 }
 
-export function getCountryByCode(code: string): (Country & { maskLength: number }) | undefined {
-  const item = Countries.find((country: any) => country.iso === code);
-  if (!item) return;
-  const mask = (item.code + (Array.isArray(item.mask) ? item.mask[0] : item.mask)).replace(/[\s-()+]/g, '');
-
-  return {
-    ...item,
-    maskLength: mask.length
-  };
+export function getCountryByCode(code: string): Country | undefined {
+  return Countries.find((country) => country.iso === code);
 }
 
-export function getMaskByCode(country: any) {
-  let mask = country.code + ' ';
-  if (Array.isArray(country.mask)) {
-    mask += country.mask[0];
-  } else {
-    mask += country.mask;
-  }
-  return mask;
+// Phone masks of a country are kept in a single data-mask attribute; no country mask contains a comma.
+const PHONE_MASK_SEPARATOR = ',';
+
+/** All phone masks of the country, prefixed with its dial code (e.g. "+62 ##-###-##"). */
+export function getPhoneMasks(country: Pick<Country, 'code' | 'mask'>): string[] {
+  const masks = Array.isArray(country.mask) ? country.mask : [country.mask];
+  return masks.map((mask) => `${country.code} ${mask}`);
+}
+
+/** data-mask attribute value of a phone input */
+export function getMaskByCode(country: Pick<Country, 'code' | 'mask'>) {
+  return getPhoneMasks(country).join(PHONE_MASK_SEPARATOR);
+}
+
+export function parsePhoneMaskAttribute(value: string): string[] {
+  return value.split(PHONE_MASK_SEPARATOR).filter(Boolean);
+}
+
+/**
+ * True when the number fills one of the country's phone masks (dial code included).
+ * Without a country, it is detected from the dial code of the number.
+ */
+export function isPhoneNumberComplete(phoneNumber: string, countryIso?: string): boolean {
+  const country = getCountryByCode(countryIso || getCountryCodeByNumber(phoneNumber, false));
+  if (!country) return false;
+  return isMaskComplete(getPhoneMasks(country), phoneNumber.replace(/\D/g, ''));
+}
+
+/** Binds the phone rule of a rule string to the country: "required|phone" -> "required|phone:ID" */
+export function setPhoneRuleCountry(ruleString: string, countryIso: string) {
+  return ruleString
+    .split('|')
+    .map((rule) => rule.split(':')[0].trim() === 'phone' ? `phone:${countryIso}` : rule)
+    .join('|');
 }
 
 export function generateAttributes(attrs: Record<string, string | number | boolean>) {
