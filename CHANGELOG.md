@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.27.1
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.27.0...v1.27.1)
+
+### 🚀 Enhancements
+
+- Add discountCode param to apply a discount code on load ([a7c7d6e](https://github.com/Zotlo/zotlo-checkout/commit/a7c7d6e))
+
+### 🩹 Fixes
+
+- Keep the discount field when its request gets no response ([4a71a80](https://github.com/Zotlo/zotlo-checkout/commit/4a71a80))
+
+### 🏡 Chore
+
+- Update CHANGELOG ([61b903d](https://github.com/Zotlo/zotlo-checkout/commit/61b903d))
+
+### ❤️ Contributors
+
+- Ilker ([@ilkerc](https://github.com/ilkerc))
+
 ## v1.27.0
 
 [compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.26.0...v1.27.0)
