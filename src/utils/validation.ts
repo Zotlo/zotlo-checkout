@@ -1,4 +1,4 @@
-import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, isDLocalIdentityRequired, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
+import { isPhoneNumberComplete, getIsSavedCardPayment, isDLocalIdentityRequired, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
 import { getCardMask } from "./getCardMask";
 import { getDLocalIdentityRule, isValidDLocalIdentity } from "./dLocalIdentity";
 import { type FormConfig, PaymentProvider } from "../lib/types";
@@ -166,12 +166,9 @@ export const ValidationRules = {
     if (value.length >= length) return true;
     return getValidationMessage('min', [length]);
   },
-  phone(value: string) {
-    const clearPattern = /[\s-()+]/g
-    const code = getCountryCodeByNumber(value, false);
-    const country = getCountryByCode(code);
-
-    if (value.replace(clearPattern, '').length !== country?.maskLength) {
+  phone(value: string, params: any[]) {
+    // Country comes from the rule param (phone:ID); empty means detect it by the dial code.
+    if (!isPhoneNumberComplete(value, params?.[0] || undefined)) {
       return getValidationMessage('phone');
     }
     return true;

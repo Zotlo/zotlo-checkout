@@ -10,6 +10,9 @@ import { loadFontsOnPage } from "../utils/fonts";
 import {
   getCountryByCode,
   getMaskByCode,
+  getPhoneMasks,
+  parsePhoneMaskAttribute,
+  setPhoneRuleCountry,
   preparePaymentMethods,
   setFormLoading,
   clearFormRedirectLock,
@@ -561,10 +564,14 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       const country = getCountryByCode(code);
 
       if (country) {
-        const mask = getMaskByCode(country);
-        input.setAttribute('data-mask', mask);
-        maskItems[input.name].mask.updateOptions({ mask });
+        input.setAttribute('data-mask', getMaskByCode(country));
+        maskItems[input.name].mask.updateOptions({ mask: getPhoneMasks(country) });
         maskItems[input.name].updateValue();
+
+        // Validate the number against the selected country's masks
+        const rules = setPhoneRuleCountry(input.getAttribute('data-rules') || '', country.iso);
+        input.setAttribute('data-rules', rules);
+        validations[input.name]?.updateRule(rules);
       }
     }
 
@@ -623,8 +630,12 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     function applyMaskAndValidation() {
       if (maskInputs) {
         for (const item of maskInputs as NodeListOf<HTMLInputElement>) {
+          const maskAttribute = item.getAttribute('data-mask') || '';
           maskItems[item.name] = maskInput(item, {
-            mask: item.getAttribute('data-mask') || '',
+            // Phone input carries every mask of the selected country
+            mask: Object.prototype.hasOwnProperty.call(item.dataset, 'phone')
+              ? parsePhoneMaskAttribute(maskAttribute)
+              : maskAttribute,
             // Identity number is masked by the country formatter (pattern may switch while typing)
             format: item.name === FORM_ITEMS.DLOCAL_IDENTITY.input.name
               ? (value: string) => formatDLocalIdentity(getDLocalIdentityCountry(config), value)

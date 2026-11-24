@@ -10,7 +10,7 @@ import { loadFontsOnPage } from "../utils/fonts";
 import { generateEmptyPage, generateTheme } from "./theme";
 import { createStyle } from "../utils/createStyle";
 import { createPaymentSuccessForm } from "./create";
-import { clearFormRedirectLock, getCDNUrl, getCountryByCode, getMaskByCode, mergeDeep, setFormLoading, isFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
+import { clearFormRedirectLock, getCDNUrl, getCountryByCode, getMaskByCode, getPhoneMasks, parsePhoneMaskAttribute, setPhoneRuleCountry, mergeDeep, setFormLoading, isFormLoading, useI18n, ZOTLO_GLOBAL } from "../utils";
 import { handleUrlQuery } from "../utils/handleUrlQuery";
 import { getCardMask } from "../utils/getCardMask";
 import { FORM_ITEMS } from "./fields";
@@ -185,10 +185,14 @@ async function createZotloCard(params: IZotloCardParams) {
       const country = getCountryByCode(code);
   
       if (country) {
-        const mask = getMaskByCode(country);
-        input.setAttribute('data-mask', mask);
-        maskItems[input.name].mask.updateOptions({ mask });
+        input.setAttribute('data-mask', getMaskByCode(country));
+        maskItems[input.name].mask.updateOptions({ mask: getPhoneMasks(country) });
         maskItems[input.name].updateValue();
+
+        // Validate the number against the selected country's masks
+        const rules = setPhoneRuleCountry(input.getAttribute('data-rules') || '', country.iso);
+        input.setAttribute('data-rules', rules);
+        validations[input.name]?.updateRule(rules);
       }
     }
 
@@ -247,8 +251,12 @@ async function createZotloCard(params: IZotloCardParams) {
     function applyMaskAndValidation() {
       if (maskInputs) {
         for (const item of maskInputs as NodeListOf<HTMLInputElement>) {
+          const maskAttribute = item.getAttribute('data-mask') || '';
           maskItems[item.name] = maskInput(item, {
-            mask: item.getAttribute('data-mask') || '',
+            // Phone input carries every mask of the selected country
+            mask: Object.prototype.hasOwnProperty.call(item.dataset, 'phone')
+              ? parsePhoneMaskAttribute(maskAttribute)
+              : maskAttribute,
             onInput(payload) {
               if (payload.name === FORM_ITEMS.CARD_NUMBER.input.name) {
                 formatCardMask(item, payload);

@@ -19,7 +19,7 @@ import footerHTML from '../html/footer.html?raw'
 import discountInputElement from '../html/discount-input.html?raw'
 import appliedDiscountSection from '../html/discount-applied.html?raw'
 import Countries from '../countries.json'
-import { generateAttributes, getMaskByCode, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, getLegalTextParams, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isDLocalIdentityAvailable, isDLocalIdentityRequired, getDLocalIdentityCountry, calculatePaymentStartDate } from "../utils";
+import { generateAttributes, getMaskByCode, setPhoneRuleCountry, getCDNUrl, useI18n, getSubmitButtonContent, prepareFooterInfo, getLegalTextParams, ZOTLO_GLOBAL, getIsDiscountCodeApplied, isDLocalIdentityAvailable, isDLocalIdentityRequired, getDLocalIdentityCountry, calculatePaymentStartDate } from "../utils";
 import { getDLocalIdentityRule } from '../utils/dLocalIdentity';
 import type { PaymentPeriodType, PaymentDateInfo } from '../utils/paymentStartCalculation';
 import { getPlanInfoText, getQuantityInfo, getPackageTypeConditions, getPackageTemplateParams } from '../utils/getPackageInfo';
@@ -125,7 +125,7 @@ export function createInput(payload: {
       return item.iso === payload.defaultCountryCode;
     }
     return index === 0
-  });
+  }) ?? Countries[0];
 
   const inputAttrs = generateAttributes({
     ...(payload.input || {}),
@@ -133,6 +133,9 @@ export function createInput(payload: {
     ...(payload?.input?.type === 'phone' ? {
       'data-phone': '',
       'data-mask': getMaskByCode(defaultCountry),
+      ...(payload.input['data-rules'] ? {
+        'data-rules': setPhoneRuleCountry(payload.input['data-rules'], defaultCountry.iso)
+      } : {}),
     } : {}),
   });
 
