@@ -71,6 +71,9 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
   let destroySavedCardsEvents = null as (() => void) | null;
   let destroyBillingFormEvents = null as (() => void) | null;
   let destroyDiscountEvents = { discounted: null, undiscounted: null } as ReturnType<typeof useDiscount>;
+  // Applied on the first render only. The discount events are loaded again on every
+  // tab switch and price refresh, which must not send the code again.
+  let initialDiscountCode = params?.discountCode;
 
   async function reloadSession() {
     let next = { general: {}, settings: {}, design: {}, success: {}, providerConfigs: {} } as FormConfig;
@@ -91,7 +94,8 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
         useCookie: !!params?.useCookie,
         showSavedCards: params?.showSavedCards,
         quantitySetting: params?.quantitySetting,
-        enableDiscountCodeEntry: params?.enableDiscountCodeEntry,
+        // A discount code given on init needs the discount field to be applied and shown
+        enableDiscountCodeEntry: params?.enableDiscountCodeEntry ?? (params?.discountCode ? true : undefined),
         events: params.events
       });
       sessionId = getSession({ useCookie: !!params?.useCookie })?.id || undefined;
@@ -407,8 +411,14 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       // Refresh discount events
       destroyDiscountEvents.discounted?.();
       destroyDiscountEvents.undiscounted?.();
-      destroyDiscountEvents = useDiscount({ params, config, syncAllPrices });
+      loadDiscountEvents();
     }
+  }
+
+  function loadDiscountEvents() {
+    const initialCode = initialDiscountCode;
+    initialDiscountCode = undefined;
+    destroyDiscountEvents = useDiscount({ params, config, syncAllPrices, initialCode });
   }
 
   const onSubscriberIdEntered = debounce(async (event: InputEvent) => {
@@ -681,7 +691,7 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
 
     destroyBillingFormEvents = handleBillingForm();
 
-    destroyDiscountEvents = useDiscount({ params, config, syncAllPrices });
+    loadDiscountEvents();
 
     formElement?.addEventListener('submit', handleForm);
     formInputs?.forEach((input) => {
