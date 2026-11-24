@@ -1,5 +1,6 @@
-import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, isDLocalEnabled, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
+import { getCountryByCode, getCountryCodeByNumber, getIsSavedCardPayment, isDLocalIdentityRequired, shouldSkipBillingFields, ZOTLO_GLOBAL } from "./index";
 import { getCardMask } from "./getCardMask";
+import { getDLocalIdentityRule, isValidDLocalIdentity } from "./dLocalIdentity";
 import { type FormConfig, PaymentProvider } from "../lib/types";
 import { FORM_ITEMS } from "../lib/fields";
 
@@ -29,7 +30,7 @@ const ValidationMessages = {
     length: 'This field must be 0:{length} long',
     min: 'Minimum 0:{min} characters required',
     phone: 'Invalid phone number format',
-    cpfCnpj: 'Invalid CPF/CNPJ number'
+    dLocalIdentity: 'Invalid 0:{label} number'
   } as Record<string, string>
 }
 
@@ -175,11 +176,11 @@ export const ValidationRules = {
     }
     return true;
   },
-  cpfCnpj(value: string) {
-    const digits = (value || '').replace(/\D/g, '');
-    // CPF has 11 digits, CNPJ has 14 digits.
-    if (digits.length === 11 || digits.length === 14) return true;
-    return getValidationMessage('cpfCnpj');
+  dLocalIdentity(value: string, params: any[]) {
+    // Country comes from the rule param (dLocalIdentity:AR); empty means the generic rule.
+    const country = params?.[0] || null;
+    if (isValidDLocalIdentity(country, value || '')) return true;
+    return getValidationMessage('dLocalIdentity', [getDLocalIdentityRule(country).label || '']);
   }
 };
 
@@ -293,16 +294,16 @@ export function validateForm(params: {
     FORM_ITEMS.BILLING_TAX_ID.input.name,
   ];
   const isSavedCardPayment = getIsSavedCardPayment({ providerKey, config });
-  const cpfCnpjField = FORM_ITEMS.CPF_CNPJ.input.name;
+  const dLocalIdentityField = FORM_ITEMS.DLOCAL_IDENTITY.input.name;
 
   for (const validation of Object.values(validations)) {
     const name = validation.name;
 
-    // When dLocal is enabled CPF/CNPJ is required for every payment method;
+    // When dLocal requires identity the field is required for every payment method;
     // otherwise it is only required when paying with PIX, regardless of theme/tab.
-    if (name === cpfCnpjField) {
-      const skipCpfCnpj = isDLocalEnabled(config) ? false : providerKey !== PaymentProvider.PIX;
-      const result = validation.validate(skipCpfCnpj);
+    if (name === dLocalIdentityField) {
+      const skipDLocalIdentity = isDLocalIdentityRequired(config) ? false : providerKey !== PaymentProvider.PIX;
+      const result = validation.validate(skipDLocalIdentity);
       if (!result.isValid) errors.push({ name, result });
       continue;
     }

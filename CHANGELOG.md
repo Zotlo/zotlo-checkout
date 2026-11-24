@@ -1,14 +1,26 @@
 # Changelog
 
-## Unreleased
+## v1.27.0
+
+[compare changes](https://github.com/Zotlo/zotlo-checkout/compare/v1.26.0...v1.27.0)
 
 ### 🚀 Enhancements
 
-- Add `discountCode` param to apply a discount code when the form is loaded
+- **Z3-6862:** Add cnpj formula validation ([c9ecc1f](https://github.com/Zotlo/zotlo-checkout/commit/c9ecc1f))
+- **Z3-6862:** Add cpf check digit validation ([90326cc](https://github.com/Zotlo/zotlo-checkout/commit/90326cc))
+- **Z3-6862:** Support alphanumeric cnpj in cpf/cnpj field ([b7b91b3](https://github.com/Zotlo/zotlo-checkout/commit/b7b91b3))
+- **Z3-6894:** Show CPF/CNPJ for dLocal only when identity is required ([37fceeb](https://github.com/Zotlo/zotlo-checkout/commit/37fceeb))
+- **Z3-6894:** Make dLocal identity input country-specific ([b6e13c1](https://github.com/Zotlo/zotlo-checkout/commit/b6e13c1))
+- **Z3-6894:** Accept foreign CUIT prefixes and fix formatted paste ([8a43c0f](https://github.com/Zotlo/zotlo-checkout/commit/8a43c0f))
 
 ### 🩹 Fixes
 
-- Keep the discount field as it is when the apply or remove request gets no response
+- **Z3-6882:** Don't hide wallet buttons when iframe payment policy disallows payment ([8ee678b](https://github.com/Zotlo/zotlo-checkout/commit/8ee678b))
+
+### ❤️ Contributors
+
+- Yiğit Şahin ([@yiiitsahin](https://github.com/yiiitsahin))
+- Sinan Mutlu ([@SinanMtl](https://github.com/SinanMtl))
 
 ## v1.26.1
 

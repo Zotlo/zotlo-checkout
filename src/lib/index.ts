@@ -24,12 +24,13 @@ import {
   getActiveSavedCardId,
   ZOTLO_GLOBAL,
   shouldSkipBillingFields,
-  toggleCpfCnpjVisibility,
-  isPixAvailable,
-  isDLocalEnabled,
+  toggleDLocalIdentityVisibility,
+  isDLocalIdentityVisible,
+  getDLocalIdentityCountry,
   getUserDataForIntegration,
   sendIntegrationCAPIInfo
 } from "../utils";
+import { formatDLocalIdentity } from "../utils/dLocalIdentity";
 import { ErrorHandler, isSessionError } from "../utils/config";
 import { getCheckoutConfig, getPaymentData } from "../utils/config/getCheckoutConfig";
 import { getPackageInfo } from "../utils/getPackageInfo";
@@ -617,34 +618,18 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
       }
     }
 
-    function formatCpfCnpjMask(item: HTMLInputElement, options: IMaskInputOnInput) {
-      const digits = options.value.replace(/\D/g, '').slice(0, 14);
-
-      // The base mask (CNPJ) already formats 12-14 digit values correctly.
-      if (digits.length > 11) return;
-
-      // Apply the CPF pattern (###.###.###-##) for values up to 11 digits.
-      let formatted = digits;
-      if (digits.length > 9) {
-        formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-      } else if (digits.length > 6) {
-        formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-      } else if (digits.length > 3) {
-        formatted = `${digits.slice(0, 3)}.${digits.slice(3)}`;
-      }
-      item.value = formatted;
-    }
-
     function applyMaskAndValidation() {
       if (maskInputs) {
         for (const item of maskInputs as NodeListOf<HTMLInputElement>) {
           maskItems[item.name] = maskInput(item, {
             mask: item.getAttribute('data-mask') || '',
+            // Identity number is masked by the country formatter (pattern may switch while typing)
+            format: item.name === FORM_ITEMS.DLOCAL_IDENTITY.input.name
+              ? (value: string) => formatDLocalIdentity(getDLocalIdentityCountry(config), value)
+              : undefined,
             onInput(payload) {
               if (payload.name === FORM_ITEMS.CARD_NUMBER.input.name) {
                 formatCardMask(item, payload);
-              } else if (payload.name === FORM_ITEMS.CPF_CNPJ.input.name) {
-                formatCpfCnpjMask(item, payload);
               }
             }
           });
@@ -716,17 +701,12 @@ async function createZotloCheckout(params: IZotloCheckoutParams): Promise<IZotlo
     document.addEventListener('cookieConsent', onCookieConsentGranted, { once: true });
     handleSubscriberIdInputEventListeners('add', onSubscriberIdEntered);
 
-    // When dLocal is enabled the CPF/CNPJ field applies to every payment method,
-    // so it stays visible regardless of the active tab. Otherwise it is only
-    // relevant for PIX: in tabbed layouts show it while the PIX tab is active; in
-    // tab-less layouts show it whenever PIX is available.
+    // Visible for every method when dLocal requires identity; otherwise only for PIX
     const activeTab = container
       ?.querySelector('button[data-tab][data-active="true"]')
       ?.getAttribute('data-tab');
 
-    const isCpfCnpjVisible = isDLocalEnabled(config)
-      || (activeTab ? activeTab === PaymentProvider.PIX : isPixAvailable(config));
-    toggleCpfCnpjVisibility(isCpfCnpjVisible);
+    toggleDLocalIdentityVisibility(isDLocalIdentityVisible({ config, activeTab }));
   }
 
   function destroyFormInputs() {

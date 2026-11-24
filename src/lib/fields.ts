@@ -64,17 +64,21 @@ export const FORM_ITEMS = {
       'data-mask': '+90 (###)###-####',
     }
   },
-  CPF_CNPJ: {
-    label: 'CPF/CNPJ',
+  // Country specific identity / tax number (CPF/CNPJ for BR, DNI/CUIT/CUIL for AR, ...).
+  // Label, placeholder, maxlength, inputmode and data-rules are set per country on render
+  // (see utils/dLocalIdentity).
+  DLOCAL_IDENTITY: {
+    label: 'Identity number',
     input: {
-      name: 'cpfCnpj',
+      name: 'dLocalIdentity',
       type: 'text',
-      placeholder: 'CPF/CNPJ number',
-      inputmode: 'numeric',
-      'data-rules': 'required|cpfCnpj',
-      // Base mask is the wider CNPJ pattern so digits are never truncated while typing.
-      // The CPF pattern is applied dynamically on input (see formatCpfCnpjMask).
-      'data-mask': '##.###.###/####-##',
+      placeholder: 'Identity number',
+      autocapitalize: 'characters',
+      autocomplete: 'off',
+      spellcheck: 'false',
+      'data-rules': 'required|dLocalIdentity',
+      // Only marks the input as masked; the pattern is applied by the country formatter on input.
+      'data-mask': 'dLocalIdentity',
     }
   },
   BILLING_ACTIVATE: {

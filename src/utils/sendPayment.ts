@@ -1,4 +1,4 @@
-import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalEnabled, setFormLoading, ZOTLO_GLOBAL } from "./index";
+import { getActivePostPaymentOffer, getUserDataForIntegration, handleResponseRedirection, isDLocalIdentityRequired, getDLocalIdentityCountry, setFormLoading, ZOTLO_GLOBAL } from "./index";
 import { type FormConfig, PaymentProvider, type IZotloCheckoutParams, type IZotloCardParams, type PaymentDetail, type ProviderConfigs, TrialPackageType, PackageType } from "../lib/types";
 import { getGooglePayClient, hasValidApplePayConfig, hasValidGooglePayConfig, isApplePayInsecureDocumentError } from "./loadProviderSdks";
 import { CheckoutAPI, type ApiResponse } from "./api";
@@ -7,6 +7,7 @@ import { deleteSession, getSession } from "./session";
 import { Logger, toCapturableError } from "../lib/logger";
 import { COOKIE, getCookie } from "./cookie";
 import { FORM_ITEMS } from "../lib/fields";
+import { normalizeDLocalIdentity } from "./dLocalIdentity";
 
 const googlePayPopupError = 'failed to open window';
 
@@ -33,7 +34,7 @@ function preparePayload(payload: {
   config: FormConfig
 }) {
   const { providerKey, formData, params, config } = payload;
-  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, saveCard, cardId = 0, cpfCnpj } = formData || {};
+  const { cardExpiration, acceptPolicy = true, cardNumber, cardHolder, cardCVV, saveCard, cardId = 0, dLocalIdentity } = formData || {};
   const { returnUrl } = params || {};
   const showSavedCards = config.general.showSavedCards;
   const [cardExpirationMonth, cardExpirationYear] = cardExpiration?.split("/") || [];
@@ -69,12 +70,12 @@ function preparePayload(payload: {
     }
   }
 
-  // When dLocal is enabled identityCardNumber is required for every payment method,
-  // When dLocal is not enabled identityCardNumber is required only for PIX
-  if (cpfCnpj && (providerKey === PaymentProvider.PIX || isDLocalEnabled(config))) {
+  // When dLocal requires identity, identityCardNumber is sent for every payment method;
+  // otherwise it is sent only for PIX
+  if (dLocalIdentity && (providerKey === PaymentProvider.PIX || isDLocalIdentityRequired(config))) {
     data = {
       ...data,
-      identityCardNumber: cpfCnpj.replace(/\D/g, ''),
+      identityCardNumber: normalizeDLocalIdentity(getDLocalIdentityCountry(config), dLocalIdentity),
     }
   }
 

@@ -9,6 +9,7 @@ import { deleteSessionOnPageHide } from './session';
 import { FORM_ITEMS } from '../lib/fields';
 import { COOKIE, getCookie } from './cookie';
 import { CheckoutAPI } from './api';
+import { hasDLocalIdentityRule } from './dLocalIdentity';
 
 export { getCDNUrl } from './getCDNUrl';
 export { useI18n } from './i18n';
@@ -132,10 +133,35 @@ export function isDLocalEnabled(config: FormConfig) {
   return !!config?.paymentData?.dLocal;
 }
 
-// The CPF/CNPJ field is rendered when dLocal is enabled (all methods) or when
-// PIX is available (PIX-only behaviour).
-export function isCpfCnpjAvailable(config: FormConfig) {
-  return isDLocalEnabled(config) || isPixAvailable(config);
+// The identity field applies to every payment method only when dLocal is enabled
+// and the backend marks the identity number as required.
+export function isDLocalIdentityRequired(config: FormConfig) {
+  return isDLocalEnabled(config) && !!config?.paymentData?.dLocalIdentityRequired;
+}
+
+// The identity field is rendered when dLocal requires identity (all methods) or
+// when PIX is available (PIX-only behaviour).
+export function isDLocalIdentityAvailable(config: FormConfig) {
+  return isDLocalIdentityRequired(config) || isPixAvailable(config);
+}
+
+// Country whose identity rules (label, mask, validation) are applied. PIX is
+// Brazil-only, so it keeps CPF/CNPJ when the country has no rules of its own.
+// null means the generic free-text rule.
+export function getDLocalIdentityCountry(config: FormConfig): string | null {
+  const countryCode = (config?.general?.countryCode || '').toUpperCase();
+  if (hasDLocalIdentityRule(countryCode)) return countryCode;
+  if (isPixAvailable(config)) return 'BR';
+  return null;
+}
+
+// When dLocal requires identity the field stays visible regardless of the active
+// tab. Otherwise it is only relevant for PIX: in tabbed layouts it is visible
+// while the PIX tab is active; in tab-less layouts whenever PIX is available.
+export function isDLocalIdentityVisible(params: { config: FormConfig; activeTab?: string | null }) {
+  const { config, activeTab } = params;
+  if (isDLocalIdentityRequired(config)) return true;
+  return activeTab ? activeTab === PaymentProvider.PIX : isPixAvailable(config);
 }
 
 /**
@@ -525,8 +551,8 @@ export function syncInputsOnTabs(tabName: string | null, inputNames: string[]) {
   }, 0);
 }
 
-export function toggleCpfCnpjVisibility(show: boolean) {
-  const fields = ZOTLO_GLOBAL.formElement?.querySelectorAll('[data-cpf-cnpj-field]');
+export function toggleDLocalIdentityVisibility(show: boolean) {
+  const fields = ZOTLO_GLOBAL.formElement?.querySelectorAll('[data-dlocal-identity-field]');
   fields?.forEach((field) => {
     (field as HTMLElement).style.display = show ? '' : 'none';
   });
